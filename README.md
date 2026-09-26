@@ -44,7 +44,18 @@ Los datos crudos se descargan en `datos/`, que está en `.gitignore`.
 
 ## Métricas del modelo
 
-_Pendiente: se completa al entrenar con los datos reales._
+Periodo **20224 (Saber 11 2022-2)**. Set de prueba: 106.514 estudiantes que el modelo no vio al entrenar.
+
+| Modelo | MAE | RMSE | R² |
+|---|---:|---:|---:|
+| **Regresión lineal Ridge (la que se publica)** | **35,5** | **43,7** | **0,289** |
+| Línea base: siempre el promedio | 42,9 | 51,8 | 0,000 |
+| HistGradientBoosting (solo comparación) | 34,6 | 42,7 | 0,321 |
+
+- El modelo lineal se equivoca en promedio 35,5 puntos, frente a 42,9 de la línea base (17 % mejor), y explica cerca del 29 % de la variación del puntaje.
+- En el 56 % de los estudiantes de prueba, el puntaje real quedó dentro de la estimación ± MAE.
+- El gradient boosting mejora un poco (MAE 34,6), pero no se puede leer como una suma de coeficientes. Por eso se publica el lineal.
+- Prueba de paridad: JavaScript y scikit-learn coinciden con una diferencia máxima de 1,1 × 10⁻¹³ en 2.005 casos (tolerancia 1e-6).
 
 ## Cómo re-entrenar
 
@@ -137,8 +148,26 @@ Como el sitio es estático, GitHub Pages también sirve gratis:
 ## Datos
 
 - **Fuente:** ICFES, «Resultados únicos Saber 11», publicado en datos.gov.co, conjunto `kgxf-xxbe` (2010 a 2022).
-- **Periodo usado:** _pendiente: se completa al entrenar._
-- **Variables fuera del modelo:** `estu_genero` (decisión ética: la predicción no debe cambiar por el género) y los nombres y códigos de colegio (identifican instituciones y no describen el contexto). La justificación completa está en el cuaderno.
+- **Periodo usado:** `20224` (Saber 11 2022-2, calendario A), el más reciente del conjunto. El portal Data Icfes, donde el ICFES publica años posteriores, no estaba disponible al preparar el proyecto (septiembre de 2026), así que no había una descarga directa que el cuaderno pudiera usar.
+- **Duplicados:** el periodo trae 1.065.888 filas, pero solo 532.792 estudiantes distintos (`estu_consecutivo`): cada fila está repetida. Se quitan los duplicados **antes** de separar train y test, para que un mismo estudiante no quede en ambos lados.
+- **Limpieza:** se excluyen 226 resultados en estado «VALIDEZ OFICINA JURÍDICA». Quedan 532.566 estudiantes: 426.052 para entrenar y 106.514 para evaluar.
+- **Variables del modelo (9 preguntas del formulario):** estrato, educación de la madre, educación del padre, internet, computador, tipo de colegio, jornada, zona y departamento.
+- **Variables fuera del modelo:**
+  - `estu_genero`: decisión ética; la predicción no debe cambiar por el género.
+  - Nombres y códigos de colegio: identifican instituciones y no describen el contexto.
+  - `fami_tieneautomovil`: casi no aporta en validación, porque su información ya la traen el estrato, el computador y el internet.
+  - `cole_bilingue`: la peor calidad (18 % de faltantes) y un aporte mínimo.
+
+  La justificación completa, con la validación dentro de train, está en el cuaderno.
+
+## Cómo mostrarlo en clase
+
+1. Abre la página y lee con el grupo el aviso de **Uso responsable** y el de privacidad.
+2. Cambia una respuesta (por ejemplo, la jornada de «Mañana» a «Sabatina») y mira cómo se mueve el medidor y qué barra cambia en **Qué suma y qué resta**.
+3. Pulsa **Cargar un caso real** varias veces: son estudiantes del set de prueba con su puntaje real. Compara real y estimado para ver el tamaño del error individual.
+4. En la **Ficha del modelo**, compara el MAE con la línea base y con el gradient boosting, y discute el límite del estrato: su efecto ajustado se invierte.
+5. En **Verificación**, muestra que el navegador y scikit-learn dan lo mismo. En la consola del navegador (F12) se puede probar `PredictorSaber11.predecir(PredictorSaber11.modelo, {...})`: el modelo es solo una suma.
+6. Abre el cuaderno en Colab y recorre las secciones; las preguntas para discutir están al final.
 
 ## Uso responsable
 
