@@ -620,6 +620,7 @@
           <h3>Límites que debes conocer</h3>
           <ul class="lista" id="ficha-limites">
             <li><strong>Describe asociaciones, no causas.</strong> Comprar un computador no sube el puntaje: el computador está asociado a otras condiciones del hogar.</li>
+            <li id="limite-ajuste"><strong>Cada aporte se mide dejando fijas las demás respuestas.</strong> Por eso alguno puede ir en contra de la intuición: parte de lo que dice una respuesta ya lo dicen las demás.</li>
             <li><strong>Es un promedio por perfil.</strong> Dentro de cada perfil hay estudiantes muy por encima y muy por debajo de la estimación.</li>
             <li id="limite-periodo"><strong>Usa un solo periodo.</strong> No refleja cambios posteriores en el examen ni en el país.</li>
             <li><strong>Las respuestas del hogar son autorreportadas</strong> y algunas faltan (aparecen como «Sin información»).</li>
@@ -821,6 +822,19 @@
     ' · ' + f0.format(M.n_total) + ' registros del periodo ' + M.periodo_etiqueta;
   $('limite-periodo').lastChild.textContent = ' Solo el periodo ' + M.periodo_etiqueta +
     '; no refleja cambios posteriores en el examen ni en el país.';
+  // Si el modelo invierte el estrato (un estrato alto resta), se explica con los números del modelo.
+  var vEstrato = M.variables.filter(function (v) { return v.nombre === 'fami_estratovivienda'; })[0];
+  if (vEstrato) {
+    var estratoComun = vEstrato.categorias.filter(function (c) { return c.valor === vEstrato.mas_frecuente; })[0];
+    var estratoAlto = vEstrato.categorias.filter(function (c) { return /6$/.test(c.valor); })[0];
+    if (estratoComun && estratoAlto && estratoAlto.coeficiente < estratoComun.coeficiente) {
+      $('limite-ajuste').lastChild.textContent = ' Por eso alguno puede ir en contra de la intuición: en este modelo, pasar de «' +
+        estratoComun.etiqueta + '» a «' + estratoAlto.etiqueta + '» resta ' +
+        f1.format(estratoComun.coeficiente - estratoAlto.coeficiente) + ' puntos. El estrato es autorreportado y, una vez ' +
+        'que el modelo conoce la educación de los padres, el tipo de colegio y la jornada, añade poca información. ' +
+        'El cuaderno lo analiza.';
+    }
+  }
 
   // ---------------------------------------------------------------- Formulario
   var formulario = $('formulario-contexto');
@@ -845,8 +859,9 @@
   }
   function crearCampo(v) {
     var id = 'campo-' + v.nombre;
-    var largo = v.categorias.reduce(function (m, c) { return Math.max(m, etiquetaOpcion(c).length); }, 0);
-    var campo = crear('div', 'campo' + (largo > 20 || v.categorias.length > 14 ? ' completo' : ''));
+    var opciones = v.categorias.filter(function (c) { return c.en_formulario !== false; });
+    var largo = opciones.reduce(function (m, c) { return Math.max(m, etiquetaOpcion(c).length); }, 0);
+    var campo = crear('div', 'campo' + (largo > 20 || opciones.length > 14 ? ' completo' : ''));
     var label = crear('label', null, v.etiqueta);
     label.htmlFor = id;
     var marca = crear('span', 'marca-cambio', 'cambiada');
@@ -862,7 +877,8 @@
       select.setAttribute('aria-describedby', ayuda.id);
       campo.appendChild(ayuda);
     }
-    v.categorias.forEach(function (c) {
+    // Las categorías con muy pocos estudiantes siguen en el modelo, pero no se ofrecen.
+    opciones.forEach(function (c) {
       var opcion = crear('option', null, etiquetaOpcion(c));
       opcion.value = c.valor;
       select.appendChild(opcion);
@@ -885,7 +901,15 @@
   function sincronizarFormulario() {
     M.variables.forEach(function (v) {
       var s = selects[v.nombre];
-      s.select.value = respuestas[v.nombre];
+      var valor = respuestas[v.nombre];
+      var existe = Array.prototype.some.call(s.select.options, function (o) { return o.value === valor; });
+      if (!existe) {
+        var c = buscar(v, valor);
+        var extra = crear('option', null, c ? etiquetaOpcion(c) : valor);
+        extra.value = valor;
+        s.select.appendChild(extra);
+      }
+      s.select.value = valor;
       s.campo.classList.toggle('distinta', respuestas[v.nombre] !== v.mas_frecuente);
     });
   }
@@ -1152,6 +1176,10 @@
     f0.format(M.n_entrenamiento) + ' para entrenar y ' + f0.format(M.n_prueba) + ' para evaluar (80/20)');
   filaDatos('Objetivo', M.objetivo.etiqueta + ' (' + M.objetivo.nombre + ')', 'Escala de ' + MIN + ' a ' + MAX + ' puntos');
   filaDatos('Algoritmo', M.algoritmo, M.variables.length + ' variables categóricas, entrenado con scikit-learn ' + M.sklearn_version);
+  if (M.min_casos) {
+    filaDatos('Categorías raras', 'Menos de ' + f0.format(M.min_casos) + ' estudiantes en entrenamiento',
+      'Se agrupan en «Otra (pocos casos)» y no aparecen como opción del formulario');
+  }
   filaDatos('Entrenado', fecha(M.fecha_entrenamiento), 'Versión ' + M.version + ' · semilla ' + M.semilla);
 
   var cuerpoMetricas = $('ficha-metricas');
@@ -1167,8 +1195,8 @@
   });
   if (M.metricas.boosting) {
     $('nota-boosting').textContent = 'El modelo publicado es el lineal (fila resaltada). HistGradientBoosting logra MAE ' +
-      f1.format(M.metricas.boosting.mae) + ' frente a ' + f1.format(MAE) + ': casi lo mismo, pero sin coeficientes que se ' +
-      'puedan leer. Por eso preferimos el lineal.';
+      f1.format(M.metricas.boosting.mae) + ' frente a ' + f1.format(MAE) + ': un poco mejor, pero sin coeficientes que se ' +
+      'puedan leer ni una suma que se pueda publicar así de simple. Por eso preferimos el lineal.';
   }
 
   var ejemplo = M.variables.slice(0, 2).map(function (v) {
@@ -1183,15 +1211,16 @@
 
   var cuerpoVariables = $('ficha-variables');
   M.variables.map(function (v) {
-    var coefs = v.categorias.map(function (c) { return c.coeficiente; });
-    return { v: v, rango: Math.max.apply(null, coefs) - Math.min.apply(null, coefs) };
+    var visibles = v.categorias.filter(function (c) { return c.en_formulario !== false; });
+    var coefs = visibles.map(function (c) { return c.coeficiente; });
+    return { v: v, n: visibles.length, rango: Math.max.apply(null, coefs) - Math.min.apply(null, coefs) };
   }).sort(function (a, b) { return b.rango - a.rango; }).forEach(function (item) {
     var tr = crear('tr');
     tr.appendChild(crear('td', null, item.v.etiqueta));
     var celdaColumna = crear('td');
     celdaColumna.appendChild(crear('code', null, item.v.nombre));
     tr.appendChild(celdaColumna);
-    tr.appendChild(crear('td', 'num', String(item.v.categorias.length)));
+    tr.appendChild(crear('td', 'num', String(item.n)));
     tr.appendChild(crear('td', 'num', f1.format(item.rango) + ' puntos'));
     cuerpoVariables.appendChild(tr);
   });
