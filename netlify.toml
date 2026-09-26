@@ -1,0 +1,20 @@
+# Configuración de Netlify para el Predictor Saber 11.
+# El sitio es estático: no hay paso de build, Netlify publica la carpeta web/ tal cual.
+
+[build]
+  publish = "web"
+
+  # Ahorro de créditos: si el push no cambia nada en web/ ni en este archivo
+  # (por ejemplo, solo el cuaderno o el README), Netlify omite la publicación.
+  # En la primera publicación (sin caché) ambas referencias son iguales y sí publica.
+  ignore = "if [ \"$CACHED_COMMIT_REF\" = \"$COMMIT_REF\" ]; then exit 1; fi; git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- web/ netlify.toml"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # connect-src 'none': la página no puede enviar datos a ningún servidor
+    # (ni fetch, ni XHR, ni WebSocket). Solo se permiten las fuentes de Google Fonts.
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"

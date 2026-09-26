@@ -1,0 +1,7 @@
+# Para correr scripts/train.py o el cuaderno fuera de Colab.
+# (Google Colab ya trae todo esto instalado.)
+numpy>=1.24
+pandas>=2.0
+scikit-learn>=1.2
+requests>=2.28
+matplotlib>=3.7
