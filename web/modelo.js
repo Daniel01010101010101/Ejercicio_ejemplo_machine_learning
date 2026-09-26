@@ -1,0 +1,952 @@
+// Generado automáticamente por scripts/train.py o por el cuaderno.
+// No lo edites a mano: vuelve a entrenar y reemplaza este archivo.
+window.MODELO = {
+  "version": "1.0.0",
+  "proyecto": "Predictor Saber 11",
+  "fuente": {
+    "nombre": "Resultados únicos Saber 11 (ICFES)",
+    "portal": "datos.gov.co",
+    "id": "kgxf-xxbe",
+    "url": "https://www.datos.gov.co/d/kgxf-xxbe"
+  },
+  "periodo": "20224",
+  "periodo_etiqueta": "2022-2",
+  "fecha_entrenamiento": "2026-09-26",
+  "n_total": 532566,
+  "n_entrenamiento": 426052,
+  "n_prueba": 106514,
+  "semilla": 42,
+  "min_casos": 200,
+  "algoritmo": "Ridge (alpha = 1) con codificación one-hot",
+  "sklearn_version": "1.9.1",
+  "objetivo": {
+    "nombre": "punt_global",
+    "etiqueta": "Puntaje global",
+    "minimo": 0,
+    "maximo": 500
+  },
+  "metricas": {
+    "modelo": {
+      "nombre": "Regresión lineal (Ridge)",
+      "mae": 35.47512966730567,
+      "rmse": 43.675325847396664,
+      "r2": 0.2889793219253356
+    },
+    "linea_base": {
+      "nombre": "Línea base: siempre el promedio",
+      "mae": 42.935727050678956,
+      "rmse": 51.79632935904461,
+      "r2": -1.8170125019922878e-05
+    },
+    "boosting": {
+      "nombre": "HistGradientBoosting (solo comparación)",
+      "mae": 34.58459189753755,
+      "rmse": 42.6879947589604,
+      "r2": 0.320762847382311
+    }
+  },
+  "cobertura_mae": 0.5615881480368777,
+  "promedio_nacional": 250.1393010443776,
+  "promedio_entrenamiento": 250.18345882662211,
+  "intercepto": 234.7193972742739,
+  "variables": [
+    {
+      "nombre": "fami_estratovivienda",
+      "etiqueta": "Estrato de la vivienda",
+      "etiqueta_corta": "Estrato",
+      "grupo": "hogar",
+      "ayuda": "Aparece en los recibos de servicios públicos.",
+      "mas_frecuente": "Estrato 2",
+      "categorias": [
+        {
+          "valor": "Estrato 1",
+          "etiqueta": "Estrato 1",
+          "coeficiente": 8.307891513032802,
+          "frecuencia": 0.27507675119468983,
+          "n": 117197,
+          "en_formulario": true
+        },
+        {
+          "valor": "Estrato 2",
+          "etiqueta": "Estrato 2",
+          "coeficiente": 6.370510106813105,
+          "frecuencia": 0.3371701106907138,
+          "n": 143652,
+          "en_formulario": true
+        },
+        {
+          "valor": "Estrato 3",
+          "etiqueta": "Estrato 3",
+          "coeficiente": 4.304966905142806,
+          "frecuencia": 0.20721883713725084,
+          "n": 88286,
+          "en_formulario": true
+        },
+        {
+          "valor": "Estrato 4",
+          "etiqueta": "Estrato 4",
+          "coeficiente": 1.0005660999612338,
+          "frecuencia": 0.052627378817609115,
+          "n": 22422,
+          "en_formulario": true
+        },
+        {
+          "valor": "Estrato 5",
+          "etiqueta": "Estrato 5",
+          "coeficiente": -1.4117325836424197,
+          "frecuencia": 0.016054378338794327,
+          "n": 6840,
+          "en_formulario": true
+        },
+        {
+          "valor": "Estrato 6",
+          "etiqueta": "Estrato 6",
+          "coeficiente": -8.557854073206412,
+          "frecuencia": 0.007283148535859473,
+          "n": 3103,
+          "en_formulario": true
+        },
+        {
+          "valor": "Sin Estrato",
+          "etiqueta": "Sin estrato",
+          "coeficiente": -9.013797744001817,
+          "frecuencia": 0.03697201280594857,
+          "n": 15752,
+          "en_formulario": true
+        },
+        {
+          "valor": "Sin información",
+          "etiqueta": "Sin información",
+          "coeficiente": -1.0005502268747553,
+          "frecuencia": 0.06759738247913401,
+          "n": 28800,
+          "en_formulario": true
+        }
+      ]
+    },
+    {
+      "nombre": "fami_educacionmadre",
+      "etiqueta": "Nivel educativo de la madre",
+      "etiqueta_corta": "Educación de la madre",
+      "grupo": "hogar",
+      "ayuda": "El nivel más alto que alcanzó.",
+      "mas_frecuente": "Secundaria (Bachillerato) completa",
+      "categorias": [
+        {
+          "valor": "Ninguno",
+          "etiqueta": "Ninguno",
+          "coeficiente": -14.968695182892887,
+          "frecuencia": 0.01942016467473454,
+          "n": 8274,
+          "en_formulario": true
+        },
+        {
+          "valor": "Primaria incompleta",
+          "etiqueta": "Primaria incompleta",
+          "coeficiente": -9.579237961779327,
+          "frecuencia": 0.11791048979936722,
+          "n": 50236,
+          "en_formulario": true
+        },
+        {
+          "valor": "Primaria completa",
+          "etiqueta": "Primaria completa",
+          "coeficiente": -8.57678547981708,
+          "frecuencia": 0.07926497235079286,
+          "n": 33771,
+          "en_formulario": true
+        },
+        {
+          "valor": "Secundaria (Bachillerato) incompleta",
+          "etiqueta": "Bachillerato incompleto",
+          "coeficiente": -6.6205918212259895,
+          "frecuencia": 0.13138771793114457,
+          "n": 55978,
+          "en_formulario": true
+        },
+        {
+          "valor": "Secundaria (Bachillerato) completa",
+          "etiqueta": "Bachillerato completo",
+          "coeficiente": -2.266437908990171,
+          "frecuencia": 0.2692417826931924,
+          "n": 114711,
+          "en_formulario": true
+        },
+        {
+          "valor": "Técnica o tecnológica incompleta",
+          "etiqueta": "Técnica o tecnológica incompleta",
+          "coeficiente": 3.310020359220621,
+          "frecuencia": 0.033610920732680516,
+          "n": 14320,
+          "en_formulario": true
+        },
+        {
+          "valor": "Técnica o tecnológica completa",
+          "etiqueta": "Técnica o tecnológica completa",
+          "coeficiente": 8.362580600568128,
+          "frecuencia": 0.09800916320073606,
+          "n": 41757,
+          "en_formulario": true
+        },
+        {
+          "valor": "Educación profesional incompleta",
+          "etiqueta": "Universitaria incompleta",
+          "coeficiente": 7.9174836903080825,
+          "frecuencia": 0.02874531747298452,
+          "n": 12247,
+          "en_formulario": true
+        },
+        {
+          "valor": "Educación profesional completa",
+          "etiqueta": "Universitaria completa",
+          "coeficiente": 10.15313079296504,
+          "frecuencia": 0.1170819524377306,
+          "n": 49883,
+          "en_formulario": true
+        },
+        {
+          "valor": "Postgrado",
+          "etiqueta": "Posgrado",
+          "coeficiente": 25.700724799675083,
+          "frecuencia": 0.021506764432510584,
+          "n": 9163,
+          "en_formulario": true
+        },
+        {
+          "valor": "No sabe",
+          "etiqueta": "No sabe",
+          "coeficiente": 2.7197064731573106,
+          "frecuencia": 0.023476007623482578,
+          "n": 10002,
+          "en_formulario": true
+        },
+        {
+          "valor": "No Aplica",
+          "etiqueta": "No aplica",
+          "coeficiente": -12.705329645786287,
+          "frecuencia": 0.0020396571310544254,
+          "n": 869,
+          "en_formulario": true
+        },
+        {
+          "valor": "Sin información",
+          "etiqueta": "Sin información",
+          "coeficiente": -3.446568721560306,
+          "frecuencia": 0.05830508951958916,
+          "n": 24841,
+          "en_formulario": true
+        }
+      ]
+    },
+    {
+      "nombre": "fami_educacionpadre",
+      "etiqueta": "Nivel educativo del padre",
+      "etiqueta_corta": "Educación del padre",
+      "grupo": "hogar",
+      "ayuda": "El nivel más alto que alcanzó.",
+      "mas_frecuente": "Secundaria (Bachillerato) completa",
+      "categorias": [
+        {
+          "valor": "Ninguno",
+          "etiqueta": "Ninguno",
+          "coeficiente": -16.10558256327864,
+          "frecuencia": 0.030784974604038944,
+          "n": 13116,
+          "en_formulario": true
+        },
+        {
+          "valor": "Primaria incompleta",
+          "etiqueta": "Primaria incompleta",
+          "coeficiente": -7.489424595568312,
+          "frecuencia": 0.15693858965572277,
+          "n": 66864,
+          "en_formulario": true
+        },
+        {
+          "valor": "Primaria completa",
+          "etiqueta": "Primaria completa",
+          "coeficiente": -7.830386331403262,
+          "frecuencia": 0.08216133241951687,
+          "n": 35005,
+          "en_formulario": true
+        },
+        {
+          "valor": "Secundaria (Bachillerato) incompleta",
+          "etiqueta": "Bachillerato incompleto",
+          "coeficiente": -6.285392472305312,
+          "frecuencia": 0.1384877902227897,
+          "n": 59003,
+          "en_formulario": true
+        },
+        {
+          "valor": "Secundaria (Bachillerato) completa",
+          "etiqueta": "Bachillerato completo",
+          "coeficiente": -4.125610482761814,
+          "frecuencia": 0.23657440875761643,
+          "n": 100793,
+          "en_formulario": true
+        },
+        {
+          "valor": "Técnica o tecnológica incompleta",
+          "etiqueta": "Técnica o tecnológica incompleta",
+          "coeficiente": -0.33415824604548505,
+          "frecuencia": 0.02235173171349976,
+          "n": 9523,
+          "en_formulario": true
+        },
+        {
+          "valor": "Técnica o tecnológica completa",
+          "etiqueta": "Técnica o tecnológica completa",
+          "coeficiente": 5.482442472941126,
+          "frecuencia": 0.06374808708796109,
+          "n": 27160,
+          "en_formulario": true
+        },
+        {
+          "valor": "Educación profesional incompleta",
+          "etiqueta": "Universitaria incompleta",
+          "coeficiente": 6.652180266296037,
+          "frecuencia": 0.0210467266906387,
+          "n": 8967,
+          "en_formulario": true
+        },
+        {
+          "valor": "Educación profesional completa",
+          "etiqueta": "Universitaria completa",
+          "coeficiente": 6.472886111038952,
+          "frecuencia": 0.09213194633518913,
+          "n": 39253,
+          "en_formulario": true
+        },
+        {
+          "valor": "Postgrado",
+          "etiqueta": "Posgrado",
+          "coeficiente": 24.23175816963288,
+          "frecuencia": 0.01709650465201431,
+          "n": 7284,
+          "en_formulario": true
+        },
+        {
+          "valor": "No sabe",
+          "etiqueta": "No sabe",
+          "coeficiente": 2.123822941971458,
+          "frecuencia": 0.06818651244449034,
+          "n": 29051,
+          "en_formulario": true
+        },
+        {
+          "valor": "No Aplica",
+          "etiqueta": "No aplica",
+          "coeficiente": 1.0503628171498207,
+          "frecuencia": 0.012359993615802766,
+          "n": 5266,
+          "en_formulario": true
+        },
+        {
+          "valor": "Sin información",
+          "etiqueta": "Sin información",
+          "coeficiente": -3.842898088238181,
+          "frecuencia": 0.058131401800719164,
+          "n": 24767,
+          "en_formulario": true
+        }
+      ]
+    },
+    {
+      "nombre": "fami_tieneinternet",
+      "etiqueta": "¿Hay internet en el hogar?",
+      "etiqueta_corta": "Internet en el hogar",
+      "grupo": "hogar",
+      "ayuda": "",
+      "mas_frecuente": "Si",
+      "categorias": [
+        {
+          "valor": "Si",
+          "etiqueta": "Sí",
+          "coeficiente": 4.849501273510333,
+          "frecuencia": 0.6827452986959338,
+          "n": 290885,
+          "en_formulario": true
+        },
+        {
+          "valor": "No",
+          "etiqueta": "No",
+          "coeficiente": -2.5058390247795064,
+          "frecuencia": 0.25775961619708393,
+          "n": 109819,
+          "en_formulario": true
+        },
+        {
+          "valor": "Sin información",
+          "etiqueta": "Sin información",
+          "coeficiente": -2.343662281126492,
+          "frecuencia": 0.059495085106982246,
+          "n": 25348,
+          "en_formulario": true
+        }
+      ]
+    },
+    {
+      "nombre": "fami_tienecomputador",
+      "etiqueta": "¿Hay computador en el hogar?",
+      "etiqueta_corta": "Computador en el hogar",
+      "grupo": "hogar",
+      "ayuda": "",
+      "mas_frecuente": "Si",
+      "categorias": [
+        {
+          "valor": "Si",
+          "etiqueta": "Sí",
+          "coeficiente": 4.38211825872852,
+          "frecuencia": 0.5099424483396393,
+          "n": 217262,
+          "en_formulario": true
+        },
+        {
+          "valor": "No",
+          "etiqueta": "No",
+          "coeficiente": -4.674604315465242,
+          "frecuencia": 0.44592444114802887,
+          "n": 189987,
+          "en_formulario": true
+        },
+        {
+          "valor": "Sin información",
+          "etiqueta": "Sin información",
+          "coeficiente": 0.29248606561834234,
+          "frecuencia": 0.044133110512331826,
+          "n": 18803,
+          "en_formulario": true
+        }
+      ]
+    },
+    {
+      "nombre": "cole_naturaleza",
+      "etiqueta": "Tipo de colegio",
+      "etiqueta_corta": "Tipo de colegio",
+      "grupo": "colegio",
+      "ayuda": "Oficial es público; no oficial es privado.",
+      "mas_frecuente": "OFICIAL",
+      "categorias": [
+        {
+          "valor": "OFICIAL",
+          "etiqueta": "Oficial (público)",
+          "coeficiente": -5.473289801900302,
+          "frecuencia": 0.7734149822087445,
+          "n": 329515,
+          "en_formulario": true
+        },
+        {
+          "valor": "NO OFICIAL",
+          "etiqueta": "No oficial (privado)",
+          "coeficiente": 5.641744978428522,
+          "frecuencia": 0.22658267065991944,
+          "n": 96536,
+          "en_formulario": true
+        },
+        {
+          "valor": "Otra (pocos casos)",
+          "etiqueta": "Otra (pocos casos)",
+          "coeficiente": -0.1684552898973792,
+          "frecuencia": 2.3471313360810417e-06,
+          "n": 1,
+          "en_formulario": false,
+          "agrupa": [
+            "Sin información"
+          ]
+        }
+      ]
+    },
+    {
+      "nombre": "cole_jornada",
+      "etiqueta": "Jornada del colegio",
+      "etiqueta_corta": "Jornada",
+      "grupo": "colegio",
+      "ayuda": "",
+      "mas_frecuente": "MAÑANA",
+      "categorias": [
+        {
+          "valor": "MAÑANA",
+          "etiqueta": "Mañana",
+          "coeficiente": 8.507410522993334,
+          "frecuencia": 0.3907762432754687,
+          "n": 166491,
+          "en_formulario": true
+        },
+        {
+          "valor": "TARDE",
+          "etiqueta": "Tarde",
+          "coeficiente": 6.047678970371535,
+          "frecuencia": 0.09230328692272305,
+          "n": 39326,
+          "en_formulario": true
+        },
+        {
+          "valor": "COMPLETA",
+          "etiqueta": "Completa",
+          "coeficiente": 21.41550884958528,
+          "frecuencia": 0.14431102306760676,
+          "n": 61484,
+          "en_formulario": true
+        },
+        {
+          "valor": "UNICA",
+          "etiqueta": "Única",
+          "coeficiente": 12.447445901816744,
+          "frecuencia": 0.2749453118398693,
+          "n": 117141,
+          "en_formulario": true
+        },
+        {
+          "valor": "NOCHE",
+          "etiqueta": "Noche",
+          "coeficiente": -22.042874392551745,
+          "frecuencia": 0.04485837409518087,
+          "n": 19112,
+          "en_formulario": true
+        },
+        {
+          "valor": "SABATINA",
+          "etiqueta": "Sabatina",
+          "coeficiente": -26.206714576067174,
+          "frecuencia": 0.0528034136678152,
+          "n": 22497,
+          "en_formulario": true
+        },
+        {
+          "valor": "Otra (pocos casos)",
+          "etiqueta": "Otra (pocos casos)",
+          "coeficiente": -0.1684552898973792,
+          "frecuencia": 2.3471313360810417e-06,
+          "n": 1,
+          "en_formulario": false,
+          "agrupa": [
+            "Sin información"
+          ]
+        }
+      ]
+    },
+    {
+      "nombre": "cole_area_ubicacion",
+      "etiqueta": "Zona donde está el colegio",
+      "etiqueta_corta": "Zona del colegio",
+      "grupo": "colegio",
+      "ayuda": "",
+      "mas_frecuente": "URBANO",
+      "categorias": [
+        {
+          "valor": "URBANO",
+          "etiqueta": "Urbana",
+          "coeficiente": 6.14256015030479,
+          "frecuencia": 0.8292391539060959,
+          "n": 353299,
+          "en_formulario": true
+        },
+        {
+          "valor": "RURAL",
+          "etiqueta": "Rural",
+          "coeficiente": -5.974104944682418,
+          "frecuencia": 0.17075849896256795,
+          "n": 72752,
+          "en_formulario": true
+        },
+        {
+          "valor": "Otra (pocos casos)",
+          "etiqueta": "Otra (pocos casos)",
+          "coeficiente": -0.1684552898973792,
+          "frecuencia": 2.3471313360810417e-06,
+          "n": 1,
+          "en_formulario": false,
+          "agrupa": [
+            "Sin información"
+          ]
+        }
+      ]
+    },
+    {
+      "nombre": "cole_depto_ubicacion",
+      "etiqueta": "Departamento del colegio",
+      "etiqueta_corta": "Departamento",
+      "grupo": "colegio",
+      "ayuda": "",
+      "mas_frecuente": "BOGOTÁ",
+      "categorias": [
+        {
+          "valor": "AMAZONAS",
+          "etiqueta": "Amazonas",
+          "coeficiente": -19.444960043849346,
+          "frecuencia": 0.001574925126510379,
+          "n": 671,
+          "en_formulario": true
+        },
+        {
+          "valor": "ANTIOQUIA",
+          "etiqueta": "Antioquia",
+          "coeficiente": -1.5344945705984814,
+          "frecuencia": 0.13569939819552543,
+          "n": 57815,
+          "en_formulario": true
+        },
+        {
+          "valor": "ARAUCA",
+          "etiqueta": "Arauca",
+          "coeficiente": 9.37652204030525,
+          "frecuencia": 0.0062644935360003,
+          "n": 2669,
+          "en_formulario": true
+        },
+        {
+          "valor": "ATLANTICO",
+          "etiqueta": "Atlántico",
+          "coeficiente": -7.026961151602602,
+          "frecuencia": 0.05884962398955996,
+          "n": 25073,
+          "en_formulario": true
+        },
+        {
+          "valor": "BOGOTÁ",
+          "etiqueta": "Bogotá D. C.",
+          "coeficiente": 8.124767102974637,
+          "frecuencia": 0.14305061354013124,
+          "n": 60947,
+          "en_formulario": true
+        },
+        {
+          "valor": "BOLIVAR",
+          "etiqueta": "Bolívar",
+          "coeficiente": -11.891979086025103,
+          "frecuencia": 0.050932749992958604,
+          "n": 21700,
+          "en_formulario": true
+        },
+        {
+          "valor": "BOYACA",
+          "etiqueta": "Boyacá",
+          "coeficiente": 15.128322358380645,
+          "frecuencia": 0.028355693671195066,
+          "n": 12081,
+          "en_formulario": true
+        },
+        {
+          "valor": "CALDAS",
+          "etiqueta": "Caldas",
+          "coeficiente": 7.29634394337618,
+          "frecuencia": 0.018659694121844282,
+          "n": 7950,
+          "en_formulario": true
+        },
+        {
+          "valor": "CAQUETA",
+          "etiqueta": "Caquetá",
+          "coeficiente": 3.64388809070617,
+          "frecuencia": 0.007416935022016092,
+          "n": 3160,
+          "en_formulario": true
+        },
+        {
+          "valor": "CASANARE",
+          "etiqueta": "Casanare",
+          "coeficiente": 13.495667233341159,
+          "frecuencia": 0.010301559434059693,
+          "n": 4389,
+          "en_formulario": true
+        },
+        {
+          "valor": "CAUCA",
+          "etiqueta": "Cauca",
+          "coeficiente": -7.041985691250132,
+          "frecuencia": 0.025590772957291598,
+          "n": 10903,
+          "en_formulario": true
+        },
+        {
+          "valor": "CESAR",
+          "etiqueta": "Cesar",
+          "coeficiente": -1.252556247603121,
+          "frecuencia": 0.025405349581741198,
+          "n": 10824,
+          "en_formulario": true
+        },
+        {
+          "valor": "CHOCO",
+          "etiqueta": "Chocó",
+          "coeficiente": -32.36057976187759,
+          "frecuencia": 0.008935528996460525,
+          "n": 3807,
+          "en_formulario": true
+        },
+        {
+          "valor": "CORDOBA",
+          "etiqueta": "Córdoba",
+          "coeficiente": -0.05775688392223826,
+          "frecuencia": 0.04192915418775173,
+          "n": 17864,
+          "en_formulario": true
+        },
+        {
+          "valor": "CUNDINAMARCA",
+          "etiqueta": "Cundinamarca",
+          "coeficiente": 8.415816522501945,
+          "frecuencia": 0.06567273478354754,
+          "n": 27980,
+          "en_formulario": true
+        },
+        {
+          "valor": "GUAINIA",
+          "etiqueta": "Guainía",
+          "coeficiente": -4.0825680909399145,
+          "frecuencia": 0.0007252635828490419,
+          "n": 309,
+          "en_formulario": true
+        },
+        {
+          "valor": "GUAVIARE",
+          "etiqueta": "Guaviare",
+          "coeficiente": -2.4799831557348293,
+          "frecuencia": 0.001917606301578211,
+          "n": 817,
+          "en_formulario": true
+        },
+        {
+          "valor": "HUILA",
+          "etiqueta": "Huila",
+          "coeficiente": 9.884428129495321,
+          "frecuencia": 0.024567423694760265,
+          "n": 10467,
+          "en_formulario": true
+        },
+        {
+          "valor": "LA GUAJIRA",
+          "etiqueta": "La Guajira",
+          "coeficiente": -13.983589033512393,
+          "frecuencia": 0.01822078056199713,
+          "n": 7763,
+          "en_formulario": true
+        },
+        {
+          "valor": "MAGDALENA",
+          "etiqueta": "Magdalena",
+          "coeficiente": -12.245618565968181,
+          "frecuencia": 0.03167688451174974,
+          "n": 13496,
+          "en_formulario": true
+        },
+        {
+          "valor": "META",
+          "etiqueta": "Meta",
+          "coeficiente": 6.787406006138329,
+          "frecuencia": 0.0220747702158422,
+          "n": 9405,
+          "en_formulario": true
+        },
+        {
+          "valor": "NARIÑO",
+          "etiqueta": "Nariño",
+          "coeficiente": 10.121153126599607,
+          "frecuencia": 0.030899984039506913,
+          "n": 13165,
+          "en_formulario": true
+        },
+        {
+          "valor": "NORTE SANTANDER",
+          "etiqueta": "Norte de Santander",
+          "coeficiente": 11.531805089478853,
+          "frecuencia": 0.030587815571808136,
+          "n": 13032,
+          "en_formulario": true
+        },
+        {
+          "valor": "PUTUMAYO",
+          "etiqueta": "Putumayo",
+          "coeficiente": 5.720984612975703,
+          "frecuencia": 0.007229164515129609,
+          "n": 3080,
+          "en_formulario": true
+        },
+        {
+          "valor": "QUINDIO",
+          "etiqueta": "Quindío",
+          "coeficiente": 11.87372499379361,
+          "frecuencia": 0.010674753316496578,
+          "n": 4548,
+          "en_formulario": true
+        },
+        {
+          "valor": "RISARALDA",
+          "etiqueta": "Risaralda",
+          "coeficiente": 8.401771931268135,
+          "frecuencia": 0.01815975514725902,
+          "n": 7737,
+          "en_formulario": true
+        },
+        {
+          "valor": "SAN ANDRES",
+          "etiqueta": "San Andrés y Providencia",
+          "coeficiente": -13.646922247181475,
+          "frecuencia": 0.0010961103339498465,
+          "n": 467,
+          "en_formulario": true
+        },
+        {
+          "valor": "SANTANDER",
+          "etiqueta": "Santander",
+          "coeficiente": 19.264894737994183,
+          "frecuencia": 0.04688629556955489,
+          "n": 19976,
+          "en_formulario": true
+        },
+        {
+          "valor": "SUCRE",
+          "etiqueta": "Sucre",
+          "coeficiente": -2.755641181056881,
+          "frecuencia": 0.02090824594180992,
+          "n": 8908,
+          "en_formulario": true
+        },
+        {
+          "valor": "TOLIMA",
+          "etiqueta": "Tolima",
+          "coeficiente": 0.16724716306741458,
+          "frecuencia": 0.029487010975186127,
+          "n": 12563,
+          "en_formulario": true
+        },
+        {
+          "valor": "VALLE",
+          "etiqueta": "Valle del Cauca",
+          "coeficiente": 0.4253639711532994,
+          "frecuencia": 0.07430313670631754,
+          "n": 31657,
+          "en_formulario": true
+        },
+        {
+          "valor": "VAUPES",
+          "etiqueta": "Vaupés",
+          "coeficiente": -7.211193496383166,
+          "frecuencia": 0.0007980246542675542,
+          "n": 340,
+          "en_formulario": true
+        },
+        {
+          "valor": "VICHADA",
+          "etiqueta": "Vichada",
+          "coeficiente": -12.47486255946481,
+          "frecuencia": 0.0011454000920075485,
+          "n": 488,
+          "en_formulario": true
+        },
+        {
+          "valor": "Otra (pocos casos)",
+          "etiqueta": "Otra (pocos casos)",
+          "coeficiente": -0.1684552898973792,
+          "frecuencia": 2.3471313360810417e-06,
+          "n": 1,
+          "en_formulario": false,
+          "agrupa": [
+            "Sin información"
+          ]
+        }
+      ]
+    }
+  ],
+  "excluidas": [
+    {
+      "nombre": "estu_genero",
+      "motivo": "Decisión ética: el modelo no debe cambiar su predicción por el género."
+    },
+    {
+      "nombre": "cole_nombre_establecimiento, cole_cod_dane_*, cole_codigo_icfes",
+      "motivo": "Nombres y códigos de colegio: identifican instituciones y no describen el contexto."
+    },
+    {
+      "nombre": "fami_tieneautomovil",
+      "motivo": "Casi no aporta en validación: su información ya la traen el estrato, el computador y el internet."
+    },
+    {
+      "nombre": "cole_bilingue",
+      "motivo": "La peor calidad de datos (18 % de faltantes) y un aporte mínimo en validación."
+    }
+  ],
+  "casos_prueba": [
+    {
+      "id": 1,
+      "entradas": {
+        "fami_estratovivienda": "Estrato 1",
+        "fami_educacionmadre": "Secundaria (Bachillerato) completa",
+        "fami_educacionpadre": "Ninguno",
+        "fami_tieneinternet": "No",
+        "fami_tienecomputador": "No",
+        "cole_naturaleza": "NO OFICIAL",
+        "cole_jornada": "SABATINA",
+        "cole_area_ubicacion": "URBANO",
+        "cole_depto_ubicacion": "TOLIMA"
+      },
+      "puntaje_real": 167.0,
+      "prediccion_sklearn": 203.2196626905267
+    },
+    {
+      "id": 2,
+      "entradas": {
+        "fami_estratovivienda": "Estrato 2",
+        "fami_educacionmadre": "Secundaria (Bachillerato) completa",
+        "fami_educacionpadre": "Secundaria (Bachillerato) completa",
+        "fami_tieneinternet": "No",
+        "fami_tienecomputador": "No",
+        "cole_naturaleza": "OFICIAL",
+        "cole_jornada": "TARDE",
+        "cole_area_ubicacion": "URBANO",
+        "cole_depto_ubicacion": "CORDOBA"
+      },
+      "puntaje_real": 237.0,
+      "prediccion_sklearn": 234.17660808394405
+    },
+    {
+      "id": 3,
+      "entradas": {
+        "fami_estratovivienda": "Estrato 2",
+        "fami_educacionmadre": "Secundaria (Bachillerato) completa",
+        "fami_educacionpadre": "Primaria completa",
+        "fami_tieneinternet": "No",
+        "fami_tienecomputador": "Si",
+        "cole_naturaleza": "OFICIAL",
+        "cole_jornada": "MAÑANA",
+        "cole_area_ubicacion": "URBANO",
+        "cole_depto_ubicacion": "CUNDINAMARCA"
+      },
+      "puntaje_real": 191.0,
+      "prediccion_sklearn": 250.46185976854235
+    },
+    {
+      "id": 4,
+      "entradas": {
+        "fami_estratovivienda": "Estrato 1",
+        "fami_educacionmadre": "Técnica o tecnológica completa",
+        "fami_educacionpadre": "No sabe",
+        "fami_tieneinternet": "No",
+        "fami_tienecomputador": "No",
+        "cole_naturaleza": "OFICIAL",
+        "cole_jornada": "MAÑANA",
+        "cole_area_ubicacion": "URBANO",
+        "cole_depto_ubicacion": "NARIÑO"
+      },
+      "puntaje_real": 330.0,
+      "prediccion_sklearn": 265.631082987599
+    },
+    {
+      "id": 5,
+      "entradas": {
+        "fami_estratovivienda": "Estrato 3",
+        "fami_educacionmadre": "Educación profesional completa",
+        "fami_educacionpadre": "Educación profesional completa",
+        "fami_tieneinternet": "Si",
+        "fami_tienecomputador": "Si",
+        "cole_naturaleza": "NO OFICIAL",
+        "cole_jornada": "UNICA",
+        "cole_area_ubicacion": "URBANO",
+        "cole_depto_ubicacion": "BOGOTÁ"
+      },
+      "puntaje_real": 301.0,
+      "prediccion_sklearn": 297.2385187491842
+    }
+  ]
+};

@@ -34,6 +34,7 @@ import subprocess
 import sys
 import time
 import unicodedata
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import numpy as np
@@ -78,12 +79,31 @@ CANDIDATAS = [
     "cole_depto_ubicacion",
 ]
 
-# Variables que usa el modelo (entre 8 y 10 campos en el formulario).
-# La elección se justifica en el cuaderno con los datos reales.
-VARIABLES = list(CANDIDATAS)
+# Variables que usa el modelo (9 campos en el formulario). Se quitan dos candidatas,
+# según la validación dentro de train que muestra el cuaderno (sección 4):
+#  - fami_tieneautomovil: sin ella el MAE de validación cambia en 0,01 puntos; su
+#    información ya la traen el estrato, el computador y el internet.
+#  - cole_bilingue: la peor calidad (18 % de faltantes, solo 1 % de "S") y un aporte
+#    mínimo (0,04 puntos de MAE).
+VARIABLES = [
+    "fami_estratovivienda",
+    "fami_educacionmadre",
+    "fami_educacionpadre",
+    "fami_tieneinternet",
+    "fami_tienecomputador",
+    "cole_naturaleza",
+    "cole_jornada",
+    "cole_area_ubicacion",
+    "cole_depto_ubicacion",
+]
 
-# Columnas extra que se descargan solo para filtrar o describir.
-COLUMNAS_EXTRA = ["periodo", "estu_estadoinvestigacion"]
+MOTIVOS_FUERA = {
+    "fami_tieneautomovil": "Casi no aporta en validación: su información ya la traen el estrato, el computador y el internet.",
+    "cole_bilingue": "La peor calidad de datos (18 % de faltantes) y un aporte mínimo en validación.",
+}
+
+# Columnas extra que se descargan solo para verificar y filtrar (no entran al modelo).
+COLUMNAS_EXTRA = ["periodo", "estu_consecutivo", "estu_estadoinvestigacion"]
 
 SEMILLA = 42
 PROPORCION_PRUEBA = 0.2
@@ -203,18 +223,18 @@ def consultar_periodos() -> pd.DataFrame:
 
 
 def descargar_periodo(periodo: str, columnas: list[str], carpeta: Path,
-                      tam_pagina: int = 50_000) -> pd.DataFrame:
+                      tam_pagina: int = 50_000, en_paralelo: int = 4) -> pd.DataFrame:
     """Descarga SOLO un periodo, por páginas, y lo guarda en caché como CSV."""
     ruta = carpeta / f"saber11_{periodo}.csv"
     if ruta.exists():
-        print(f"   usando la copia local {ruta}")
+        print(f"   usando la copia local {ruta.name}")
         return pd.read_csv(ruta, dtype=str, keep_default_na=False, na_values=[""])
 
     filtro = f"periodo = '{periodo}'"
     total = int(socrata({"$select": "count(*) AS filas", "$where": filtro}).json()[0]["filas"])
-    print(f"   {total:,} filas en el periodo {periodo}".replace(",", "."))
-    partes = []
-    for inicio in range(0, total, tam_pagina):
+    print(f"   {total:,} filas en el periodo {periodo}; se descargan en páginas de {tam_pagina:,}".replace(",", "."))
+
+    def pagina(inicio: int) -> pd.DataFrame:
         respuesta = socrata({
             "$select": ",".join(columnas),
             "$where": filtro,
@@ -224,15 +244,35 @@ def descargar_periodo(periodo: str, columnas: list[str], carpeta: Path,
         }, formato="csv")
         # dtype=str: todo llega como texto. keep_default_na=False evita que pandas
         # convierta textos como "NA" en faltantes; solo la celda vacía es faltante.
-        partes.append(pd.read_csv(io.StringIO(respuesta.text), dtype=str,
-                                  keep_default_na=False, na_values=[""]))
-        print(f"   {min(inicio + tam_pagina, total):>9,} / {total:,}".replace(",", "."))
+        return pd.read_csv(io.StringIO(respuesta.text), dtype=str,
+                           keep_default_na=False, na_values=[""])
+
+    # Varias páginas a la vez (el servidor tarda unos segundos en preparar cada una).
+    inicios = list(range(0, total, tam_pagina))
+    partes = [None] * len(inicios)
+    with ThreadPoolExecutor(max_workers=en_paralelo) as grupo:
+        tareas = {grupo.submit(pagina, inicio): i for i, inicio in enumerate(inicios)}
+        for listas, tarea in enumerate(as_completed(tareas), start=1):
+            partes[tareas[tarea]] = tarea.result()
+            print(f"   página {listas}/{len(inicios)} lista")
     datos = pd.concat(partes, ignore_index=True)
     if len(datos) != total:
         raise RuntimeError(f"Se esperaban {total} filas y llegaron {len(datos)}")
     carpeta.mkdir(parents=True, exist_ok=True)
     datos.to_csv(ruta, index=False)
     return datos
+
+
+def quitar_duplicados(datos: pd.DataFrame) -> pd.DataFrame:
+    """Deja una sola fila por estudiante (estu_consecutivo identifica cada examen)."""
+    copias_exactas = int(datos.duplicated().sum())
+    datos = datos.drop_duplicates()
+    mismo_estudiante = int(datos["estu_consecutivo"].duplicated().sum())
+    datos = datos.drop_duplicates(subset="estu_consecutivo", keep="first")
+    print(f"   copias exactas eliminadas: {copias_exactas:,}".replace(",", "."))
+    print(f"   filas del mismo estudiante con datos distintos (se deja la primera): {mismo_estudiante:,}".replace(",", "."))
+    print(f"   estudiantes únicos: {len(datos):,}".replace(",", "."))
+    return datos.reset_index(drop=True)
 
 
 # ---------------------------------------------------------------------------
@@ -345,6 +385,9 @@ def exportar_modelo(modelo: Pipeline, variables: list[str], x_train: pd.DataFram
                 "coeficiente": float(coeficiente),
                 "frecuencia": float(conteo.get(valor, 0) / len(x_train)),
                 "n": int(conteo.get(valor, 0)),
+                # Una categoría con muy pocos casos sigue en el modelo, pero no se
+                # ofrece como respuesta en el formulario.
+                "en_formulario": bool(conteo.get(valor, 0) >= MIN_CASOS),
             }
             if valor == OTRA:
                 agrupadas = [etiqueta_categoria(variable, r) for r in extras["raras"].get(variable, [])]
@@ -388,6 +431,7 @@ def exportar_modelo(modelo: Pipeline, variables: list[str], x_train: pd.DataFram
         "n_entrenamiento": int(len(x_train)),
         "n_prueba": extras["n_prueba"],
         "semilla": SEMILLA,
+        "min_casos": MIN_CASOS,
         "algoritmo": f"Ridge (alpha = {ALPHA:g}) con codificación one-hot",
         "sklearn_version": sklearn.__version__,
         "objetivo": {"nombre": OBJETIVO, "etiqueta": "Puntaje global", "minimo": 0, "maximo": 500},
@@ -402,7 +446,8 @@ def exportar_modelo(modelo: Pipeline, variables: list[str], x_train: pd.DataFram
              "motivo": "Decisión ética: el modelo no debe cambiar su predicción por el género."},
             {"nombre": "cole_nombre_establecimiento, cole_cod_dane_*, cole_codigo_icfes",
              "motivo": "Nombres y códigos de colegio: identifican instituciones y no describen el contexto."},
-        ],
+        ] + [{"nombre": v, "motivo": MOTIVOS_FUERA.get(v, "No mejora la validación.")}
+             for v in CANDIDATAS if v not in variables],
         "casos_prueba": extras["casos_prueba"],
     }
 
@@ -420,9 +465,18 @@ def escribir_modelo(modelo_dict: dict, carpeta_web: Path) -> tuple[Path, Path]:
     return ruta_js, ruta_json
 
 
-def elegir_casos(modelo: Pipeline, x_test: pd.DataFrame, y_test: pd.Series,
-                 variables: list[str], cantidad: int = 5) -> list[dict]:
-    """Casos del set de prueba repartidos entre predicciones bajas, medias y altas."""
+def elegir_casos(modelo: Pipeline, x_train: pd.DataFrame, x_test: pd.DataFrame,
+                 y_test: pd.Series, variables: list[str], cantidad: int = 5) -> list[dict]:
+    """Casos del set de prueba repartidos entre predicciones bajas, medias y altas.
+
+    Solo se eligen estudiantes cuyas respuestas aparecen en el formulario
+    (categorías con al menos MIN_CASOS estudiantes en train), para poder cargarlos.
+    """
+    en_formulario = pd.Series(True, index=x_test.index)
+    for v in variables:
+        conteo = x_train[v].value_counts()
+        en_formulario &= x_test[v].isin(conteo[conteo >= MIN_CASOS].index)
+    x_test, y_test = x_test[en_formulario], y_test[en_formulario]
     predicciones = modelo.predict(x_test)
     orden = np.argsort(predicciones, kind="stable")
     cuantiles = np.linspace(0.05, 0.95, cantidad)
@@ -486,6 +540,7 @@ def main() -> int:
     print("2) Descarga")
     columnas = COLUMNAS_EXTRA + CANDIDATAS + [OBJETIVO]
     crudos = descargar_periodo(periodo, columnas, carpeta_datos)
+    crudos = quitar_duplicados(crudos)
 
     print("3) Limpieza")
     datos = limpiar(crudos, VARIABLES)
@@ -533,7 +588,7 @@ def main() -> int:
         "cobertura_mae": cobertura,
         "promedio_nacional": promedio_nacional,
         "raras": raras,
-        "casos_prueba": elegir_casos(modelo, x_test, y_test, VARIABLES),
+        "casos_prueba": elegir_casos(modelo, x_train, x_test, y_test, VARIABLES),
     }
     modelo_dict = exportar_modelo(modelo, VARIABLES, x_train, y_train, extras)
     ruta_js, ruta_json = escribir_modelo(modelo_dict, Path(args.salida))
