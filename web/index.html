@@ -1,0 +1,1270 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Predictor Saber 11</title>
+<meta name="description" content="Modelo de Machine Learning que estima el puntaje global de Saber 11 a partir del contexto del hogar y del colegio. Se calcula en tu navegador; no envía datos a ningún servidor.">
+<meta property="og:title" content="Predictor Saber 11">
+<meta property="og:description" content="¿Cuánto pesa el contexto en el puntaje del Saber 11? Un modelo lineal entrenado con resultados reales del ICFES, calculado en tu navegador.">
+<meta property="og:type" content="website">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f3f5f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0f17" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d1726'/%3E%3Cpath d='M7 22a9 9 0 0 1 18 0' fill='none' stroke='%23cde2fb' stroke-width='3.2'/%3E%3Cpath d='M7 22a9 9 0 0 1 12.2-8.4' fill='none' stroke='%236da7ec' stroke-width='3.2'/%3E%3Ccircle cx='19.2' cy='13.6' r='2.6' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap">
+<script>
+  // Aplica el tema guardado antes de pintar (evita un destello del tema equivocado).
+  try {
+    var temaGuardado = localStorage.getItem('predictor-saber11-tema');
+    if (temaGuardado === 'light' || temaGuardado === 'dark') {
+      document.documentElement.setAttribute('data-theme', temaGuardado);
+    }
+  } catch (e) { /* almacenamiento bloqueado: se usa el tema del sistema */ }
+</script>
+<style>
+  /* ------------------------------------------------------------------
+     Tokens de diseño. Modo claro en :root; el oscuro redefine solo tokens.
+     ------------------------------------------------------------------ */
+  :root {
+    color-scheme: light;
+    --bg: #f3f5f8;
+    --surface: #ffffff;
+    --surface-2: #f7f9fb;
+    --ink: #0d1726;
+    --ink-2: #435066;
+    --muted: #5f6b7e;
+    --line: #e2e6ed;
+    --line-strong: #cbd2dc;
+    --accent: #1c5cab;
+    --accent-hover: #184f95;
+    --accent-ink: #ffffff;
+    --accent-soft: #cde2fb;
+    --accent-wash: #eef4fd;
+    --pos: #2a78d6;
+    --neg: #e34948;
+    --warn-bg: #fff6e5;
+    --warn-line: #f0d49b;
+    --warn-ink: #6b4a00;
+    --ok: #006300;
+    --tooltip-bg: #0d1726;
+    --tooltip-ink: #ffffff;
+    --sombra: 0 1px 2px rgba(13, 23, 38, .04), 0 10px 28px rgba(13, 23, 38, .06);
+    --radio: 16px;
+    --radio-sm: 11px;
+    --fuente: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --fuente-titulos: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --fuente-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0a0f17;
+      --surface: #111823;
+      --surface-2: #0d141e;
+      --ink: #edf1f7;
+      --ink-2: #b5bfcd;
+      --muted: #8d98a9;
+      --line: #222d3b;
+      --line-strong: #334155;
+      --accent: #6da7ec;
+      --accent-hover: #86b6ef;
+      --accent-ink: #0a0f17;
+      --accent-soft: #1d3a5f;
+      --accent-wash: #132338;
+      --pos: #3987e5;
+      --neg: #e66767;
+      --warn-bg: #221a0b;
+      --warn-line: #5c4516;
+      --warn-ink: #f2d59a;
+      --ok: #0ca30c;
+      --tooltip-bg: #edf1f7;
+      --tooltip-ink: #0a0f17;
+      --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px rgba(0, 0, 0, .35);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0a0f17;
+    --surface: #111823;
+    --surface-2: #0d141e;
+    --ink: #edf1f7;
+    --ink-2: #b5bfcd;
+    --muted: #8d98a9;
+    --line: #222d3b;
+    --line-strong: #334155;
+    --accent: #6da7ec;
+    --accent-hover: #86b6ef;
+    --accent-ink: #0a0f17;
+    --accent-soft: #1d3a5f;
+    --accent-wash: #132338;
+    --pos: #3987e5;
+    --neg: #e66767;
+    --warn-bg: #221a0b;
+    --warn-line: #5c4516;
+    --warn-ink: #f2d59a;
+    --ok: #0ca30c;
+    --tooltip-bg: #edf1f7;
+    --tooltip-ink: #0a0f17;
+    --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px rgba(0, 0, 0, .35);
+  }
+
+  /* ------------------------------------------------------------------ Base */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 88px; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 1rem/1.6 var(--fuente);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  [hidden] { display: none !important; }
+  img, svg { display: block; max-width: 100%; }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: .2em; }
+  a:hover { text-decoration-thickness: 2px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  code, .mono { font-family: var(--fuente-mono); font-size: .875em; }
+  p { margin: 0; }
+  .sr-only {
+    position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+  .saltar {
+    position: absolute; left: 16px; top: -60px; z-index: 50;
+    background: var(--ink); color: var(--surface); padding: 10px 14px; border-radius: 10px;
+    font-weight: 500; text-decoration: none;
+  }
+  .saltar:focus { top: 12px; }
+  .contenedor { width: 100%; max-width: 1200px; margin-inline: auto; padding-inline: clamp(16px, 4vw, 40px); }
+
+  /* ------------------------------------------------------------------ Encabezado */
+  .cabecera {
+    position: sticky; top: 0; z-index: 20;
+    padding-top: env(safe-area-inset-top, 0px);
+    background: color-mix(in srgb, var(--bg) 85%, transparent);
+    -webkit-backdrop-filter: saturate(1.4) blur(12px);
+    backdrop-filter: saturate(1.4) blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .cabecera .contenedor { display: flex; align-items: center; gap: 12px; min-height: 64px; }
+  .marca { display: flex; align-items: center; gap: 11px; color: var(--ink); text-decoration: none; margin-right: auto; min-width: 0; }
+  .marca svg { width: 34px; height: 34px; flex: none; }
+  .marca-nombre { display: block; font-weight: 600; letter-spacing: -.01em; line-height: 1.15; }
+  .marca-sub { display: block; font-size: .75rem; color: var(--muted); line-height: 1.3; }
+  .nav { display: flex; gap: 2px; }
+  .nav a {
+    padding: 8px 11px; border-radius: 9px; color: var(--ink-2); text-decoration: none;
+    font-size: .875rem; font-weight: 500;
+  }
+  .nav a:hover { background: var(--accent-wash); color: var(--ink); }
+  .boton-icono {
+    display: inline-grid; place-items: center; width: 40px; height: 40px; flex: none;
+    border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+    cursor: pointer;
+  }
+  .boton-icono:hover { border-color: var(--line-strong); background: var(--accent-wash); }
+  .boton-icono svg { width: 18px; height: 18px; }
+  .icono-sol { display: none; }
+  .tema-oscuro .icono-sol { display: block; }
+  .tema-oscuro .icono-luna { display: none; }
+  @media (max-width: 760px) { .nav { display: none; } }
+
+  /* ------------------------------------------------------------------ Portada */
+  .portada { padding-block: clamp(36px, 6vw, 72px) clamp(28px, 4vw, 44px); }
+  .etiqueta-superior {
+    margin: 0 0 14px; font-size: .75rem; font-weight: 600; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  h1 {
+    font-family: var(--fuente-titulos); font-optical-sizing: auto; font-weight: 500;
+    font-size: clamp(2.25rem, 1.3rem + 3.4vw, 3.75rem); line-height: 1.04; letter-spacing: -.02em;
+    margin: 0 0 18px; max-width: 17ch; text-wrap: balance;
+  }
+  .entrada { font-size: clamp(1.0625rem, 1rem + .3vw, 1.1875rem); color: var(--ink-2); max-width: 60ch; margin-bottom: 28px; }
+  .avisos { display: grid; gap: 12px; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); max-width: 1000px; }
+  @media (max-width: 780px) { .avisos { grid-template-columns: minmax(0, 1fr); } }
+  .aviso {
+    display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px;
+    border-radius: var(--radio-sm); border: 1px solid var(--line); background: var(--surface);
+  }
+  .aviso svg { width: 22px; height: 22px; flex: none; margin-top: 1px; }
+  .aviso h2 { font: 600 .9375rem/1.35 var(--fuente); margin: 0 0 3px; color: inherit; }
+  .aviso p { font-size: .9375rem; line-height: 1.55; }
+  .aviso-etico { background: var(--warn-bg); border-color: var(--warn-line); color: var(--warn-ink); }
+  .aviso-privado { color: var(--ink-2); }
+  .aviso-privado h2 { color: var(--ink); }
+  .aviso-privado svg { color: var(--accent); }
+
+  /* ------------------------------------------------------------------ Tarjetas */
+  .tarjeta {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radio);
+    box-shadow: var(--sombra); padding: clamp(18px, 2.6vw, 30px); min-width: 0;
+  }
+  .tarjeta-cabecera { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+  .tarjeta-titulo { font: 600 1.125rem/1.3 var(--fuente); letter-spacing: -.01em; margin: 0; }
+  .tarjeta-intro { color: var(--ink-2); font-size: .9375rem; margin-bottom: 22px; max-width: 62ch; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--surface-2); color: var(--ink-2);
+    font-size: .8125rem; font-weight: 500; white-space: nowrap;
+  }
+  .chip-ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 35%, transparent); background: color-mix(in srgb, var(--ok) 8%, var(--surface)); }
+  .chip-error { color: var(--neg); border-color: color-mix(in srgb, var(--neg) 40%, transparent); }
+
+  /* ------------------------------------------------------------------ Aplicación */
+  .app { display: grid; gap: 24px; grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr); align-items: start; }
+  @media (max-width: 959px) { .app { grid-template-columns: minmax(0, 1fr); } }
+
+  fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+  fieldset:not(:last-of-type) { padding-bottom: 24px; margin-bottom: 22px; border-bottom: 1px solid var(--line); }
+  legend {
+    padding: 0; margin-bottom: 14px; font-size: .75rem; font-weight: 600; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 18px; }
+  .campo { min-width: 0; }
+  .campo.completo { grid-column: 1 / -1; }
+  @media (max-width: 540px) { .campos { grid-template-columns: minmax(0, 1fr); } }
+  .campo label { display: block; font-weight: 500; font-size: .9375rem; line-height: 1.35; margin-bottom: 7px; }
+  .campo .ayuda { font-size: .8125rem; color: var(--muted); margin: -3px 0 7px; line-height: 1.4; }
+  .selector { position: relative; }
+  .selector select {
+    -webkit-appearance: none; appearance: none; width: 100%; min-height: 46px;
+    font: inherit; font-size: .9375rem; color: var(--ink);
+    background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 11px;
+    padding: 10px 40px 10px 13px; cursor: pointer; text-overflow: ellipsis;
+    transition: border-color .15s ease, background-color .15s ease;
+  }
+  .selector select:hover { border-color: var(--muted); }
+  .selector select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .selector::after {
+    content: ""; position: absolute; right: 16px; top: 50%; width: 7px; height: 7px; pointer-events: none;
+    border-right: 1.75px solid var(--ink-2); border-bottom: 1.75px solid var(--ink-2);
+    transform: translateY(-70%) rotate(45deg);
+  }
+  .campo.distinta select { border-color: var(--accent); background: var(--accent-wash); }
+  .marca-cambio { display: none; margin-left: 6px; font-size: .75rem; font-weight: 500; color: var(--accent); }
+  .campo.distinta .marca-cambio { display: inline; }
+
+  .botones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+  .boton {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px;
+    padding: 9px 15px; border-radius: 11px; border: 1px solid var(--line-strong);
+    background: var(--surface); color: var(--ink); font: 500 .9375rem/1.2 var(--fuente); cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease;
+  }
+  .boton:hover { background: var(--accent-wash); border-color: var(--accent); }
+  .boton svg { width: 16px; height: 16px; flex: none; }
+  .boton-principal { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .boton-principal:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .caso-activo {
+    margin-top: 16px; padding: 12px 14px; border-radius: var(--radio-sm);
+    background: var(--accent-wash); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    font-size: .9375rem; color: var(--ink-2);
+  }
+  .caso-activo strong { color: var(--ink); font-weight: 600; }
+
+  /* Resultado */
+  .resultado { position: sticky; top: calc(84px + env(safe-area-inset-top, 0px)); }
+  @media (max-width: 959px) { .resultado { position: static; } }
+  .medidor { position: relative; width: 100%; max-width: 380px; margin: 4px auto 0; container-type: inline-size; }
+  .medidor svg { width: 100%; height: auto; overflow: visible; }
+  .medidor-valor {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    display: flex; flex-direction: column; align-items: center; line-height: 1; pointer-events: none;
+  }
+  .medidor-numero { font-weight: 600; font-size: 3.5rem; font-size: clamp(2.75rem, 19cqi, 4.5rem); letter-spacing: -.045em; color: var(--ink); }
+  .medidor-de { font-size: .8125rem; color: var(--muted); margin-top: 7px; }
+  .pista { fill: none; stroke: var(--accent-soft); stroke-width: 16; }
+  .relleno { fill: none; stroke: var(--accent); stroke-width: 16; }
+  .rango { fill: none; stroke: var(--ink-2); stroke-width: 3; stroke-linecap: round; }
+  .promedio { stroke: var(--ink); stroke-width: 2.5; stroke-linecap: round; }
+  .punta { fill: var(--accent); stroke: var(--surface); stroke-width: 3; }
+  .marca-eje { stroke: var(--line-strong); stroke-width: 1.5; }
+  .texto-eje { fill: var(--muted); font: 500 11px var(--fuente); font-variant-numeric: tabular-nums; }
+  .leyenda {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; list-style: none;
+    margin: 16px 0 0; padding: 0; font-size: .8125rem; color: var(--ink-2);
+  }
+  .leyenda li { display: flex; align-items: center; gap: 7px; }
+  .clave { display: inline-block; flex: none; }
+  .clave-punto { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+  .clave-promedio { width: 3px; height: 14px; border-radius: 2px; background: var(--ink); }
+  .clave-rango { width: 18px; height: 3px; border-radius: 2px; background: var(--ink-2); }
+  .cifras { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 22px 0 0; }
+  @media (max-width: 400px) { .cifras { grid-template-columns: minmax(0, 1fr); } }
+  .cifra { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 13px 15px; min-width: 0; }
+  .cifra dt { font-size: .75rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .cifra dd { margin: 0; }
+  .cifra .valor { font-size: 1.375rem; font-weight: 600; letter-spacing: -.015em; margin-top: 3px; }
+  .cifra .nota { font-size: .8125rem; color: var(--muted); line-height: 1.4; margin-top: 2px; }
+  .explicacion { font-size: .875rem; color: var(--ink-2); margin-top: 16px; }
+  .recordatorio { display: flex; gap: 8px; align-items: flex-start; font-size: .875rem; color: var(--warn-ink); margin-top: 12px; }
+  .recordatorio svg { width: 16px; height: 16px; flex: none; margin-top: 3px; }
+  .enlace-aportes { display: inline-block; margin-top: 14px; font-size: .9375rem; font-weight: 500; }
+
+  /* Aportes (gráfica de barras divergentes) */
+  .seccion-aportes { margin-top: 24px; }
+  .aportes { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .aporte {
+    display: grid; grid-template-columns: minmax(0, 17rem) minmax(0, 1fr) 4.75rem; align-items: center;
+    gap: 18px; padding: 8px 10px; border-radius: 10px; outline-offset: -2px;
+  }
+  .aporte:hover, .aporte.activo { background: var(--accent-wash); }
+  .aporte-var { display: block; font-size: .8125rem; color: var(--muted); line-height: 1.3; }
+  .aporte-resp { display: block; font-weight: 500; line-height: 1.35; overflow-wrap: anywhere; }
+  .pista-barra {
+    position: relative; height: 24px;
+    background:
+      linear-gradient(var(--line), var(--line)) 25% 0 / 1px 100% no-repeat,
+      linear-gradient(var(--line), var(--line)) 75% 0 / 1px 100% no-repeat;
+  }
+  .pista-barra::before { content: ""; position: absolute; left: 50%; top: -5px; bottom: -5px; width: 1px; background: var(--line-strong); }
+  .barra {
+    position: absolute; top: 4px; height: 16px; left: 50%; width: 0; background: var(--pos);
+    border-radius: 0 4px 4px 0; transition: left .45s cubic-bezier(.2, .8, .2, 1), width .45s cubic-bezier(.2, .8, .2, 1);
+  }
+  .barra.negativa { background: var(--neg); border-radius: 4px 0 0 4px; }
+  .aporte-valor { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .aporte.eje { padding-block: 0; }
+  .aporte.eje:hover { background: none; }
+  .eje-marcas { position: relative; height: 18px; font-size: .75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .eje-marcas span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+  .eje-marcas span:first-child { transform: none; }
+  .eje-marcas span:last-child { transform: translateX(-100%); }
+  .suma {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; margin-top: 14px; padding-top: 14px;
+    border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; color: var(--ink-2); font-size: .9375rem;
+  }
+  .suma strong { color: var(--ink); font-weight: 600; }
+  .claves-aportes { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 14px; padding: 0; list-style: none; font-size: .8125rem; color: var(--ink-2); }
+  .claves-aportes li { display: flex; align-items: center; gap: 7px; }
+  .clave-pos, .clave-neg { width: 14px; height: 10px; border-radius: 2px; }
+  .clave-pos { background: var(--pos); }
+  .clave-neg { background: var(--neg); }
+  .boton-texto {
+    background: none; border: 0; padding: 4px 0; font: 500 .9375rem/1.3 var(--fuente); color: var(--accent);
+    cursor: pointer; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .2em;
+  }
+  .boton-texto:hover { text-decoration-thickness: 2px; }
+  @media (max-width: 680px) {
+    .aporte { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "texto valor" "barra barra"; row-gap: 6px; gap: 6px 12px; }
+    .aporte-texto { grid-area: texto; }
+    .pista-barra { grid-area: barra; }
+    .aporte-valor { grid-area: valor; }
+    .aporte.eje { grid-template-areas: "barra barra"; }
+    .aporte.eje > span { display: none; }
+    .aporte.eje .eje-marcas { grid-area: barra; }
+  }
+  .tooltip {
+    position: fixed; z-index: 40; max-width: 290px; padding: 10px 12px; border-radius: 10px;
+    background: var(--tooltip-bg); color: var(--tooltip-ink); font-size: .8125rem; line-height: 1.45;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .25); pointer-events: none;
+  }
+  .tooltip strong { display: block; font-size: 1rem; font-weight: 600; margin-bottom: 2px; }
+
+  /* ------------------------------------------------------------------ Secciones */
+  .seccion { padding-top: clamp(48px, 7vw, 80px); }
+  .seccion-titulo {
+    font-family: var(--fuente-titulos); font-optical-sizing: auto; font-weight: 500;
+    font-size: clamp(1.875rem, 1.35rem + 1.7vw, 2.625rem); line-height: 1.08; letter-spacing: -.015em;
+    margin: 0 0 10px; text-wrap: balance;
+  }
+  .seccion-intro { color: var(--ink-2); max-width: 64ch; margin-bottom: 26px; }
+  .ficha { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  @media (max-width: 900px) { .ficha { grid-template-columns: minmax(0, 1fr); } }
+  .ficha .completa { grid-column: 1 / -1; }
+  h3 { font: 600 1rem/1.35 var(--fuente); margin: 0 0 12px; }
+  .datos { display: grid; grid-template-columns: minmax(7.5rem, auto) minmax(0, 1fr); gap: 11px 20px; margin: 0; font-size: .9375rem; }
+  .datos dt { color: var(--muted); }
+  .datos dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
+  .datos dd span { display: block; font-weight: 400; color: var(--ink-2); font-size: .875rem; }
+  @media (max-width: 420px) { .datos { grid-template-columns: minmax(0, 1fr); gap: 2px; } .datos dd { margin-bottom: 10px; } }
+  .contenedor-tabla { position: relative; overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: .9375rem; }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  thead th {
+    font-size: .75rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--muted); background: var(--surface-2); white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.destacada td { background: var(--accent-wash); }
+  tr.destacada td:first-child { font-weight: 600; }
+  .nota-tabla { font-size: .8125rem; color: var(--muted); margin-top: 10px; }
+  .lista { margin: 0; padding-left: 1.2em; display: grid; gap: 8px; color: var(--ink-2); }
+  .lista strong { color: var(--ink); font-weight: 600; }
+  .formula {
+    font-family: var(--fuente-mono); font-size: .875rem; line-height: 1.7; margin: 0 0 12px;
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px;
+    overflow-x: auto; white-space: pre;
+  }
+  .estado-verificacion { margin-bottom: 16px; }
+  .estado-verificacion .chip { white-space: normal; max-width: 100%; line-height: 1.4; padding-block: 5px; }
+  .ok { color: var(--ok); font-weight: 600; }
+  .fallo { color: var(--neg); font-weight: 600; }
+  .celda-perfil { min-width: 15rem; }
+  .celda-perfil span { display: block; font-size: .8125rem; color: var(--muted); }
+
+  /* ------------------------------------------------------------------ Pie */
+  .pie { margin-top: clamp(56px, 8vw, 96px); background: var(--surface); border-top: 1px solid var(--line); }
+  .pie .contenedor { padding-block: 36px calc(88px + env(safe-area-inset-bottom, 0px)); }
+  .pie-grid { display: grid; gap: 28px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  @media (max-width: 780px) { .pie-grid { grid-template-columns: minmax(0, 1fr); } }
+  .pie h2 { font: 600 .75rem/1.3 var(--fuente); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+  .pie p { font-size: .9375rem; color: var(--ink-2); margin-bottom: 8px; }
+  .pie-final { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--line); font-size: .8125rem; color: var(--muted); }
+
+  /* ------------------------------------------------------------------ Estimación flotante */
+  .flotante {
+    position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 30;
+    transform: translateX(-50%); display: flex; align-items: center; gap: 12px;
+    padding: 7px 7px 7px 18px; border-radius: 999px; background: var(--tooltip-bg); color: var(--tooltip-ink);
+    box-shadow: 0 10px 34px rgba(0, 0, 0, .28); white-space: nowrap; max-width: calc(100vw - 32px);
+  }
+  .flotante-texto { font-size: .875rem; }
+  .flotante-numero { font-size: 1.125rem; font-weight: 600; margin-left: 4px; }
+  .flotante a {
+    background: var(--tooltip-ink); color: var(--tooltip-bg); border-radius: 999px; padding: 7px 14px;
+    font-size: .875rem; font-weight: 500; text-decoration: none;
+  }
+
+  .error-modelo {
+    padding: 16px 18px; border-radius: var(--radio-sm); border: 1px solid var(--neg);
+    color: var(--ink); background: var(--surface); margin-top: 16px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+  @media (forced-colors: active) {
+    .barra, .relleno, .punta, .clave-pos, .clave-neg, .clave-punto { forced-color-adjust: none; }
+  }
+</style>
+</head>
+<body>
+<a class="saltar" href="#formulario">Saltar al formulario</a>
+
+<header class="cabecera">
+  <div class="contenedor">
+    <a class="marca" href="#" aria-label="Predictor Saber 11, inicio">
+      <svg viewBox="0 0 34 34" aria-hidden="true">
+        <rect width="34" height="34" rx="9" fill="var(--ink)"/>
+        <path d="M8 23.5a9 9 0 0 1 18 0" fill="none" stroke="var(--accent-soft)" stroke-width="3.2"/>
+        <path d="M8 23.5a9 9 0 0 1 12.2-8.4" fill="none" stroke="#6da7ec" stroke-width="3.2"/>
+        <circle cx="20.2" cy="15.1" r="2.6" fill="var(--bg)"/>
+      </svg>
+      <span>
+        <span class="marca-nombre">Predictor Saber 11</span>
+        <span class="marca-sub">Machine Learning 1 · Universidad EAN</span>
+      </span>
+    </a>
+    <nav class="nav" aria-label="Secciones">
+      <a href="#formulario">Predicción</a>
+      <a href="#aportes-titulo">Qué suma y qué resta</a>
+      <a href="#ficha">Ficha del modelo</a>
+      <a href="#verificacion">Verificación</a>
+    </nav>
+    <button class="boton-icono" id="boton-tema" type="button" aria-label="Cambiar a modo oscuro">
+      <svg class="icono-luna" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>
+      <svg class="icono-sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>
+    </button>
+  </div>
+</header>
+
+<main>
+  <section class="portada contenedor" aria-labelledby="titulo">
+    <p class="etiqueta-superior" id="texto-periodo">Saber 11 · datos abiertos del ICFES</p>
+    <h1 id="titulo">¿Cuánto pesa el contexto en el puntaje del Saber 11?</h1>
+    <p class="entrada" id="texto-entrada">Responde las preguntas sobre el hogar y el colegio. Un modelo de regresión entrenado con resultados reales estima el puntaje global (de 0 a 500) y muestra qué suma y qué resta cada respuesta.</p>
+    <div class="avisos">
+      <div class="aviso aviso-etico" role="note" aria-labelledby="titulo-etico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 10v4.5M12 17.2v.1"/></svg>
+        <div>
+          <h2 id="titulo-etico">Uso responsable</h2>
+          <p id="texto-etico">Este modelo mide desigualdad de contexto, no capacidad. Estudiantes con las mismas respuestas obtienen puntajes muy distintos. Nunca lo uses para juzgar, clasificar o seleccionar a un estudiante.</p>
+        </div>
+      </div>
+      <div class="aviso aviso-privado" role="note" aria-labelledby="titulo-privado">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/></svg>
+        <div>
+          <h2 id="titulo-privado">Se calcula en tu navegador</h2>
+          <p>Tus respuestas no se envían a ningún servidor ni se guardan. Todo el modelo viene en un archivo de la página.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="contenedor">
+    <div class="app">
+      <section class="tarjeta" id="formulario" aria-labelledby="titulo-formulario">
+        <div class="tarjeta-cabecera">
+          <h2 class="tarjeta-titulo" id="titulo-formulario">Contexto del estudiante</h2>
+        </div>
+        <p class="tarjeta-intro">Empieza con la respuesta más común de cada pregunta. Cambia cualquiera y la estimación se actualiza al instante.</p>
+        <form id="formulario-contexto" novalidate>
+          <noscript><p class="error-modelo">Esta página necesita JavaScript para calcular la predicción.</p></noscript>
+        </form>
+        <div class="botones">
+          <button class="boton" type="button" id="boton-restablecer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg>
+            Respuestas más comunes
+          </button>
+          <button class="boton" type="button" id="boton-caso">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>
+            <span id="texto-boton-caso">Cargar un caso real</span>
+          </button>
+        </div>
+        <p class="caso-activo" id="caso-activo" hidden></p>
+      </section>
+
+      <section class="tarjeta resultado" id="resultado" aria-labelledby="titulo-resultado">
+        <div class="tarjeta-cabecera">
+          <h2 class="tarjeta-titulo" id="titulo-resultado">Puntaje global estimado</h2>
+          <span class="chip" id="chip-periodo">Saber 11</span>
+        </div>
+        <div class="medidor" id="medidor" role="img" aria-labelledby="medidor-descripcion">
+          <svg id="medidor-svg" viewBox="0 0 320 196" aria-hidden="true"></svg>
+          <div class="medidor-valor" aria-hidden="true">
+            <span class="medidor-numero" id="medidor-numero">–</span>
+            <span class="medidor-de">de 500 puntos</span>
+          </div>
+        </div>
+        <p class="sr-only" id="medidor-descripcion">Calculando la estimación.</p>
+        <ul class="leyenda" aria-hidden="true">
+          <li><span class="clave clave-punto"></span>Estimación</li>
+          <li><span class="clave clave-promedio"></span>Promedio nacional</li>
+          <li><span class="clave clave-rango"></span>Rango aproximado</li>
+        </ul>
+        <dl class="cifras">
+          <div class="cifra">
+            <dt>Rango aproximado</dt>
+            <dd class="valor" id="cifra-rango">–</dd>
+            <dd class="nota" id="nota-rango">± el error absoluto medio</dd>
+          </div>
+          <div class="cifra">
+            <dt>Frente al promedio nacional</dt>
+            <dd class="valor" id="cifra-diferencia">–</dd>
+            <dd class="nota" id="nota-promedio">Promedio del periodo</dd>
+          </div>
+        </dl>
+        <p class="explicacion" id="texto-cobertura"></p>
+        <p class="recordatorio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.1"/></svg>
+          <span>Es una estimación del contexto, no una medida de la capacidad del estudiante.</span>
+        </p>
+        <a class="enlace-aportes" href="#aportes-titulo">Ver qué suma y qué resta cada respuesta <span aria-hidden="true">↓</span></a>
+        <p class="sr-only" aria-live="polite" id="anuncio"></p>
+      </section>
+    </div>
+
+    <section class="tarjeta seccion-aportes" aria-labelledby="aportes-titulo">
+      <div class="tarjeta-cabecera">
+        <h2 class="tarjeta-titulo" id="aportes-titulo">Qué suma y qué resta cada respuesta</h2>
+      </div>
+      <p class="tarjeta-intro" id="texto-aportes">Cada barra compara tu respuesta con el efecto promedio de esa pregunta en los datos de entrenamiento, dejando lo demás igual.</p>
+      <ul class="claves-aportes" aria-hidden="true">
+        <li><span class="clave clave-pos"></span>Suma puntos</li>
+        <li><span class="clave clave-neg"></span>Resta puntos</li>
+      </ul>
+      <ol class="aportes" id="aportes" aria-label="Aporte de cada respuesta, en puntos"></ol>
+      <div class="aporte eje" aria-hidden="true">
+        <span></span>
+        <div class="eje-marcas" id="eje-marcas"></div>
+        <span></span>
+      </div>
+      <p class="suma" id="suma-aportes"></p>
+      <p><button class="boton-texto" type="button" id="boton-tabla" aria-expanded="false" aria-controls="tabla-aportes">Ver los aportes como tabla</button></p>
+      <div class="contenedor-tabla" id="tabla-aportes" hidden>
+        <table>
+          <caption class="sr-only">Aporte de cada respuesta a la estimación</caption>
+          <thead>
+            <tr><th scope="col">Pregunta</th><th scope="col">Respuesta</th><th scope="col" class="num">Aporte</th><th scope="col" class="num">Frente a la más común</th></tr>
+          </thead>
+          <tbody id="cuerpo-tabla-aportes"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="seccion" id="ficha" aria-labelledby="ficha-titulo">
+      <h2 class="seccion-titulo" id="ficha-titulo">Ficha del modelo</h2>
+      <p class="seccion-intro">Qué datos usa, cómo se evaluó y dónde falla. Léela antes de interpretar cualquier estimación.</p>
+      <div class="ficha">
+        <div class="tarjeta">
+          <h3>Datos y entrenamiento</h3>
+          <dl class="datos" id="ficha-datos"></dl>
+        </div>
+        <div class="tarjeta">
+          <h3>Desempeño en el set de prueba</h3>
+          <div class="contenedor-tabla">
+            <table>
+              <caption class="sr-only">Métricas en el set de prueba</caption>
+              <thead><tr><th scope="col">Modelo</th><th scope="col" class="num">MAE</th><th scope="col" class="num">RMSE</th><th scope="col" class="num">R²</th></tr></thead>
+              <tbody id="ficha-metricas"></tbody>
+            </table>
+          </div>
+          <p class="nota-tabla"><strong>MAE</strong>: error promedio en puntos. <strong>RMSE</strong>: castiga más los errores grandes. <strong>R²</strong>: parte de la variación del puntaje que explica el modelo (0 equivale a responder siempre el promedio).</p>
+          <p class="nota-tabla" id="nota-boosting"></p>
+        </div>
+        <div class="tarjeta">
+          <h3>Cómo calcula la estimación</h3>
+          <pre class="formula" id="ficha-formula">estimación = intercepto + Σ coeficiente(respuesta)</pre>
+          <p class="tarjeta-intro" style="margin-bottom:0" id="ficha-formula-texto">Es una suma. Por eso el modelo completo cabe en un archivo pequeño y corre en tu navegador.</p>
+        </div>
+        <div class="tarjeta">
+          <h3>Límites que debes conocer</h3>
+          <ul class="lista" id="ficha-limites">
+            <li><strong>Describe asociaciones, no causas.</strong> Comprar un computador no sube el puntaje: el computador está asociado a otras condiciones del hogar.</li>
+            <li><strong>Es un promedio por perfil.</strong> Dentro de cada perfil hay estudiantes muy por encima y muy por debajo de la estimación.</li>
+            <li id="limite-periodo"><strong>Usa un solo periodo.</strong> No refleja cambios posteriores en el examen ni en el país.</li>
+            <li><strong>Las respuestas del hogar son autorreportadas</strong> y algunas faltan (aparecen como «Sin información»).</li>
+            <li><strong>Es aditivo.</strong> No captura interacciones, por ejemplo que el efecto del estrato cambie según el departamento.</li>
+          </ul>
+        </div>
+        <div class="tarjeta completa">
+          <h3>Variables del modelo</h3>
+          <p class="tarjeta-intro" style="margin-bottom:14px">Ordenadas por la distancia entre su categoría con mayor y menor coeficiente: cuánto puede mover la estimación cada pregunta por sí sola.</p>
+          <div class="contenedor-tabla">
+            <table>
+              <caption class="sr-only">Variables del modelo</caption>
+              <thead><tr><th scope="col">Pregunta</th><th scope="col">Columna del ICFES</th><th scope="col" class="num">Categorías</th><th scope="col" class="num">Mayor − menor</th></tr></thead>
+              <tbody id="ficha-variables"></tbody>
+            </table>
+          </div>
+          <p class="nota-tabla" id="ficha-excluidas"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="seccion" id="verificacion" aria-labelledby="verificacion-titulo">
+      <h2 class="seccion-titulo" id="verificacion-titulo">Verificación en tu navegador</h2>
+      <p class="seccion-intro">Estos 5 estudiantes del set de prueba no se usaron para entrenar. La tabla compara la predicción de scikit-learn (Python) con la que calcula esta página (JavaScript). Deben coincidir.</p>
+      <p class="estado-verificacion"><span class="chip" id="estado-verificacion">Verificando…</span></p>
+      <div class="contenedor-tabla">
+        <table>
+          <caption class="sr-only">Comparación entre scikit-learn y el navegador</caption>
+          <thead>
+            <tr>
+              <th scope="col">Caso</th><th scope="col">Perfil</th><th scope="col" class="num">Puntaje real</th>
+              <th scope="col" class="num">scikit-learn</th><th scope="col" class="num">Navegador</th>
+              <th scope="col" class="num">Diferencia</th><th scope="col"><span class="sr-only">Acción</span></th>
+            </tr>
+          </thead>
+          <tbody id="cuerpo-verificacion"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="pie">
+  <div class="contenedor">
+    <div class="pie-grid">
+      <div>
+        <h2>Fuente de los datos</h2>
+        <p>ICFES, <a href="https://www.datos.gov.co/Educaci-n/Resultados-nicos-Saber-11/kgxf-xxbe" rel="noopener">«Resultados únicos Saber 11»</a>, publicados en datos.gov.co (conjunto <code>kgxf-xxbe</code>).</p>
+        <p id="pie-periodo"></p>
+      </div>
+      <div>
+        <h2>Proyecto</h2>
+        <p>Ejercicio del curso Machine Learning 1, Universidad EAN (Bogotá).</p>
+        <p>Autor: <a href="https://github.com/Daniel01010101010101" rel="noopener">Daniel01010101010101</a> · <a href="https://github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning" rel="noopener">código y cuaderno</a> · <a href="https://colab.research.google.com/github/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/blob/main/notebooks/saber11_modelo.ipynb" rel="noopener">abrir en Colab</a></p>
+      </div>
+      <div>
+        <h2>Privacidad</h2>
+        <p>La estimación se calcula en tu navegador con el archivo <code>modelo.js</code>. La página no envía tus respuestas a ningún servidor, no usa cookies ni analítica.</p>
+      </div>
+    </div>
+    <p class="pie-final" id="pie-version">Predictor Saber 11</p>
+  </div>
+</footer>
+
+<div class="flotante" id="flotante" hidden>
+  <span class="flotante-texto">Estimación <span class="flotante-numero" id="flotante-numero">–</span></span>
+  <a href="#resultado">Ver resultado</a>
+</div>
+<div class="tooltip" id="tooltip" role="tooltip" hidden></div>
+
+<script src="modelo.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var M = window.MODELO;
+  var raiz = document.documentElement;
+  var movimientoReducido = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  function $(id) { return document.getElementById(id); }
+  function crear(etiqueta, clase, texto) {
+    var el = document.createElement(etiqueta);
+    if (clase) el.className = clase;
+    if (texto !== undefined) el.textContent = texto;
+    return el;
+  }
+
+  // ---------------------------------------------------------------- Tema
+  var botonTema = $('boton-tema');
+  function temaActual() {
+    var t = raiz.getAttribute('data-theme');
+    if (t) return t;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  function pintarBotonTema() {
+    var oscuro = temaActual() === 'dark';
+    botonTema.classList.toggle('tema-oscuro', oscuro);
+    botonTema.setAttribute('aria-label', oscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
+  }
+  botonTema.addEventListener('click', function () {
+    var nuevo = temaActual() === 'dark' ? 'light' : 'dark';
+    raiz.setAttribute('data-theme', nuevo);
+    try { localStorage.setItem('predictor-saber11-tema', nuevo); } catch (e) { /* sin almacenamiento */ }
+    pintarBotonTema();
+  });
+  var consultaOscuro = window.matchMedia('(prefers-color-scheme: dark)');
+  if (consultaOscuro.addEventListener) consultaOscuro.addEventListener('change', pintarBotonTema);
+  else if (consultaOscuro.addListener) consultaOscuro.addListener(pintarBotonTema);
+  pintarBotonTema();
+
+  if (!M || !Array.isArray(M.variables)) {
+    var aviso = crear('p', 'error-modelo',
+      'No se encontró el modelo. Verifica que el archivo modelo.js esté en la misma carpeta que index.html.');
+    $('resultado').appendChild(aviso);
+    return;
+  }
+
+  // ---------------------------------------------------------------- Formatos (español de Colombia)
+  var f0 = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
+  var f1 = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  var f2 = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  var f3 = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+  var fPct = new Intl.NumberFormat('es-CO', { style: 'percent', maximumFractionDigits: 0 });
+  function conSigno(x, formato) {
+    var f = formato || f1;
+    var texto = f.format(Math.abs(x));
+    if (texto === f.format(0)) return texto;
+    return (x > 0 ? '+' : '−') + texto;
+  }
+  function fecha(iso) {
+    var partes = String(iso).split('-');
+    var d = new Date(Date.UTC(+partes[0], +partes[1] - 1, +partes[2], 12));
+    return new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(d);
+  }
+
+  // ---------------------------------------------------------------- Modelo
+  // Misma función que scripts/prueba_paridad.js: intercepto + suma de coeficientes.
+  function predecir(modelo, respuestas) {
+    var total = modelo.intercepto;
+    modelo.variables.forEach(function (variable) {
+      var valor = respuestas[variable.nombre];
+      var categoria = variable.categorias.find(function (c) { return c.valor === valor; });
+      if (categoria) total += categoria.coeficiente; // categoría desconocida: aporta 0
+    });
+    return total;
+  }
+  function buscar(variable, valor) {
+    return variable.categorias.find(function (c) { return c.valor === valor; }) || null;
+  }
+  // Efecto promedio de una variable en train. Con estos promedios se cumple:
+  // intercepto + suma(efectos promedio) = promedio de entrenamiento.
+  var efectoMedio = {};
+  M.variables.forEach(function (v) {
+    efectoMedio[v.nombre] = v.categorias.reduce(function (s, c) { return s + c.frecuencia * c.coeficiente; }, 0);
+  });
+  function calcularAportes(respuestas) {
+    return M.variables.map(function (v) {
+      var elegida = buscar(v, respuestas[v.nombre]);
+      var comun = buscar(v, v.mas_frecuente);
+      var coef = elegida ? elegida.coeficiente : 0;
+      return {
+        variable: v,
+        elegida: elegida,
+        comun: comun,
+        aporte: coef - efectoMedio[v.nombre],
+        frenteAComun: coef - (comun ? comun.coeficiente : 0)
+      };
+    });
+  }
+  function respuestasComunes() {
+    var r = {};
+    M.variables.forEach(function (v) { r[v.nombre] = v.mas_frecuente; });
+    return r;
+  }
+
+  var MAE = M.metricas.modelo.mae;
+  var MIN = M.objetivo.minimo, MAX = M.objetivo.maximo;
+  var respuestas = respuestasComunes();
+
+  // ---------------------------------------------------------------- Textos que dependen del modelo
+  var periodoTexto = M.periodo_etiqueta + ' (código ' + M.periodo + ')';
+  $('texto-periodo').textContent = 'Saber 11 · periodo ' + M.periodo_etiqueta + ' · datos abiertos del ICFES';
+  $('chip-periodo').textContent = 'Periodo ' + M.periodo_etiqueta;
+  $('texto-entrada').textContent = 'Responde ' + M.variables.length + ' preguntas sobre el hogar y el colegio. ' +
+    'Un modelo de regresión entrenado con ' + f0.format(M.n_entrenamiento) + ' resultados reales del ICFES estima ' +
+    'el puntaje global (de 0 a 500) y muestra qué suma y qué resta cada respuesta.';
+  $('texto-etico').textContent = 'Este modelo mide desigualdad de contexto, no capacidad. Estudiantes con las mismas ' +
+    'respuestas obtienen puntajes muy distintos: la estimación se equivoca en promedio ' + f0.format(MAE) +
+    ' puntos. Nunca la uses para juzgar, clasificar o seleccionar a un estudiante.';
+  $('nota-rango').textContent = '± ' + f0.format(MAE) + ' puntos, el error absoluto medio (MAE) en el set de prueba';
+  $('nota-promedio').textContent = 'Promedio nacional del periodo: ' + f1.format(M.promedio_nacional);
+  $('texto-cobertura').textContent = 'En el set de prueba, el puntaje real quedó dentro de ese rango en el ' +
+    fPct.format(M.cobertura_mae) + ' de los casos.';
+  $('texto-aportes').textContent = 'Cada barra compara tu respuesta con el efecto promedio de esa pregunta en los datos ' +
+    'de entrenamiento, dejando lo demás igual. Las barras suman, junto con el promedio de entrenamiento (' +
+    f1.format(M.promedio_entrenamiento) + '), la estimación.';
+  $('pie-periodo').textContent = 'Periodo usado: ' + periodoTexto + '. Modelo entrenado el ' + fecha(M.fecha_entrenamiento) + '.';
+  $('pie-version').textContent = 'Predictor Saber 11 · modelo v' + M.version + ' · scikit-learn ' + M.sklearn_version +
+    ' · ' + f0.format(M.n_total) + ' registros del periodo ' + M.periodo_etiqueta;
+  $('limite-periodo').lastChild.textContent = ' Solo el periodo ' + M.periodo_etiqueta +
+    '; no refleja cambios posteriores en el examen ni en el país.';
+
+  // ---------------------------------------------------------------- Formulario
+  var formulario = $('formulario-contexto');
+  var selects = {};
+  var grupos = [
+    { id: 'hogar', titulo: 'Hogar' },
+    { id: 'colegio', titulo: 'Colegio' }
+  ];
+  grupos.forEach(function (grupo) {
+    var variables = M.variables.filter(function (v) { return v.grupo === grupo.id; });
+    if (!variables.length) return;
+    var fs = crear('fieldset');
+    fs.appendChild(crear('legend', null, grupo.titulo + ' · ' + variables.length + ' preguntas'));
+    var campos = crear('div', 'campos');
+    variables.forEach(function (v) { campos.appendChild(crearCampo(v)); });
+    fs.appendChild(campos);
+    formulario.appendChild(fs);
+  });
+
+  function etiquetaOpcion(c) {
+    return c.agrupa && c.agrupa.length ? c.etiqueta + ': ' + c.agrupa.join(', ') : c.etiqueta;
+  }
+  function crearCampo(v) {
+    var id = 'campo-' + v.nombre;
+    var largo = v.categorias.reduce(function (m, c) { return Math.max(m, etiquetaOpcion(c).length); }, 0);
+    var campo = crear('div', 'campo' + (largo > 20 || v.categorias.length > 14 ? ' completo' : ''));
+    var label = crear('label', null, v.etiqueta);
+    label.htmlFor = id;
+    var marca = crear('span', 'marca-cambio', 'cambiada');
+    marca.setAttribute('aria-hidden', 'true');
+    label.appendChild(marca);
+    campo.appendChild(label);
+    var select = crear('select');
+    select.id = id;
+    select.name = v.nombre;
+    if (v.ayuda) {
+      var ayuda = crear('p', 'ayuda', v.ayuda);
+      ayuda.id = id + '-ayuda';
+      select.setAttribute('aria-describedby', ayuda.id);
+      campo.appendChild(ayuda);
+    }
+    v.categorias.forEach(function (c) {
+      var opcion = crear('option', null, etiquetaOpcion(c));
+      opcion.value = c.valor;
+      select.appendChild(opcion);
+    });
+    select.value = respuestas[v.nombre];
+    select.addEventListener('change', function () {
+      respuestas[v.nombre] = select.value;
+      casoActual = null;
+      $('caso-activo').hidden = true;
+      actualizar(v.nombre);
+    });
+    var envoltura = crear('div', 'selector');
+    envoltura.appendChild(select);
+    campo.appendChild(envoltura);
+    selects[v.nombre] = { select: select, campo: campo };
+    return campo;
+  }
+  formulario.addEventListener('submit', function (e) { e.preventDefault(); });
+
+  function sincronizarFormulario() {
+    M.variables.forEach(function (v) {
+      var s = selects[v.nombre];
+      s.select.value = respuestas[v.nombre];
+      s.campo.classList.toggle('distinta', respuestas[v.nombre] !== v.mas_frecuente);
+    });
+  }
+
+  // ---------------------------------------------------------------- Medidor (SVG)
+  var NS = 'http://www.w3.org/2000/svg';
+  var G = { cx: 160, cy: 166, r: 134 };
+  var svg = $('medidor-svg');
+  function nodo(tipo, atributos) {
+    var n = document.createElementNS(NS, tipo);
+    Object.keys(atributos).forEach(function (k) { n.setAttribute(k, atributos[k]); });
+    svg.appendChild(n);
+    return n;
+  }
+  function limitar(x, a, b) { return Math.min(b, Math.max(a, x)); }
+  function punto(valor, radio) {
+    var t = Math.PI * (1 - (limitar(valor, MIN, MAX) - MIN) / (MAX - MIN));
+    return [G.cx + radio * Math.cos(t), G.cy - radio * Math.sin(t)];
+  }
+  function arco(desde, hasta, radio) {
+    var a = punto(desde, radio), b = punto(hasta, radio);
+    return 'M ' + a[0].toFixed(2) + ' ' + a[1].toFixed(2) + ' A ' + radio + ' ' + radio + ' 0 0 1 ' +
+      b[0].toFixed(2) + ' ' + b[1].toFixed(2);
+  }
+  nodo('path', { 'class': 'pista', d: arco(MIN, MAX, G.r) });
+  var relleno = nodo('path', { 'class': 'relleno', d: '' });
+  for (var marcaEje = MIN; marcaEje <= MAX; marcaEje += 100) {
+    var p1 = punto(marcaEje, G.r - 13), p2 = punto(marcaEje, G.r - 19), pt = punto(marcaEje, G.r - 32);
+    nodo('line', { 'class': 'marca-eje', x1: p1[0].toFixed(2), y1: p1[1].toFixed(2), x2: p2[0].toFixed(2), y2: p2[1].toFixed(2) });
+    var etiquetaEje = nodo('text', { 'class': 'texto-eje', x: pt[0].toFixed(2), y: pt[1].toFixed(2), 'text-anchor': 'middle', 'dominant-baseline': 'middle' });
+    etiquetaEje.textContent = String(marcaEje);
+  }
+  var pa = punto(M.promedio_nacional, G.r - 12), pb = punto(M.promedio_nacional, G.r + 12);
+  nodo('line', { 'class': 'promedio', x1: pa[0].toFixed(2), y1: pa[1].toFixed(2), x2: pb[0].toFixed(2), y2: pb[1].toFixed(2) });
+  var rango = nodo('path', { 'class': 'rango', d: '' });
+  var punta = nodo('circle', { 'class': 'punta', r: 8, cx: G.cx - G.r, cy: G.cy });
+
+  var mostrado = MIN;
+  var idAnimacion = 0;
+  function pintarMedidor(v) {
+    relleno.setAttribute('d', v - MIN > 0.5 ? arco(MIN, v, G.r) : '');
+    rango.setAttribute('d', arco(Math.max(MIN, v - MAE), Math.min(MAX, v + MAE), G.r + 18));
+    var p = punto(v, G.r);
+    punta.setAttribute('cx', p[0].toFixed(2));
+    punta.setAttribute('cy', p[1].toFixed(2));
+    $('medidor-numero').textContent = f0.format(v);
+  }
+  function animarMedidor(destino) {
+    cancelAnimationFrame(idAnimacion);
+    if (movimientoReducido.matches) { mostrado = destino; pintarMedidor(destino); return; }
+    var origen = mostrado, inicio = null, duracion = 750;
+    function paso(t) {
+      if (inicio === null) inicio = t;
+      var k = Math.min(1, (t - inicio) / duracion);
+      mostrado = origen + (destino - origen) * (1 - Math.pow(1 - k, 3));
+      pintarMedidor(mostrado);
+      if (k < 1) idAnimacion = requestAnimationFrame(paso);
+    }
+    idAnimacion = requestAnimationFrame(paso);
+  }
+
+  // ---------------------------------------------------------------- Aportes
+  var escala = (function () {
+    var maximo = 0;
+    M.variables.forEach(function (v) {
+      v.categorias.forEach(function (c) { maximo = Math.max(maximo, Math.abs(c.coeficiente - efectoMedio[v.nombre])); });
+    });
+    var pasos = [5, 10, 15, 20, 25, 30, 40, 50, 60, 80, 100, 150, 200, 250];
+    for (var i = 0; i < pasos.length; i++) { if (maximo <= pasos[i]) return pasos[i]; }
+    return Math.ceil(maximo / 50) * 50;
+  })();
+  var eje = $('eje-marcas');
+  [-escala, -escala / 2, 0, escala / 2, escala].forEach(function (valor, i) {
+    var marca = crear('span', null, conSigno(valor, f0));
+    marca.style.left = (i * 25) + '%';
+    eje.appendChild(marca);
+  });
+
+  var lista = $('aportes');
+  var filas = {};
+  M.variables.forEach(function (v, i) {
+    var li = crear('li', 'aporte');
+    li.tabIndex = i === 0 ? 0 : -1;
+    li.dataset.variable = v.nombre;
+    var textoFila = crear('span', 'aporte-texto');
+    textoFila.appendChild(crear('span', 'aporte-var', v.etiqueta_corta));
+    var respuesta = crear('span', 'aporte-resp');
+    textoFila.appendChild(respuesta);
+    var pista = crear('span', 'pista-barra');
+    var barra = crear('span', 'barra');
+    pista.appendChild(barra);
+    var valor = crear('span', 'aporte-valor');
+    li.appendChild(textoFila);
+    li.appendChild(pista);
+    li.appendChild(valor);
+    lista.appendChild(li);
+    filas[v.nombre] = { li: li, respuesta: respuesta, barra: barra, valor: valor };
+  });
+  var ultimosAportes = [];
+
+  function textoComparacion(a) {
+    if (!a.comun || !a.elegida) return '';
+    if (a.elegida.valor === a.comun.valor) return 'Es la respuesta más común de esta pregunta.';
+    return 'Frente a «' + a.comun.etiqueta + '» (la respuesta más común): ' + conSigno(a.frenteAComun) + ' puntos.';
+  }
+  function actualizarAportes(aportes) {
+    ultimosAportes = aportes;
+    var cuerpo = $('cuerpo-tabla-aportes');
+    cuerpo.textContent = '';
+    aportes.forEach(function (a) {
+      var f = filas[a.variable.nombre];
+      var etiqueta = a.elegida ? a.elegida.etiqueta : 'Respuesta desconocida';
+      f.respuesta.textContent = etiqueta;
+      var ancho = Math.min(50, Math.abs(a.aporte) / escala * 50);
+      f.barra.style.width = ancho + '%';
+      f.barra.style.left = (a.aporte >= 0 ? 50 : 50 - ancho) + '%';
+      f.barra.classList.toggle('negativa', a.aporte < 0);
+      f.valor.textContent = conSigno(a.aporte);
+      f.li.setAttribute('aria-label', a.variable.etiqueta_corta + ': ' + etiqueta + '. Aporte ' +
+        conSigno(a.aporte) + ' puntos. ' + textoComparacion(a));
+      var tr = crear('tr');
+      tr.appendChild(crear('td', null, a.variable.etiqueta_corta));
+      tr.appendChild(crear('td', null, etiqueta));
+      tr.appendChild(crear('td', 'num', conSigno(a.aporte)));
+      tr.appendChild(crear('td', 'num', a.elegida && a.comun && a.elegida.valor !== a.comun.valor ? conSigno(a.frenteAComun) : '—'));
+      cuerpo.appendChild(tr);
+    });
+  }
+
+  // Tooltip de cada barra (con el mouse o con el teclado).
+  var tooltip = $('tooltip');
+  function mostrarTooltip(li, x, y) {
+    var a = ultimosAportes.filter(function (item) { return item.variable.nombre === li.dataset.variable; })[0];
+    if (!a) return;
+    tooltip.textContent = '';
+    tooltip.appendChild(crear('strong', null, conSigno(a.aporte) + ' puntos'));
+    tooltip.appendChild(crear('span', null, 'Frente al efecto promedio de «' + a.variable.etiqueta_corta + '». '));
+    tooltip.appendChild(crear('span', null, textoComparacion(a)));
+    tooltip.hidden = false;
+    var ancho = tooltip.offsetWidth, alto = tooltip.offsetHeight;
+    var izquierda = limitar(x + 14, 8, window.innerWidth - ancho - 8);
+    var arriba = y - alto - 12 < 8 ? y + 16 : y - alto - 12;
+    tooltip.style.left = izquierda + 'px';
+    tooltip.style.top = arriba + 'px';
+  }
+  function ocultarTooltip() { tooltip.hidden = true; }
+  lista.addEventListener('pointermove', function (e) {
+    var li = e.target.closest('.aporte');
+    if (li && e.pointerType === 'mouse') mostrarTooltip(li, e.clientX, e.clientY); else ocultarTooltip();
+  });
+  lista.addEventListener('pointerleave', ocultarTooltip);
+  lista.addEventListener('focusin', function (e) {
+    var li = e.target.closest('.aporte');
+    if (!li) return;
+    var caja = li.getBoundingClientRect();
+    mostrarTooltip(li, caja.left + caja.width / 2, caja.top);
+  });
+  lista.addEventListener('focusout', ocultarTooltip);
+  lista.addEventListener('keydown', function (e) {
+    var items = Array.prototype.slice.call(lista.querySelectorAll('.aporte'));
+    var i = items.indexOf(document.activeElement);
+    if (i < 0) return;
+    var siguiente = null;
+    if (e.key === 'ArrowDown') siguiente = items[Math.min(items.length - 1, i + 1)];
+    if (e.key === 'ArrowUp') siguiente = items[Math.max(0, i - 1)];
+    if (e.key === 'Home') siguiente = items[0];
+    if (e.key === 'End') siguiente = items[items.length - 1];
+    if (e.key === 'Escape') { ocultarTooltip(); return; }
+    if (!siguiente) return;
+    e.preventDefault();
+    items[i].tabIndex = -1;
+    siguiente.tabIndex = 0;
+    siguiente.focus();
+  });
+  window.addEventListener('scroll', ocultarTooltip, { passive: true });
+
+  $('boton-tabla').addEventListener('click', function () {
+    var tabla = $('tabla-aportes');
+    tabla.hidden = !tabla.hidden;
+    this.setAttribute('aria-expanded', String(!tabla.hidden));
+    this.textContent = tabla.hidden ? 'Ver los aportes como tabla' : 'Ocultar la tabla';
+  });
+
+  // ---------------------------------------------------------------- Actualización general
+  var temporizadorAnuncio = 0;
+  function actualizar(variableCambiada) {
+    sincronizarFormulario();
+    var estimacion = predecir(M, respuestas);
+    var aportes = calcularAportes(respuestas);
+    animarMedidor(estimacion);
+    actualizarAportes(aportes);
+
+    var desde = Math.max(MIN, estimacion - MAE), hasta = Math.min(MAX, estimacion + MAE);
+    $('cifra-rango').textContent = f0.format(desde) + ' – ' + f0.format(hasta);
+    var diferencia = estimacion - M.promedio_nacional;
+    $('cifra-diferencia').textContent = conSigno(diferencia, f0) + ' puntos';
+    $('flotante-numero').textContent = f0.format(estimacion);
+    var sumaAportes = aportes.reduce(function (s, a) { return s + a.aporte; }, 0);
+    var suma = $('suma-aportes');
+    suma.textContent = '';
+    suma.appendChild(crear('span', null, 'Promedio de entrenamiento ' + f1.format(M.promedio_entrenamiento)));
+    suma.appendChild(crear('span', null, (sumaAportes < 0 ? '−' : '+') + ' aportes ' + f1.format(Math.abs(sumaAportes))));
+    suma.appendChild(crear('span', null, '='));
+    suma.appendChild(crear('strong', null, 'estimación ' + f1.format(estimacion)));
+
+    var descripcion = 'Puntaje estimado: ' + f0.format(estimacion) + ' de 500. Rango aproximado de ' +
+      f0.format(desde) + ' a ' + f0.format(hasta) + '. Promedio nacional: ' + f0.format(M.promedio_nacional) + '.';
+    $('medidor-descripcion').textContent = descripcion;
+    clearTimeout(temporizadorAnuncio);
+    temporizadorAnuncio = setTimeout(function () {
+      $('anuncio').textContent = 'Estimación actualizada: ' + f0.format(estimacion) + ' puntos, ' +
+        (diferencia >= 0 ? f0.format(diferencia) + ' por encima' : f0.format(-diferencia) + ' por debajo') +
+        ' del promedio nacional.';
+    }, 400);
+
+    if (variableCambiada && filas[variableCambiada]) {
+      var fila = filas[variableCambiada].li;
+      fila.classList.add('activo');
+      setTimeout(function () { fila.classList.remove('activo'); }, 1200);
+    }
+  }
+
+  // ---------------------------------------------------------------- Casos del set de prueba
+  var casoActual = null;
+  function cargarCaso(indice) {
+    var caso = M.casos_prueba[indice];
+    casoActual = indice;
+    M.variables.forEach(function (v) {
+      var valor = caso.entradas[v.nombre];
+      respuestas[v.nombre] = buscar(v, valor) ? valor : v.mas_frecuente;
+    });
+    var aviso = $('caso-activo');
+    aviso.textContent = '';
+    aviso.appendChild(crear('strong', null, 'Caso ' + caso.id + ' del set de prueba. '));
+    aviso.appendChild(document.createTextNode('Puntaje real: ' + f0.format(caso.puntaje_real) +
+      ' · scikit-learn predijo ' + f1.format(caso.prediccion_sklearn) + '.'));
+    aviso.hidden = false;
+    var siguiente = (indice + 1) % M.casos_prueba.length;
+    $('texto-boton-caso').textContent = 'Cargar el caso ' + M.casos_prueba[siguiente].id + ' de ' + M.casos_prueba.length;
+    actualizar();
+  }
+  $('boton-caso').addEventListener('click', function () {
+    cargarCaso(casoActual === null ? 0 : (casoActual + 1) % M.casos_prueba.length);
+  });
+  $('boton-restablecer').addEventListener('click', function () {
+    respuestas = respuestasComunes();
+    casoActual = null;
+    $('caso-activo').hidden = true;
+    $('texto-boton-caso').textContent = 'Cargar un caso real';
+    actualizar();
+  });
+
+  // ---------------------------------------------------------------- Ficha del modelo
+  function filaDatos(titulo, valor, detalle) {
+    var dl = $('ficha-datos');
+    dl.appendChild(crear('dt', null, titulo));
+    var dd = crear('dd', null, valor);
+    if (detalle) dd.appendChild(crear('span', null, detalle));
+    dl.appendChild(dd);
+  }
+  filaDatos('Fuente', M.fuente.nombre, M.fuente.portal + ', conjunto ' + M.fuente.id);
+  filaDatos('Periodo', periodoTexto, 'El más reciente disponible en el conjunto al entrenar');
+  filaDatos('Registros', f0.format(M.n_total) + ' con puntaje válido',
+    f0.format(M.n_entrenamiento) + ' para entrenar y ' + f0.format(M.n_prueba) + ' para evaluar (80/20)');
+  filaDatos('Objetivo', M.objetivo.etiqueta + ' (' + M.objetivo.nombre + ')', 'Escala de ' + MIN + ' a ' + MAX + ' puntos');
+  filaDatos('Algoritmo', M.algoritmo, M.variables.length + ' variables categóricas, entrenado con scikit-learn ' + M.sklearn_version);
+  filaDatos('Entrenado', fecha(M.fecha_entrenamiento), 'Versión ' + M.version + ' · semilla ' + M.semilla);
+
+  var cuerpoMetricas = $('ficha-metricas');
+  ['modelo', 'linea_base', 'boosting'].forEach(function (clave) {
+    var m = M.metricas[clave];
+    if (!m) return;
+    var tr = crear('tr', clave === 'modelo' ? 'destacada' : null);
+    tr.appendChild(crear('td', null, m.nombre));
+    tr.appendChild(crear('td', 'num', f1.format(m.mae)));
+    tr.appendChild(crear('td', 'num', f1.format(m.rmse)));
+    tr.appendChild(crear('td', 'num', f3.format(m.r2)));
+    cuerpoMetricas.appendChild(tr);
+  });
+  if (M.metricas.boosting) {
+    $('nota-boosting').textContent = 'El modelo publicado es el lineal (fila resaltada). HistGradientBoosting logra MAE ' +
+      f1.format(M.metricas.boosting.mae) + ' frente a ' + f1.format(MAE) + ': casi lo mismo, pero sin coeficientes que se ' +
+      'puedan leer. Por eso preferimos el lineal.';
+  }
+
+  var ejemplo = M.variables.slice(0, 2).map(function (v) {
+    var c = buscar(v, v.mas_frecuente);
+    return 'coef(' + v.etiqueta_corta + ' = ' + c.etiqueta + ') ' + (c.coeficiente < 0 ? '− ' : '+ ') + f2.format(Math.abs(c.coeficiente));
+  });
+  $('ficha-formula').textContent = 'estimación = intercepto + Σ coeficiente(respuesta)\n\n' +
+    'intercepto = ' + f2.format(M.intercepto) + '\n' + ejemplo.join('\n') + '\n… una suma por cada una de las ' + M.variables.length + ' preguntas';
+  $('ficha-formula-texto').textContent = 'Cada categoría de cada pregunta tiene un coeficiente. La estimación es el intercepto ' +
+    'más los coeficientes de las respuestas elegidas: ' + M.variables.length + ' sumas. Por eso el modelo completo cabe en un ' +
+    'archivo pequeño y corre en tu navegador.';
+
+  var cuerpoVariables = $('ficha-variables');
+  M.variables.map(function (v) {
+    var coefs = v.categorias.map(function (c) { return c.coeficiente; });
+    return { v: v, rango: Math.max.apply(null, coefs) - Math.min.apply(null, coefs) };
+  }).sort(function (a, b) { return b.rango - a.rango; }).forEach(function (item) {
+    var tr = crear('tr');
+    tr.appendChild(crear('td', null, item.v.etiqueta));
+    var celdaColumna = crear('td');
+    celdaColumna.appendChild(crear('code', null, item.v.nombre));
+    tr.appendChild(celdaColumna);
+    tr.appendChild(crear('td', 'num', String(item.v.categorias.length)));
+    tr.appendChild(crear('td', 'num', f1.format(item.rango) + ' puntos'));
+    cuerpoVariables.appendChild(tr);
+  });
+  if (M.excluidas && M.excluidas.length) {
+    $('ficha-excluidas').textContent = 'No se usan: ' + M.excluidas.map(function (e) {
+      return e.nombre + ' (' + e.motivo.charAt(0).toLowerCase() + e.motivo.slice(1).replace(/\.$/, '') + ')';
+    }).join('; ') + '.';
+  }
+
+  // ---------------------------------------------------------------- Verificación (paridad en el navegador)
+  var cuerpoVerificacion = $('cuerpo-verificacion');
+  var maxDiferencia = 0, coinciden = 0;
+  M.casos_prueba.forEach(function (caso, i) {
+    var js = predecir(M, caso.entradas);
+    var dif = Math.abs(js - caso.prediccion_sklearn);
+    maxDiferencia = Math.max(maxDiferencia, dif);
+    var ok = dif <= 1e-6;
+    if (ok) coinciden += 1;
+    var tr = crear('tr');
+    tr.appendChild(crear('td', null, String(caso.id)));
+    var perfil = crear('td', 'celda-perfil');
+    var resumen = M.variables.slice(0, 1).concat(M.variables.filter(function (v) {
+      return v.nombre === 'cole_naturaleza' || v.nombre === 'cole_depto_ubicacion';
+    })).map(function (v) {
+      var c = buscar(v, caso.entradas[v.nombre]);
+      return c ? c.etiqueta : caso.entradas[v.nombre];
+    });
+    perfil.appendChild(document.createTextNode(resumen.join(' · ')));
+    tr.appendChild(perfil);
+    tr.appendChild(crear('td', 'num', f0.format(caso.puntaje_real)));
+    tr.appendChild(crear('td', 'num', caso.prediccion_sklearn.toFixed(6)));
+    tr.appendChild(crear('td', 'num', js.toFixed(6)));
+    var celdaDif = crear('td', 'num');
+    celdaDif.appendChild(crear('span', ok ? 'ok' : 'fallo', (ok ? '✓ ' : '✗ ') + dif.toExponential(1)));
+    tr.appendChild(celdaDif);
+    var celdaAccion = crear('td');
+    var boton = crear('button', 'boton-texto', 'Cargar');
+    boton.type = 'button';
+    boton.setAttribute('aria-label', 'Cargar el caso ' + caso.id + ' en el formulario');
+    boton.addEventListener('click', function () {
+      cargarCaso(i);
+      $('formulario').scrollIntoView({ behavior: movimientoReducido.matches ? 'auto' : 'smooth', block: 'start' });
+    });
+    celdaAccion.appendChild(boton);
+    tr.appendChild(celdaAccion);
+    cuerpoVerificacion.appendChild(tr);
+  });
+  var estado = $('estado-verificacion');
+  var todoBien = coinciden === M.casos_prueba.length;
+  estado.className = 'chip ' + (todoBien ? 'chip-ok' : 'chip-error');
+  estado.textContent = (todoBien ? '✓ ' : '✗ ') + coinciden + ' de ' + M.casos_prueba.length +
+    ' coinciden · diferencia máxima ' + maxDiferencia.toExponential(1) + ' (tolerancia 1e-6)';
+
+  // ---------------------------------------------------------------- Estimación flotante
+  var flotante = $('flotante');
+  if ('IntersectionObserver' in window) {
+    var visibleResultado = true, visibleFormulario = true;
+    var observador = new IntersectionObserver(function (entradas) {
+      entradas.forEach(function (e) {
+        if (e.target.id === 'resultado') visibleResultado = e.isIntersecting;
+        if (e.target.id === 'formulario') visibleFormulario = e.isIntersecting;
+      });
+      flotante.hidden = visibleResultado || !visibleFormulario;
+    }, { threshold: 0.15 });
+    observador.observe($('resultado'));
+    observador.observe($('formulario'));
+  }
+
+  // Para experimentar en la consola del navegador: PredictorSaber11.predecir(PredictorSaber11.modelo, {...})
+  window.PredictorSaber11 = { modelo: M, predecir: predecir };
+
+  actualizar();
+})();
+</script>
+</body>
+</html>
