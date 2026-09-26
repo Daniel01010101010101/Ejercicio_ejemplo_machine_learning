@@ -1,0 +1,25 @@
+# Datos crudos: se descargan de datos.gov.co al entrenar y NO se versionan
+datos/
+data/
+*.csv
+*.parquet
+*.zip
+
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Node
+node_modules/
+
+# Netlify (carpeta local del CLI)
+.netlify/
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
