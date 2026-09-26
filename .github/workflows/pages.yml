@@ -1,0 +1,47 @@
+# Publica la carpeta web/ en GitHub Pages cada vez que cambia en main.
+# Antes de publicar corre la prueba de paridad: si modelo.js no reproduce
+# a scikit-learn (tolerancia 1e-6), no se publica nada.
+name: Publicar en GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "scripts/prueba_paridad.js"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v7
+
+      - name: Prueba de paridad (JavaScript vs scikit-learn)
+        run: node scripts/prueba_paridad.js web/modelo.js
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v6
+
+      - name: Empaquetar la carpeta web/
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: web
+
+      - name: Publicar
+        id: despliegue
+        uses: actions/deploy-pages@v5

@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Privacidad: el navegador bloquea cualquier conexión saliente (fetch, XHR, WebSocket, beacon)
+     y el envío de formularios. Funciona en GitHub Pages y al abrir el archivo directamente. -->
+<meta http-equiv="Content-Security-Policy" content="connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
 <title>Predictor Saber 11</title>
 <meta name="description" content="Modelo de Machine Learning que estima el puntaje global de Saber 11 a partir del contexto del hogar y del colegio. Se calcula en tu navegador; no envía datos a ningún servidor.">
 <meta property="og:title" content="Predictor Saber 11">
