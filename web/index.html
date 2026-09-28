@@ -463,8 +463,8 @@
         <circle cx="20.2" cy="15.1" r="2.6" fill="var(--bg)"/>
       </svg>
       <span>
-        <span class="marca-nombre">Predictor Saber 11</span>
-        <span class="marca-sub">Machine Learning 1 · Universidad EAN</span>
+        <span class="marca-nombre" id="marca-nombre">Predictor Saber 11</span>
+        <span class="marca-sub" id="marca-sub">Machine Learning 1 · Universidad EAN</span>
       </span>
     </a>
     <nav class="nav" aria-label="Secciones">
@@ -535,13 +535,13 @@
           <svg id="medidor-svg" viewBox="0 0 320 196" aria-hidden="true"></svg>
           <div class="medidor-valor" aria-hidden="true">
             <span class="medidor-numero" id="medidor-numero">–</span>
-            <span class="medidor-de">de 500 puntos</span>
+            <span class="medidor-de" id="medidor-de">de 500 puntos</span>
           </div>
         </div>
         <p class="sr-only" id="medidor-descripcion">Calculando la estimación.</p>
         <ul class="leyenda" aria-hidden="true">
           <li><span class="clave clave-punto"></span>Estimación</li>
-          <li><span class="clave clave-promedio"></span>Promedio nacional</li>
+          <li><span class="clave clave-promedio"></span><span id="leyenda-promedio">Promedio nacional</span></li>
           <li><span class="clave clave-rango"></span>Rango aproximado</li>
         </ul>
         <dl class="cifras">
@@ -551,7 +551,7 @@
             <dd class="nota" id="nota-rango">± el error absoluto medio</dd>
           </div>
           <div class="cifra">
-            <dt>Frente al promedio nacional</dt>
+            <dt id="dt-promedio">Frente al promedio nacional</dt>
             <dd class="valor" id="cifra-diferencia">–</dd>
             <dd class="nota" id="nota-promedio">Promedio del periodo</dd>
           </div>
@@ -559,7 +559,7 @@
         <p class="explicacion" id="texto-cobertura"></p>
         <p class="recordatorio">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.1"/></svg>
-          <span>Es una estimación del contexto, no una medida de la capacidad del estudiante.</span>
+          <span id="texto-recordatorio">Es una estimación del contexto, no una medida de la capacidad del estudiante.</span>
         </p>
         <a class="enlace-aportes" href="#aportes-titulo">Ver qué suma y qué resta cada respuesta <span aria-hidden="true">↓</span></a>
         <p class="sr-only" aria-live="polite" id="anuncio"></p>
@@ -572,8 +572,8 @@
       </div>
       <p class="tarjeta-intro" id="texto-aportes">Cada barra compara tu respuesta con el efecto promedio de esa pregunta en los datos de entrenamiento, dejando lo demás igual.</p>
       <ul class="claves-aportes" aria-hidden="true">
-        <li><span class="clave clave-pos"></span>Suma puntos</li>
-        <li><span class="clave clave-neg"></span>Resta puntos</li>
+        <li><span class="clave clave-pos"></span><span id="leyenda-suma">Suma puntos</span></li>
+        <li><span class="clave clave-neg"></span><span id="leyenda-resta">Resta puntos</span></li>
       </ul>
       <ol class="aportes" id="aportes" aria-label="Aporte de cada respuesta, en puntos"></ol>
       <div class="aporte eje" aria-hidden="true">
@@ -611,7 +611,7 @@
               <tbody id="ficha-metricas"></tbody>
             </table>
           </div>
-          <p class="nota-tabla"><strong>MAE</strong>: error promedio en puntos. <strong>RMSE</strong>: castiga más los errores grandes. <strong>R²</strong>: parte de la variación del puntaje que explica el modelo (0 equivale a responder siempre el promedio).</p>
+          <p class="nota-tabla" id="nota-metricas"><strong>MAE</strong>: error promedio en puntos. <strong>RMSE</strong>: castiga más los errores grandes. <strong>R²</strong>: parte de la variación del puntaje que explica el modelo (0 equivale a responder siempre el promedio).</p>
           <p class="nota-tabla" id="nota-boosting"></p>
         </div>
         <div class="tarjeta">
@@ -636,7 +636,7 @@
           <div class="contenedor-tabla">
             <table>
               <caption class="sr-only">Variables del modelo</caption>
-              <thead><tr><th scope="col">Pregunta</th><th scope="col">Columna del ICFES</th><th scope="col" class="num">Categorías</th><th scope="col" class="num">Mayor − menor</th></tr></thead>
+              <thead><tr><th scope="col">Pregunta</th><th scope="col" id="th-columna">Columna del ICFES</th><th scope="col" class="num">Categorías</th><th scope="col" class="num">Mayor − menor</th></tr></thead>
               <tbody id="ficha-variables"></tbody>
             </table>
           </div>
@@ -654,7 +654,7 @@
           <caption class="sr-only">Comparación entre scikit-learn y el navegador</caption>
           <thead>
             <tr>
-              <th scope="col">Caso</th><th scope="col">Perfil</th><th scope="col" class="num">Puntaje real</th>
+              <th scope="col">Caso</th><th scope="col">Perfil</th><th scope="col" class="num" id="th-real">Puntaje real</th>
               <th scope="col" class="num">scikit-learn</th><th scope="col" class="num">Navegador</th>
               <th scope="col" class="num">Diferencia</th><th scope="col"><span class="sr-only">Acción</span></th>
             </tr>
@@ -669,14 +669,14 @@
 <footer class="pie">
   <div class="contenedor">
     <div class="pie-grid">
-      <div>
+      <div id="pie-fuente">
         <h2>Fuente de los datos</h2>
         <p>ICFES, <a href="https://www.datos.gov.co/Educaci-n/Resultados-nicos-Saber-11/kgxf-xxbe" rel="noopener">«Resultados únicos Saber 11»</a>, publicados en datos.gov.co (conjunto <code>kgxf-xxbe</code>).</p>
         <p id="pie-periodo"></p>
       </div>
-      <div>
+      <div id="pie-proyecto">
         <h2>Proyecto</h2>
-        <p>Ejercicio del curso Machine Learning 1, Universidad EAN (Bogotá).</p>
+        <p>Ejercicio del curso Machine Learning 1, Universidad EAN (Bogotá). ¿Quieres publicar tu propio modelo? Sigue la <a href="guia/">guía de clase</a>.</p>
         <p>Autor: <a href="https://github.com/Daniel01010101010101" rel="noopener">Daniel01010101010101</a> · <a href="https://github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning" rel="noopener">código y cuaderno</a> · <a href="https://colab.research.google.com/github/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/blob/main/notebooks/saber11_modelo.ipynb" rel="noopener">abrir en Colab</a></p>
       </div>
       <div>
@@ -803,28 +803,138 @@
   var MIN = M.objetivo.minimo, MAX = M.objetivo.maximo;
   var respuestas = respuestasComunes();
 
+  // Textos propios del modelo (los exporta el cuaderno plantilla). Si modelo.js no los
+  // trae, la página usa los del Predictor Saber 11.
+  var T = M.textos || null;
+  var UNIDAD = (M.objetivo && M.objetivo.unidad) || 'puntos';
+  var ETIQ_PROM = (T && T.etiqueta_promedio) || 'Promedio nacional';
+  function primeraMinuscula(texto) { return texto.charAt(0).toLowerCase() + texto.slice(1); }
+  // Paso "redondo" (1, 2, 2,5 o 5 × 10^k) para ejes y escalas.
+  function pasoRedondo(valor) {
+    var p = Math.pow(10, Math.floor(Math.log(valor) / Math.LN10));
+    var m = valor / p;
+    return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p;
+  }
+
   // ---------------------------------------------------------------- Textos que dependen del modelo
-  var periodoTexto = M.periodo_etiqueta + ' (código ' + M.periodo + ')';
-  $('texto-periodo').textContent = 'Saber 11 · periodo ' + M.periodo_etiqueta + ' · datos abiertos del ICFES';
-  $('chip-periodo').textContent = 'Periodo ' + M.periodo_etiqueta;
-  $('texto-entrada').textContent = 'Responde ' + M.variables.length + ' preguntas sobre el hogar y el colegio. ' +
-    'Un modelo de regresión entrenado con ' + f0.format(M.n_entrenamiento) + ' resultados reales del ICFES estima ' +
-    'el puntaje global (de 0 a 500) y muestra qué suma y qué resta cada respuesta.';
-  $('texto-etico').textContent = 'Este modelo mide desigualdad de contexto, no capacidad. Estudiantes con las mismas ' +
-    'respuestas obtienen puntajes muy distintos: la estimación se equivoca en promedio ' + f0.format(MAE) +
-    ' puntos. Nunca la uses para juzgar, clasificar o seleccionar a un estudiante.';
-  $('nota-rango').textContent = '± ' + f0.format(MAE) + ' puntos, el error absoluto medio (MAE) en el set de prueba';
-  $('nota-promedio').textContent = 'Promedio nacional del periodo: ' + f1.format(M.promedio_nacional);
-  $('texto-cobertura').textContent = 'En el set de prueba, el puntaje real quedó dentro de ese rango en el ' +
-    fPct.format(M.cobertura_mae) + ' de los casos.';
+  var periodoTexto = M.periodo ? M.periodo_etiqueta + ' (código ' + M.periodo + ')' : '';
+  if (T) {
+    document.title = T.titulo || document.title;
+    $('marca-nombre').textContent = T.titulo || 'Mi modelo';
+    $('marca-sub').textContent = T.subtitulo || '';
+    $('titulo').textContent = T.pregunta || T.titulo || '';
+    $('texto-periodo').textContent = T.etiqueta_superior || ('Datos: ' + M.fuente.nombre);
+    $('chip-periodo').textContent = M.periodo ? 'Periodo ' + M.periodo_etiqueta : 'Modelo v' + M.version;
+    $('texto-entrada').textContent = T.entrada || ('Responde ' + M.variables.length + ' preguntas. Un modelo de regresión, ' +
+      'entrenado con ' + f0.format(M.n_entrenamiento) + ' registros, calcula una estimación de ' +
+      primeraMinuscula(M.objetivo.etiqueta) + ' y muestra qué suma y qué resta cada respuesta.');
+    $('texto-etico').textContent = (T.aviso_etico || 'Es una estimación con error.') + ' En promedio se equivoca por ' +
+      f0.format(MAE) + ' ' + UNIDAD + '.';
+    $('titulo-resultado').textContent = T.etiqueta_resultado || ('Estimación de ' + primeraMinuscula(M.objetivo.etiqueta));
+    $('th-columna').textContent = 'Columna de los datos';
+    $('th-real').textContent = 'Valor real';
+    $('titulo-formulario').textContent = T.titulo_formulario || 'Tus respuestas';
+    $('texto-recordatorio').textContent = T.recordatorio || 'Es una estimación con error, no un valor exacto.';
+    $('leyenda-suma').textContent = 'Suma';
+    $('leyenda-resta').textContent = 'Resta';
+    var notaMetricas = $('nota-metricas');
+    notaMetricas.textContent = '';
+    [['MAE', ': error promedio, en ' + UNIDAD + '. '], ['RMSE', ': castiga más los errores grandes. '],
+     ['R²', ': parte de la variación que explica el modelo (0 equivale a responder siempre el promedio).']
+    ].forEach(function (par) {
+      notaMetricas.appendChild(crear('strong', null, par[0]));
+      notaMetricas.appendChild(document.createTextNode(par[1]));
+    });
+    $('texto-cobertura').textContent = 'En el set de prueba, el valor real quedó dentro de ese rango en el ' +
+      fPct.format(M.cobertura_mae) + ' de los casos.';
+  } else {
+    $('texto-periodo').textContent = 'Saber 11 · periodo ' + M.periodo_etiqueta + ' · datos abiertos del ICFES';
+    $('chip-periodo').textContent = 'Periodo ' + M.periodo_etiqueta;
+    $('texto-entrada').textContent = 'Responde ' + M.variables.length + ' preguntas sobre el hogar y el colegio. ' +
+      'Un modelo de regresión entrenado con ' + f0.format(M.n_entrenamiento) + ' resultados reales del ICFES estima ' +
+      'el puntaje global (de 0 a 500) y muestra qué suma y qué resta cada respuesta.';
+    $('texto-etico').textContent = 'Este modelo mide desigualdad de contexto, no capacidad. Estudiantes con las mismas ' +
+      'respuestas obtienen puntajes muy distintos: la estimación se equivoca en promedio ' + f0.format(MAE) +
+      ' puntos. Nunca la uses para juzgar, clasificar o seleccionar a un estudiante.';
+    $('texto-cobertura').textContent = 'En el set de prueba, el puntaje real quedó dentro de ese rango en el ' +
+      fPct.format(M.cobertura_mae) + ' de los casos.';
+  }
+  $('medidor-de').textContent = (T && T.subetiqueta_medidor) || ('de ' + f0.format(MAX) + ' ' + UNIDAD);
+  $('leyenda-promedio').textContent = ETIQ_PROM;
+  $('dt-promedio').textContent = 'Frente al ' + primeraMinuscula(ETIQ_PROM);
+  $('nota-rango').textContent = '± ' + f0.format(MAE) + ' ' + UNIDAD + ', el error absoluto medio (MAE) en el set de prueba';
+  $('nota-promedio').textContent = ETIQ_PROM + (M.periodo ? ' del periodo' : '') + ': ' + f1.format(M.promedio_nacional);
   $('texto-aportes').textContent = 'Cada barra compara tu respuesta con el efecto promedio de esa pregunta en los datos ' +
     'de entrenamiento, dejando lo demás igual. Las barras suman, junto con el promedio de entrenamiento (' +
     f1.format(M.promedio_entrenamiento) + '), la estimación.';
-  $('pie-periodo').textContent = 'Periodo usado: ' + periodoTexto + '. Modelo entrenado el ' + fecha(M.fecha_entrenamiento) + '.';
-  $('pie-version').textContent = 'Predictor Saber 11 · modelo v' + M.version + ' · scikit-learn ' + M.sklearn_version +
-    ' · ' + f0.format(M.n_total) + ' registros del periodo ' + M.periodo_etiqueta;
-  $('limite-periodo').lastChild.textContent = ' Solo el periodo ' + M.periodo_etiqueta +
-    '; no refleja cambios posteriores en el examen ni en el país.';
+  $('pie-periodo').textContent = (M.periodo ? 'Periodo usado: ' + periodoTexto + '. ' : '') +
+    'Modelo entrenado el ' + fecha(M.fecha_entrenamiento) + '.';
+  $('pie-version').textContent = ((T && T.titulo) || 'Predictor Saber 11') + ' · modelo v' + M.version +
+    ' · scikit-learn ' + M.sklearn_version + ' · ' + f0.format(M.n_total) + ' registros' +
+    (M.periodo ? ' del periodo ' + M.periodo_etiqueta : '');
+  if (M.periodo) {
+    $('limite-periodo').lastChild.textContent = ' Solo el periodo ' + M.periodo_etiqueta +
+      '; no refleja cambios posteriores en el examen ni en el país.';
+  }
+  if (T) {
+    // Límites generales (los del Saber 11 hablan de su propio contexto).
+    var limites = $('ficha-limites');
+    var itemAjuste = $('limite-ajuste');
+    limites.textContent = '';
+    [
+      ['Describe asociaciones, no causas.', ' Que una respuesta sume no significa que cambiarla cause ese cambio.'],
+      ['Es un promedio por perfil.', ' Dentro de cada perfil hay casos muy por encima y muy por debajo de la estimación.'],
+      null,
+      ['Depende de los datos de entrenamiento.', ' Si esos datos no representan bien a todos los casos, el modelo también falla.'],
+      ['Es aditivo.', ' No captura interacciones entre respuestas.']
+    ].forEach(function (item) {
+      if (!item) { limites.appendChild(itemAjuste); return; }
+      var li = crear('li');
+      li.appendChild(crear('strong', null, item[0]));
+      li.appendChild(document.createTextNode(item[1]));
+      limites.appendChild(li);
+    });
+    // Pie de página con la fuente y el autor del modelo.
+    var pieFuente = $('pie-fuente');
+    pieFuente.textContent = '';
+    pieFuente.appendChild(crear('h2', null, 'Fuente de los datos'));
+    var pFuente = crear('p');
+    if (M.fuente.url) {
+      var aFuente = crear('a', null, M.fuente.nombre);
+      aFuente.href = M.fuente.url;
+      aFuente.rel = 'noopener';
+      pFuente.appendChild(aFuente);
+    } else {
+      pFuente.textContent = M.fuente.nombre;
+    }
+    pieFuente.appendChild(pFuente);
+    var pPeriodo = crear('p');
+    pPeriodo.id = 'pie-periodo';
+    pPeriodo.textContent = 'Modelo entrenado el ' + fecha(M.fecha_entrenamiento) + '.';
+    pieFuente.appendChild(pPeriodo);
+    var pieProyecto = $('pie-proyecto');
+    pieProyecto.textContent = '';
+    pieProyecto.appendChild(crear('h2', null, 'Proyecto'));
+    if (T.subtitulo) pieProyecto.appendChild(crear('p', null, T.subtitulo));
+    var pAutor = crear('p');
+    pAutor.appendChild(document.createTextNode('Autor: '));
+    if (T.autor_url) {
+      var aAutor = crear('a', null, T.autor || 'sin nombre');
+      aAutor.href = T.autor_url;
+      aAutor.rel = 'noopener';
+      pAutor.appendChild(aAutor);
+    } else {
+      pAutor.appendChild(document.createTextNode(T.autor || 'sin nombre'));
+    }
+    if (T.repo_url) {
+      pAutor.appendChild(document.createTextNode(' · '));
+      var aRepo = crear('a', null, 'código');
+      aRepo.href = T.repo_url;
+      aRepo.rel = 'noopener';
+      pAutor.appendChild(aRepo);
+    }
+    pieProyecto.appendChild(pAutor);
+  }
   // Si el modelo invierte el estrato (un estrato alto resta), se explica con los números del modelo.
   var vEstrato = M.variables.filter(function (v) { return v.nombre === 'fami_estratovivienda'; })[0];
   if (vEstrato) {
@@ -842,15 +952,18 @@
   // ---------------------------------------------------------------- Formulario
   var formulario = $('formulario-contexto');
   var selects = {};
-  var grupos = [
-    { id: 'hogar', titulo: 'Hogar' },
-    { id: 'colegio', titulo: 'Colegio' }
-  ];
-  grupos.forEach(function (grupo) {
-    var variables = M.variables.filter(function (v) { return v.grupo === grupo.id; });
-    if (!variables.length) return;
+  var titulosGrupo = { hogar: 'Hogar', colegio: 'Colegio', preguntas: 'Preguntas' };
+  var ordenGrupos = [];
+  M.variables.forEach(function (v) {
+    var g = v.grupo || 'preguntas';
+    if (ordenGrupos.indexOf(g) < 0) ordenGrupos.push(g);
+  });
+  ordenGrupos.forEach(function (g) {
+    var variables = M.variables.filter(function (v) { return (v.grupo || 'preguntas') === g; });
+    var tituloGrupo = (T && T.grupos && T.grupos[g]) || titulosGrupo[g] || (g.charAt(0).toUpperCase() + g.slice(1));
     var fs = crear('fieldset');
-    fs.appendChild(crear('legend', null, grupo.titulo + ' · ' + variables.length + ' preguntas'));
+    fs.appendChild(crear('legend', null, tituloGrupo + ' · ' + variables.length +
+      (variables.length === 1 ? ' pregunta' : ' preguntas')));
     var campos = crear('div', 'campos');
     variables.forEach(function (v) { campos.appendChild(crearCampo(v)); });
     fs.appendChild(campos);
@@ -939,11 +1052,12 @@
   }
   nodo('path', { 'class': 'pista', d: arco(MIN, MAX, G.r) });
   var relleno = nodo('path', { 'class': 'relleno', d: '' });
-  for (var marcaEje = MIN; marcaEje <= MAX; marcaEje += 100) {
+  var pasoEje = pasoRedondo((MAX - MIN) / 5);
+  for (var marcaEje = MIN; marcaEje <= MAX + 1e-9; marcaEje += pasoEje) {
     var p1 = punto(marcaEje, G.r - 13), p2 = punto(marcaEje, G.r - 19), pt = punto(marcaEje, G.r - 32);
     nodo('line', { 'class': 'marca-eje', x1: p1[0].toFixed(2), y1: p1[1].toFixed(2), x2: p2[0].toFixed(2), y2: p2[1].toFixed(2) });
     var etiquetaEje = nodo('text', { 'class': 'texto-eje', x: pt[0].toFixed(2), y: pt[1].toFixed(2), 'text-anchor': 'middle', 'dominant-baseline': 'middle' });
-    etiquetaEje.textContent = String(marcaEje);
+    etiquetaEje.textContent = f0.format(marcaEje);
   }
   var pa = punto(M.promedio_nacional, G.r - 12), pb = punto(M.promedio_nacional, G.r + 12);
   nodo('line', { 'class': 'promedio', x1: pa[0].toFixed(2), y1: pa[1].toFixed(2), x2: pb[0].toFixed(2), y2: pb[1].toFixed(2) });
@@ -982,7 +1096,7 @@
     });
     var pasos = [5, 10, 15, 20, 25, 30, 40, 50, 60, 80, 100, 150, 200, 250];
     for (var i = 0; i < pasos.length; i++) { if (maximo <= pasos[i]) return pasos[i]; }
-    return Math.ceil(maximo / 50) * 50;
+    return Math.ceil(maximo / pasoRedondo(maximo / 4)) * pasoRedondo(maximo / 4);
   })();
   var eje = $('eje-marcas');
   [-escala, -escala / 2, 0, escala / 2, escala].forEach(function (valor, i) {
@@ -1016,7 +1130,7 @@
   function textoComparacion(a) {
     if (!a.comun || !a.elegida) return '';
     if (a.elegida.valor === a.comun.valor) return 'Es la respuesta más común de esta pregunta.';
-    return 'Frente a «' + a.comun.etiqueta + '» (la respuesta más común): ' + conSigno(a.frenteAComun) + ' puntos.';
+    return 'Frente a «' + a.comun.etiqueta + '» (la respuesta más común): ' + conSigno(a.frenteAComun) + ' ' + UNIDAD + '.';
   }
   function actualizarAportes(aportes) {
     ultimosAportes = aportes;
@@ -1032,7 +1146,7 @@
       f.barra.classList.toggle('negativa', a.aporte < 0);
       f.valor.textContent = conSigno(a.aporte);
       f.li.setAttribute('aria-label', a.variable.etiqueta_corta + ': ' + etiqueta + '. Aporte ' +
-        conSigno(a.aporte) + ' puntos. ' + textoComparacion(a));
+        conSigno(a.aporte) + ' ' + UNIDAD + '. ' + textoComparacion(a));
       var tr = crear('tr');
       tr.appendChild(crear('td', null, a.variable.etiqueta_corta));
       tr.appendChild(crear('td', null, etiqueta));
@@ -1048,7 +1162,7 @@
     var a = ultimosAportes.filter(function (item) { return item.variable.nombre === li.dataset.variable; })[0];
     if (!a) return;
     tooltip.textContent = '';
-    tooltip.appendChild(crear('strong', null, conSigno(a.aporte) + ' puntos'));
+    tooltip.appendChild(crear('strong', null, conSigno(a.aporte) + ' ' + UNIDAD));
     tooltip.appendChild(crear('span', null, 'Frente al efecto promedio de «' + a.variable.etiqueta_corta + '». '));
     tooltip.appendChild(crear('span', null, textoComparacion(a)));
     tooltip.hidden = false;
@@ -1108,7 +1222,7 @@
     var desde = Math.max(MIN, estimacion - MAE), hasta = Math.min(MAX, estimacion + MAE);
     $('cifra-rango').textContent = f0.format(desde) + ' – ' + f0.format(hasta);
     var diferencia = estimacion - M.promedio_nacional;
-    $('cifra-diferencia').textContent = conSigno(diferencia, f0) + ' puntos';
+    $('cifra-diferencia').textContent = conSigno(diferencia, f0) + ' ' + UNIDAD;
     $('flotante-numero').textContent = f0.format(estimacion);
     var sumaAportes = aportes.reduce(function (s, a) { return s + a.aporte; }, 0);
     var suma = $('suma-aportes');
@@ -1118,14 +1232,15 @@
     suma.appendChild(crear('span', null, '='));
     suma.appendChild(crear('strong', null, 'estimación ' + f1.format(estimacion)));
 
-    var descripcion = 'Puntaje estimado: ' + f0.format(estimacion) + ' de 500. Rango aproximado de ' +
-      f0.format(desde) + ' a ' + f0.format(hasta) + '. Promedio nacional: ' + f0.format(M.promedio_nacional) + '.';
+    var descripcion = 'Estimación: ' + f0.format(estimacion) + ' ' + UNIDAD + ', en una escala de ' + f0.format(MIN) +
+      ' a ' + f0.format(MAX) + '. Rango aproximado de ' + f0.format(desde) + ' a ' + f0.format(hasta) + '. ' +
+      ETIQ_PROM + ': ' + f0.format(M.promedio_nacional) + '.';
     $('medidor-descripcion').textContent = descripcion;
     clearTimeout(temporizadorAnuncio);
     temporizadorAnuncio = setTimeout(function () {
-      $('anuncio').textContent = 'Estimación actualizada: ' + f0.format(estimacion) + ' puntos, ' +
+      $('anuncio').textContent = 'Estimación actualizada: ' + f0.format(estimacion) + ' ' + UNIDAD + ', ' +
         (diferencia >= 0 ? f0.format(diferencia) + ' por encima' : f0.format(-diferencia) + ' por debajo') +
-        ' del promedio nacional.';
+        ' del ' + primeraMinuscula(ETIQ_PROM) + '.';
     }, 400);
 
     if (variableCambiada && filas[variableCambiada]) {
@@ -1147,8 +1262,8 @@
     var aviso = $('caso-activo');
     aviso.textContent = '';
     aviso.appendChild(crear('strong', null, 'Caso ' + caso.id + ' del set de prueba. '));
-    aviso.appendChild(document.createTextNode('Puntaje real: ' + f0.format(caso.puntaje_real) +
-      ' · scikit-learn predijo ' + f1.format(caso.prediccion_sklearn) + '.'));
+    aviso.appendChild(document.createTextNode((T ? 'Valor real: ' : 'Puntaje real: ') + f0.format(caso.puntaje_real) +
+      (T ? ' ' + UNIDAD : '') + ' · scikit-learn predijo ' + f1.format(caso.prediccion_sklearn) + (T ? ' ' + UNIDAD : '') + '.'));
     aviso.hidden = false;
     var siguiente = (indice + 1) % M.casos_prueba.length;
     $('texto-boton-caso').textContent = 'Cargar el caso ' + M.casos_prueba[siguiente].id + ' de ' + M.casos_prueba.length;
@@ -1173,11 +1288,11 @@
     if (detalle) dd.appendChild(crear('span', null, detalle));
     dl.appendChild(dd);
   }
-  filaDatos('Fuente', M.fuente.nombre, M.fuente.portal + ', conjunto ' + M.fuente.id);
-  filaDatos('Periodo', periodoTexto, 'El más reciente disponible en el conjunto al entrenar');
-  filaDatos('Registros', f0.format(M.n_total) + ' con puntaje válido',
+  filaDatos('Fuente', M.fuente.nombre, M.fuente.id ? M.fuente.portal + ', conjunto ' + M.fuente.id : (M.fuente.portal || ''));
+  if (M.periodo) filaDatos('Periodo', periodoTexto, 'El más reciente disponible en el conjunto al entrenar');
+  filaDatos('Registros', f0.format(M.n_total) + (T ? ' registros válidos' : ' con puntaje válido'),
     f0.format(M.n_entrenamiento) + ' para entrenar y ' + f0.format(M.n_prueba) + ' para evaluar (80/20)');
-  filaDatos('Objetivo', M.objetivo.etiqueta + ' (' + M.objetivo.nombre + ')', 'Escala de ' + MIN + ' a ' + MAX + ' puntos');
+  filaDatos('Objetivo', M.objetivo.etiqueta + ' (' + M.objetivo.nombre + ')', 'Escala de ' + f0.format(MIN) + ' a ' + f0.format(MAX) + ' ' + UNIDAD);
   filaDatos('Algoritmo', M.algoritmo, M.variables.length + ' variables categóricas, entrenado con scikit-learn ' + M.sklearn_version);
   if (M.min_casos) {
     filaDatos('Categorías raras', 'Menos de ' + f0.format(M.min_casos) + ' estudiantes en entrenamiento',
@@ -1224,7 +1339,7 @@
     celdaColumna.appendChild(crear('code', null, item.v.nombre));
     tr.appendChild(celdaColumna);
     tr.appendChild(crear('td', 'num', String(item.n)));
-    tr.appendChild(crear('td', 'num', f1.format(item.rango) + ' puntos'));
+    tr.appendChild(crear('td', 'num', f1.format(item.rango) + ' ' + UNIDAD));
     cuerpoVariables.appendChild(tr);
   });
   if (M.excluidas && M.excluidas.length) {
@@ -1245,9 +1360,9 @@
     var tr = crear('tr');
     tr.appendChild(crear('td', null, String(caso.id)));
     var perfil = crear('td', 'celda-perfil');
-    var resumen = M.variables.slice(0, 1).concat(M.variables.filter(function (v) {
+    var resumen = (T ? M.variables.slice(0, 3) : M.variables.slice(0, 1).concat(M.variables.filter(function (v) {
       return v.nombre === 'cole_naturaleza' || v.nombre === 'cole_depto_ubicacion';
-    })).map(function (v) {
+    }))).map(function (v) {
       var c = buscar(v, caso.entradas[v.nombre]);
       return c ? c.etiqueta : caso.entradas[v.nombre];
     });

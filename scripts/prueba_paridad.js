@@ -64,13 +64,13 @@ function formato(numero) {
 var modelo = cargarModelo(rutaModelo);
 var ok = true;
 
-console.log('Modelo ' + modelo.version + ' · periodo ' + modelo.periodo +
+console.log('Modelo ' + modelo.version + (modelo.periodo ? ' · periodo ' + modelo.periodo : '') +
             ' · ' + modelo.variables.length + ' variables');
-console.log('Caso      sklearn   JavaScript    diferencia');
+console.log('Caso       sklearn   JavaScript    diferencia');
 modelo.casos_prueba.forEach(function (caso) {
   var js = predecir(modelo, caso.entradas);
   var dif = Math.abs(js - caso.prediccion_sklearn);
-  console.log(String(caso.id).padStart(4) + formato(caso.prediccion_sklearn) + ' ' +
+  console.log(String(caso.id).padStart(4) + ' ' + formato(caso.prediccion_sklearn) + ' ' +
               formato(js) + '  ' + dif.toExponential(2));
 });
 
