@@ -11,7 +11,7 @@ window.MODELO = {
   },
   "periodo": "20224",
   "periodo_etiqueta": "2022-2",
-  "fecha_entrenamiento": "2026-09-26",
+  "fecha_entrenamiento": "2026-09-28",
   "n_total": 532566,
   "n_entrenamiento": 426052,
   "n_prueba": 106514,
