@@ -6,6 +6,7 @@ Proyecto de clase del curso **Machine Learning 1**, Universidad EAN (Bogotá).
 
 - **Página publicada:** https://daniel01010101010101.github.io/Ejercicio_ejemplo_machine_learning/ (GitHub Pages; se actualiza sola con cada cambio en `main`)
 - **Cuaderno en Colab:** [abrir `notebooks/saber11_modelo.ipynb`](https://colab.research.google.com/github/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/blob/main/notebooks/saber11_modelo.ipynb)
+- **Guía de clase «Tu modelo en la web»:** https://daniel01010101010101.github.io/Ejercicio_ejemplo_machine_learning/guia/ ([PDF](https://daniel01010101010101.github.io/Ejercicio_ejemplo_machine_learning/guia/guia_de_clase.pdf)). Cada estudiante copia este repositorio y publica su propio modelo en 60 minutos, sin instalar nada.
 
 > **Uso responsable.** El modelo mide desigualdad de contexto, no capacidad. Nunca debe usarse para juzgar, clasificar o seleccionar a un estudiante.
 
@@ -31,8 +32,12 @@ web/
   index.html          página completa (HTML, CSS y JS en un solo archivo)
   modelo.js           el modelo: window.MODELO = {...}  (generado, no se edita a mano)
   modelo.json         el mismo contenido en JSON
+  guia/               guía de clase para estudiantes (página y PDF)
 notebooks/
-  saber11_modelo.ipynb  cuaderno de clase, ejecutado con los datos reales
+  saber11_modelo.ipynb        cuaderno de clase, ejecutado con los datos reales
+  plantilla_tu_modelo.ipynb   plantilla: de un CSV propio a modelo.js
+ejemplos/diamantes/
+  modelo.js           modelo de ejemplo hecho con la plantilla (plan B en clase)
 scripts/
   train.py            lo mismo que el cuaderno, desde la terminal
   prueba_paridad.js   prueba de paridad JavaScript vs scikit-learn
@@ -132,6 +137,16 @@ El plan gratuito da 300 créditos al mes y cada publicación en producción cues
 4. En la **Ficha del modelo**, compara el MAE con la línea base y con el gradient boosting, y discute el límite del estrato: su efecto ajustado se invierte.
 5. En **Verificación**, muestra que el navegador y scikit-learn dan lo mismo. En la consola del navegador (F12) se puede probar `PredictorSaber11.predecir(PredictorSaber11.modelo, {...})`: el modelo es solo una suma.
 6. Abre el cuaderno en Colab y recorre las secciones; las preguntas para discutir están al final.
+
+## Para tu clase: cada estudiante publica su modelo
+
+La misma página sirve para cualquier modelo lineal. Cada estudiante copia este repositorio, entrena su modelo en Colab y reemplaza `web/modelo.js`; la página toma del archivo el título, las preguntas, las unidades y los textos.
+
+1. **Guía de estudiantes:** [`web/guia/`](https://daniel01010101010101.github.io/Ejercicio_ejemplo_machine_learning/guia/) (también en [PDF](https://daniel01010101010101.github.io/Ejercicio_ejemplo_machine_learning/guia/guia_de_clase.pdf)). Seis pasos con tiempos: crear la cuenta, copiar la plantilla, activar la página, entrenar en Colab, subir el modelo y compartir.
+2. **Cuaderno plantilla:** [abrir `notebooks/plantilla_tu_modelo.ipynb` en Colab](https://colab.research.google.com/github/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/blob/main/notebooks/plantilla_tu_modelo.ipynb). Solo se cambia la celda «1. Configura»: título, autor, CSV, columna a predecir y de 3 a 10 columnas (con `VARIABLES = None` el cuaderno las elige). Separa entrenamiento y prueba, parte en 5 rangos (aprendidos solo con entrenamiento) las columnas numéricas con más de 10 valores distintos, compara con la línea base, corre la prueba de paridad y descarga `modelo.js`. Sin cambios, usa un ejemplo de precios de diamantes.
+3. **Plan B:** si Colab falla en clase, [`ejemplos/diamantes/modelo.js`](ejemplos/diamantes/modelo.js) es un modelo listo para subir a `web/`.
+
+**Una sola vez, antes de la clase:** *Settings → General →* marca **Template repository**. Así aparece el botón **Use this template** y cada copia trae la página, los cuadernos y el workflow de publicación. En cada copia, el estudiante activa *Settings → Pages → Source:* **GitHub Actions** (paso 2 de la guía).
 
 ## Uso responsable
 
