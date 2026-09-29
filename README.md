@@ -1,6 +1,6 @@
 # Predictor Saber 11
 
-Modelo de Machine Learning que estima el **puntaje global del Saber 11** (0 a 500) a partir del contexto del hogar y del colegio, publicado como una página web estática. Uno llena un formulario y el modelo predice **en el navegador**: no hay servidor y no se envía ningún dato.
+Modelo de Machine Learning (**Gradient Boosting**, 100 árboles de decisión) que estima el **puntaje global del Saber 11** (0 a 500) a partir del contexto del hogar y del colegio, publicado como una página web estática. Uno llena un formulario y el modelo predice **en el navegador**: no hay servidor y no se envía ningún dato.
 
 Proyecto de clase del curso **Machine Learning 1**, Universidad EAN (Bogotá).
 
@@ -14,14 +14,14 @@ Proyecto de clase del curso **Machine Learning 1**, Universidad EAN (Bogotá).
 
 ```
 datos.gov.co (API Socrata) ──► cuaderno / train.py ──► web/modelo.js ──► GitHub ──► GitHub Pages
-      ICFES, un periodo        limpieza, train/test,     intercepto y      dev → main   página
-                               Ridge, métricas           coeficientes                   estática
+      ICFES, un periodo        limpieza, train/test,     los 100 árboles    dev → main   página
+                               4 modelos, métricas       como números                    estática
 ```
 
 1. Se descarga **un solo periodo** del conjunto [«Resultados únicos Saber 11»](https://www.datos.gov.co/Educaci-n/Resultados-nicos-Saber-11/kgxf-xxbe) (`kgxf-xxbe`), filtrando con `$where` y paginando con `$limit`/`$offset`.
-2. Se entrena un `Pipeline` de scikit-learn: `OneHotEncoder(handle_unknown="ignore")` + `Ridge`.
-3. Como todas las variables son categóricas, la predicción es **el intercepto más la suma de los coeficientes de las respuestas elegidas**. Esos números se exportan a `web/modelo.js` y la página hace la misma suma en JavaScript.
-4. Una **prueba de paridad** en Node verifica que JavaScript y scikit-learn den lo mismo (tolerancia 1e-6).
+2. Se comparan cuatro `Pipeline` de scikit-learn con el mismo `OneHotEncoder(handle_unknown="ignore")`: regresión lineal (`Ridge`), árbol de decisión, bosque aleatorio y Gradient Boosting (`HistGradientBoostingRegressor`). Se publica el Gradient Boosting, el que menos se equivoca en validación y en prueba.
+3. Un árbol es una lista de preguntas de sí o no («¿columna ≤ umbral?») y de hojas con un número. Los 100 árboles se exportan como números a `web/modelo.js`, y `web/motor.js` los recorre en el navegador: *punto de partida + la hoja de cada árbol = estimación*. La página también muestra cuánto aportó cada respuesta y las preguntas que hace el árbol 1.
+4. Una **prueba de paridad** en Node carga el mismo `web/motor.js` que usa la página y verifica que JavaScript y scikit-learn den lo mismo (tolerancia 1e-6).
 
 ¿Por qué no un `.pkl`? GitHub Pages solo publica archivos estáticos: no ejecuta Python ni ningún código en el servidor. (Netlify tampoco: sus funciones solo corren JavaScript/TypeScript, y Go mediante la API compatible con Lambda.) Exportar el modelo como números lo vuelve portable y auditable.
 
@@ -29,7 +29,8 @@ datos.gov.co (API Socrata) ──► cuaderno / train.py ──► web/modelo.js
 
 ```
 web/
-  index.html          página completa (HTML, CSS y JS en un solo archivo)
+  index.html          la página (HTML, CSS y JS)
+  motor.js            recorre los árboles (o suma los coeficientes de un modelo lineal)
   modelo.js           el modelo: window.MODELO = {...}  (generado, no se edita a mano)
   modelo.json         el mismo contenido en JSON
   guia/               guía de clase para estudiantes (página y PDF)
@@ -55,14 +56,16 @@ Periodo **20224 (Saber 11 2022-2)**. Set de prueba: 106.514 estudiantes que el m
 
 | Modelo | MAE | RMSE | R² |
 |---|---:|---:|---:|
-| **Regresión lineal Ridge (la que se publica)** | **35,5** | **43,7** | **0,289** |
 | Línea base: siempre el promedio | 42,9 | 51,8 | 0,000 |
-| HistGradientBoosting (solo comparación) | 34,6 | 42,7 | 0,321 |
+| Regresión lineal (Ridge) | 35,5 | 43,7 | 0,289 |
+| Árbol de decisión (profundidad 8) | 36,5 | 44,9 | 0,249 |
+| Bosque aleatorio (50 árboles) | 35,9 | 44,1 | 0,274 |
+| **Gradient Boosting (100 árboles, el que se publica)** | **34,7** | **42,8** | **0,316** |
 
-- El modelo lineal se equivoca en promedio 35,5 puntos, frente a 42,9 de la línea base (17 % mejor), y explica cerca del 29 % de la variación del puntaje.
+- El Gradient Boosting se equivoca en promedio 34,7 puntos, frente a 42,9 de la línea base (19 % mejor), y explica cerca del 32 % de la variación del puntaje.
+- Le gana a la regresión lineal por menos de un punto: con 9 preguntas sobre el contexto, los datos tienen un techo. Un solo árbol se equivoca más que la lineal. El modelo se eligió en una validación dentro de train, con el mismo resultado.
 - En el 56 % de los estudiantes de prueba, el puntaje real quedó dentro de la estimación ± MAE.
-- El gradient boosting mejora un poco (MAE 34,6), pero no se puede leer como una suma de coeficientes. Por eso se publica el lineal.
-- Prueba de paridad: JavaScript y scikit-learn coinciden con una diferencia máxima de 1,1 × 10⁻¹³ en 2.005 casos (tolerancia 1e-6).
+- Prueba de paridad: JavaScript y scikit-learn coinciden con una diferencia máxima de 0 en 2.005 casos (tolerancia 1e-6).
 
 ## Cómo re-entrenar
 
@@ -134,19 +137,19 @@ El plan gratuito da 300 créditos al mes y cada publicación en producción cues
 1. Abre la página (https://daniel01010101010101.github.io/Ejercicio_ejemplo_machine_learning/) y lee con el grupo el aviso de **Uso responsable** y el de privacidad.
 2. Cambia una respuesta (por ejemplo, la jornada de «Mañana» a «Sabatina») y mira cómo se mueve el medidor y qué barra cambia en **Qué suma y qué resta**.
 3. Pulsa **Cargar un caso real** varias veces: son estudiantes del set de prueba con su puntaje real. Compara real y estimado para ver el tamaño del error individual.
-4. En la **Ficha del modelo**, compara el MAE con la línea base y con el gradient boosting, y discute el límite del estrato: su efecto ajustado se invierte.
-5. En **Verificación**, muestra que el navegador y scikit-learn dan lo mismo. En la consola del navegador (F12) se puede probar `PredictorSaber11.predecir(PredictorSaber11.modelo, {...})`: el modelo es solo una suma.
+4. En la **Ficha del modelo**, compara los cinco modelos (línea base, lineal, árbol, bosque y Gradient Boosting) y muestra las preguntas que hace el árbol 1 con las respuestas actuales. Cambia el estrato a «Estrato 6» y discute por qué resta: una vez que el modelo conoce el resto del perfil, al estrato le queda poca información propia.
+5. En **Verificación**, muestra que el navegador y scikit-learn dan lo mismo. En la consola del navegador (F12) se puede probar `PredictorSaber11.predecir(PredictorSaber11.modelo, {...})` o `PredictorSaber11.explicar({...})`, que devuelve el punto de partida y el aporte de cada respuesta.
 6. Abre el cuaderno en Colab y recorre las secciones; las preguntas para discutir están al final.
 
 ## Para tu clase: cada estudiante publica su modelo
 
-La misma página sirve para cualquier modelo lineal. Cada estudiante copia este repositorio, entrena su modelo en Colab y reemplaza `web/modelo.js`; la página toma del archivo el título, las preguntas, las unidades y los textos.
+La misma página sirve para el modelo del proyecto final de cada estudiante: Gradient Boosting, bosque aleatorio, un árbol de decisión o una regresión lineal. Cada estudiante copia este repositorio, entrena su modelo en Colab y reemplaza `web/modelo.js`; la página toma del archivo el título, las preguntas, las unidades y los textos.
 
-1. **Guía de estudiantes:** [`web/guia/`](https://daniel01010101010101.github.io/Ejercicio_ejemplo_machine_learning/guia/) (también en [PDF](https://daniel01010101010101.github.io/Ejercicio_ejemplo_machine_learning/guia/guia_de_clase.pdf)). Seis pasos con tiempos: crear la cuenta, copiar la plantilla, activar la página, entrenar en Colab, subir el modelo y compartir.
-2. **Cuaderno plantilla:** [abrir `notebooks/plantilla_tu_modelo.ipynb` en Colab](https://colab.research.google.com/github/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/blob/main/notebooks/plantilla_tu_modelo.ipynb). Solo se cambia la celda «1. Configura»: título, autor, CSV, columna a predecir y de 3 a 10 columnas (con `VARIABLES = None` el cuaderno las elige). Separa entrenamiento y prueba, parte en 5 rangos (aprendidos solo con entrenamiento) las columnas numéricas con más de 10 valores distintos, compara con la línea base, corre la prueba de paridad y descarga `modelo.js`. Sin cambios, usa un ejemplo de precios de diamantes.
+1. **Guía de estudiantes:** [`web/guia/`](https://daniel01010101010101.github.io/Ejercicio_ejemplo_machine_learning/guia/) (también en [PDF](https://daniel01010101010101.github.io/Ejercicio_ejemplo_machine_learning/guia/guia_de_clase.pdf)). Tres partes: qué hace el modelo (árboles y Gradient Boosting), cómo leer sus resultados y cómo publicar el modelo propio en 4 pasos.
+2. **Cuaderno plantilla:** [abrir `notebooks/plantilla_tu_modelo.ipynb` en Colab](https://colab.research.google.com/github/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/blob/main/notebooks/plantilla_tu_modelo.ipynb). Solo se llena un formulario de Colab: título, autor, CSV, columna a predecir, de 3 a 10 columnas (vacío = el cuaderno las elige) y `MODELO` (`boosting`, `bosque`, `arbol` o `lineal`). Separa entrenamiento y prueba, entrena los cuatro modelos y los compara con la línea base, exporta el elegido, corre la prueba de paridad y descarga `modelo.js`. Las columnas numéricas quedan como números (en la página, una barra para elegir el valor); si el objetivo es sí/no o una clase, estima la probabilidad y reporta la exactitud. Sin cambios, usa un ejemplo de precios de diamantes (Gradient Boosting: MAE 295 USD frente a 3.020 de la línea base).
 3. **Plan B:** si Colab falla en clase, [`ejemplos/diamantes/modelo.js`](ejemplos/diamantes/modelo.js) es un modelo listo para subir a `web/`.
 
-**Una sola vez, antes de la clase:** *Settings → General →* marca **Template repository**. Así aparece el botón **Use this template** y cada copia trae la página, los cuadernos y el workflow de publicación. En cada copia, el estudiante activa *Settings → Pages → Source:* **GitHub Actions** (paso 2 de la guía).
+**Una sola vez, antes de la clase:** *Settings → General →* marca **Template repository**. Así aparece el botón **Use this template** y cada copia trae la página, los cuadernos y el workflow de publicación. En cada copia, el estudiante activa *Settings → Pages → Source:* **GitHub Actions** (paso 1 de la guía).
 
 ## Uso responsable
 

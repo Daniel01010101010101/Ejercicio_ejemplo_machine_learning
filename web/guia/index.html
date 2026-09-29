@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
 <title>Tu modelo en la web</title>
-<meta name="description" content="Guía de clase paso a paso para publicar un modelo de Machine Learning como página web con GitHub, Colab y GitHub Pages, sin instalar nada.">
+<meta name="description" content="Guía de clase: qué hace el Predictor Saber 11, cómo leer sus resultados y cómo publicar tu propio modelo de Machine Learning (árboles o Gradient Boosting) en una página web, sin instalar nada.">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d1726'/%3E%3Cpath d='M7 22a9 9 0 0 1 18 0' fill='none' stroke='%23cde2fb' stroke-width='3.2'/%3E%3Cpath d='M7 22a9 9 0 0 1 12.2-8.4' fill='none' stroke='%236da7ec' stroke-width='3.2'/%3E%3Ccircle cx='19.2' cy='13.6' r='2.6' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,7 +25,7 @@
     --line: #e2e6ed; --line-strong: #cbd2dc;
     --accent: #1c5cab; --accent-ink: #ffffff; --accent-soft: #cde2fb; --accent-wash: #eef4fd;
     --verde: #1a7f37; --verde-ink: #ffffff; --ok: #006300;
-    --warn-bg: #fff6e5; --warn-line: #f0d49b; --warn-ink: #6b4a00;
+    --warn-bg: #fff6e5; --warn-line: #f0d49b; --warn-ink: #6b4a00; --barra-gris: #8792a2;
     --sombra: 0 1px 2px rgba(13, 23, 38, .04), 0 10px 28px rgba(13, 23, 38, .06);
     --fuente: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     --fuente-titulos: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
@@ -39,7 +39,7 @@
       --line: #222d3b; --line-strong: #334155;
       --accent: #6da7ec; --accent-ink: #0a0f17; --accent-soft: #1d3a5f; --accent-wash: #132338;
       --verde: #2ea043; --verde-ink: #ffffff; --ok: #3fb950;
-      --warn-bg: #221a0b; --warn-line: #5c4516; --warn-ink: #f2d59a;
+      --warn-bg: #221a0b; --warn-line: #5c4516; --warn-ink: #f2d59a; --barra-gris: #5d6a7d;
       --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px rgba(0, 0, 0, .35);
     }
   }
@@ -50,7 +50,7 @@
     --line: #222d3b; --line-strong: #334155;
     --accent: #6da7ec; --accent-ink: #0a0f17; --accent-soft: #1d3a5f; --accent-wash: #132338;
     --verde: #2ea043; --verde-ink: #ffffff; --ok: #3fb950;
-    --warn-bg: #221a0b; --warn-line: #5c4516; --warn-ink: #f2d59a;
+    --warn-bg: #221a0b; --warn-line: #5c4516; --warn-ink: #f2d59a; --barra-gris: #5d6a7d;
     --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px rgba(0, 0, 0, .35);
   }
   *, *::before, *::after { box-sizing: border-box; }
@@ -116,7 +116,7 @@
   .meta { font-size: .875rem; color: var(--muted); }
   .objetivo { color: var(--ink-2); max-width: 64ch; }
   ol.pasos { margin: 14px 0 0; padding: 0; list-style: none; counter-reset: paso; display: grid; gap: 10px; }
-  ol.pasos > li { counter-increment: paso; position: relative; padding-left: 38px; }
+  ol.pasos > li { counter-increment: paso; position: relative; padding-left: 38px; min-width: 0; }
   ol.pasos > li::before { content: counter(paso); position: absolute; left: 0; top: 1px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
     background: var(--accent-wash); color: var(--accent); font-weight: 600; font-size: .875rem; border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); }
   .ui { display: inline-block; font: 500 .875rem/1.2 var(--fuente); padding: 3px 8px; border-radius: 7px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--ink); white-space: nowrap; }
@@ -133,18 +133,19 @@
   .enlace-copiable a { font-family: var(--fuente-mono); font-size: .8125rem; overflow-wrap: anywhere; }
   .copiar { font: 500 .8125rem/1 var(--fuente); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); cursor: pointer; }
   .copiar:hover { border-color: var(--accent); background: var(--accent-wash); }
-  pre.config { font-family: var(--fuente-mono); font-size: .8125rem; line-height: 1.65; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; overflow-x: auto; margin: 10px 0 0; }
+  pre.config { max-width: 100%; font-family: var(--fuente-mono); font-size: .8125rem; line-height: 1.65; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; overflow-x: auto; margin: 10px 0 0; }
   pre.config .c { color: var(--muted); }
 
   .idea { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: 18px 0 6px; padding: 0; list-style: none; }
   .idea li { position: relative; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
   .idea li:not(:last-child)::after { content: ""; position: absolute; right: -5px; top: 50%; width: 9px; height: 9px;
     border-top: 2px solid var(--muted); border-right: 2px solid var(--muted); transform: translate(60%, -50%) rotate(45deg); }
+  .idea.idea-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .idea b { display: block; font-size: .9375rem; }
   .idea span { display: block; font-size: .8125rem; color: var(--ink-2); line-height: 1.4; margin-top: 2px; }
   .idea .icono { width: 26px; height: 26px; color: var(--accent); margin-bottom: 6px; }
   @media (max-width: 760px) {
-    .idea { grid-template-columns: minmax(0, 1fr); }
+    .idea, .idea.idea-3 { grid-template-columns: minmax(0, 1fr); }
     .idea li:not(:last-child)::after { right: 50%; top: auto; bottom: -5px; transform: translate(50%, 60%) rotate(135deg); }
   }
   .glosario { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 16px 0 0; }
@@ -169,6 +170,56 @@
   .pie { border-top: 1px solid var(--line); background: var(--surface); margin-top: 40px; }
   .pie .contenedor { padding-block: 28px calc(28px + env(safe-area-inset-bottom, 0px)); font-size: .9375rem; color: var(--ink-2); }
 
+  .partes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 26px 0 0; padding: 0; list-style: none; max-width: 900px; }
+  .partes li { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .partes b { display: block; font-size: .8125rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .partes span { display: block; font-size: 1rem; font-weight: 600; line-height: 1.3; margin-top: 2px; }
+  .partes small { display: block; font-size: .8125rem; color: var(--ink-2); }
+  @media (max-width: 640px) { .partes { grid-template-columns: minmax(0, 1fr); } }
+  .parte-titulo { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .parte-titulo .meta { margin: 0; }
+
+  .arbol { margin: 18px 0 10px; padding: clamp(14px, 2.4vw, 22px); border: 1px solid var(--line); border-radius: 14px; background: var(--surface-2); }
+  .arbol figcaption { font-size: .8125rem; color: var(--muted); margin-bottom: 14px; }
+  .nodo { background: var(--surface); border: 1px solid var(--line-strong); border-radius: 12px; padding: 10px 12px; font-weight: 600; font-size: .9375rem; text-align: center; line-height: 1.35; }
+  .nodo small { display: block; font-weight: 400; font-size: .8125rem; color: var(--muted); }
+  .raiz { max-width: 360px; margin: 0 auto; }
+  .ramas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 14px; }
+  .rama { display: grid; gap: 10px; align-content: start; padding-top: 4px; border-top: 2px solid var(--line-strong); }
+  .rama-etiqueta { justify-self: center; font-size: .8125rem; font-weight: 600; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 2px 12px; margin-top: 6px; }
+  .hojas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .hoja { text-align: center; background: var(--accent-wash); border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent); border-radius: 12px; padding: 10px 8px; }
+  .hoja .respuesta { display: block; font-size: .75rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); }
+  .hoja b { display: block; font-size: 1.625rem; font-weight: 600; letter-spacing: -.02em; line-height: 1.2; }
+  .hoja small { display: block; font-size: .75rem; color: var(--ink-2); line-height: 1.35; }
+  @media (max-width: 560px) { .ramas { grid-template-columns: minmax(0, 1fr); } }
+
+  .modelos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 14px 0 0; padding: 0; list-style: none; }
+  .modelos li { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .modelos li.destacado { background: var(--accent-wash); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+  .modelos b { display: block; }
+  .modelos span { display: block; font-size: .9375rem; color: var(--ink-2); margin-top: 2px; }
+  @media (max-width: 760px) { .modelos { grid-template-columns: minmax(0, 1fr); } }
+
+  .indicadores { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 16px 0 0; }
+  @media (max-width: 640px) { .indicadores { grid-template-columns: minmax(0, 1fr); } }
+  .indicadores div { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .indicadores dt { font-weight: 600; }
+  .indicadores dd { margin: 2px 0 0; font-size: .9375rem; color: var(--ink-2); }
+  .indicadores .cifra { display: block; margin-top: 6px; font-size: .875rem; color: var(--ink); font-weight: 500; }
+
+  .grafica { margin: 16px 0 6px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+  .grafica figcaption { font-size: .875rem; color: var(--ink-2); margin-bottom: 12px; }
+  .barras { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .barras li { display: grid; grid-template-columns: minmax(8rem, 15rem) minmax(0, 1fr) 3.2rem; gap: 12px; align-items: center; font-size: .9375rem; padding: 2px 4px; border-radius: 8px; }
+  .barras li:hover { background: var(--surface-2); }
+  .barras .pista { display: block; height: 16px; border-left: 1px solid var(--line-strong); }
+  .barras .barra { display: block; height: 16px; width: calc(var(--v) / 45 * 100%); background: var(--barra-gris); border-radius: 0 4px 4px 0; }
+  .barras li.destacada { font-weight: 600; }
+  .barras li.destacada .barra { background: var(--accent); }
+  .barras .valor { text-align: right; font-variant-numeric: tabular-nums; }
+  @media (max-width: 520px) { .barras li { grid-template-columns: minmax(0, 1fr) 3.2rem; } .barras .nombre { grid-column: 1 / -1; } .barras .pista { grid-column: 1; } }
+
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
   @media print {
     :root { color-scheme: light; }
@@ -179,8 +230,13 @@
     section { margin-bottom: 12px; }
     .portada { padding-block: 0 8px; }
     h1 { font-size: 28pt; max-width: none; }
-    .tiempos { grid-template-columns: repeat(6, minmax(0, 1fr)); margin-top: 14px; }
+    .partes { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 14px; }
+    .modelos { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .ramas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .arbol, .grafica, .indicadores div { break-inside: avoid; }
+    .barras .barra, .hoja, .modelos li.destacado { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .idea { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .idea.idea-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .idea li:not(:last-child)::after { right: -5px; top: 50%; bottom: auto; transform: translate(60%, -50%) rotate(45deg); }
     .listo, .nota { break-inside: avoid; }
     details { border: 0; padding: 0; background: none; }
@@ -213,18 +269,15 @@
   <section class="portada" aria-labelledby="titulo">
     <p class="etiqueta-superior">Guía de clase · 60 minutos · sin instalar nada</p>
     <h1 id="titulo">Tu modelo de Machine Learning en la web</h1>
-    <p class="entrada">Al final de esta clase tendrás tu propio modelo funcionando en una página web con dirección propia, como el <a href="../">Predictor Saber 11</a>. Solo necesitas un navegador, una cuenta de GitHub y una de Google.</p>
+    <p class="entrada">En esta clase entiendes qué hace el <a href="../">Predictor Saber 11</a>, aprendes a leer sus resultados y publicas tu propio modelo, el de tu proyecto final, en una página con dirección propia. Solo necesitas un navegador, una cuenta de GitHub y una de Google.</p>
     <div class="resultado-final">
       <span>Tu página quedará en:</span>
       <span class="url">https://<em>tu-usuario</em>.github.io/<em>mi-modelo</em>/</span>
     </div>
-    <ol class="tiempos" aria-label="Tiempo de cada paso">
-      <li><b>Antes</b><span>0. Crear cuenta de GitHub</span></li>
-      <li><b>5 min</b><span>1. Copiar la plantilla</span></li>
-      <li><b>7 min</b><span>2. Activar la página</span></li>
-      <li><b>20 min</b><span>3. Entrenar en Colab</span></li>
-      <li><b>8 min</b><span>4. Subir el modelo</span></li>
-      <li><b>5 min</b><span>5. Revisar y compartir</span></li>
+    <ol class="partes" aria-label="Las tres partes de la clase">
+      <li><b>Parte 1 · 10 min</b><span>Qué hace el modelo</span><small>Árboles y Gradient Boosting</small></li>
+      <li><b>Parte 2 · 10 min</b><span>Cómo leer los resultados</span><small>Los indicadores de la página</small></li>
+      <li><b>Parte 3 · 40 min</b><span>Publica tu modelo</span><small>4 pasos, sin escribir código</small></li>
     </ol>
   </section>
 
@@ -232,24 +285,112 @@
     <nav class="indice" aria-label="Contenido">
       <h2>Contenido</h2>
       <ol>
-        <li><a href="#idea">La idea</a></li>
-        <li><a href="#palabras">Palabras clave</a></li>
-        <li><a href="#paso-0">0. Cuenta <span>antes</span></a></li>
-        <li><a href="#paso-1">1. Plantilla <span>5</span></a></li>
-        <li><a href="#paso-2">2. Página <span>7</span></a></li>
-        <li><a href="#paso-3">3. Colab <span>20</span></a></li>
-        <li><a href="#paso-4">4. Subir <span>8</span></a></li>
-        <li><a href="#paso-5">5. Revisar <span>5</span></a></li>
-        <li><a href="#datos">Tus datos</a></li>
+        <li><a href="#parte-1">1. Qué hace el modelo</a></li>
+        <li><a href="#parte-2">2. Cómo leer los resultados</a></li>
+        <li><a href="#parte-3">3. Publica tu modelo</a></li>
+        <li><a href="#paso-1">· Copia la plantilla <span>10</span></a></li>
+        <li><a href="#paso-2">· Entrena en Colab <span>20</span></a></li>
+        <li><a href="#paso-3">· Sube el modelo <span>5</span></a></li>
+        <li><a href="#paso-4">· Abre y comparte <span>5</span></a></li>
+        <li><a href="#datos">¿Sirve mi proyecto?</a></li>
         <li><a href="#problemas">Si algo falla</a></li>
         <li><a href="#chequeo">Lista final</a></li>
       </ol>
     </nav>
 
     <div>
-      <section class="tarjeta" id="idea" aria-labelledby="idea-titulo">
-        <h2 class="titulo-seccion" id="idea-titulo">La idea en un minuto</h2>
-        <p class="objetivo">Un modelo lineal es una <strong>suma</strong>: un número de partida (el intercepto) más un número por cada respuesta (los coeficientes). Si guardamos esos números en un archivo, cualquier navegador puede hacer la suma. No hace falta un servidor con Python: la página es gratis y tus datos no salen del computador de quien la usa.</p>
+      <!-- ================================================================ PARTE 1 -->
+      <section class="tarjeta" id="parte-1" aria-labelledby="parte-1-titulo">
+        <div class="parte-titulo"><p class="meta">Parte 1 · 10 minutos</p></div>
+        <h2 class="titulo-seccion" id="parte-1-titulo">Qué hace el Predictor Saber 11</h2>
+        <p class="objetivo">Recibe 9 respuestas sobre el hogar y el colegio de un estudiante y estima su <strong>puntaje global del Saber 11</strong>, de 0 a 500. Aprendió de 426.052 resultados reales del ICFES.</p>
+        <ol class="idea idea-3">
+          <li>
+            <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>
+            <b>Entran 9 respuestas</b><span>Estrato, educación de los padres, internet, computador, tipo de colegio, jornada, zona y departamento</span>
+          </li>
+          <li>
+            <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v5M12 8l-6 5M12 8l6 5M6 13v4M18 13v4"/><circle cx="12" cy="3.5" r="1.5"/><circle cx="6" cy="18.5" r="1.5"/><circle cx="18" cy="18.5" r="1.5"/></svg>
+            <b>Un Gradient Boosting</b><span>100 árboles de decisión que trabajan en equipo</span>
+          </li>
+          <li>
+            <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17a8 8 0 0 1 16 0"/><path d="M12 17l4-5"/></svg>
+            <b>Sale un puntaje</b><span>Con su margen de error y lo que sumó o restó cada respuesta</span>
+          </li>
+        </ol>
+
+        <h3>¿Qué es un árbol de decisión?</h3>
+        <p>Un diagrama de preguntas de sí o no. Cada respuesta lleva por una rama hasta una <strong>hoja</strong>, que tiene un número: el puntaje promedio de los estudiantes que llegaron ahí. Este es un árbol real de dos preguntas, entrenado con los mismos datos:</p>
+        <figure class="arbol" aria-labelledby="arbol-titulo">
+          <figcaption id="arbol-titulo">Un árbol de dos preguntas entrenado con los 426.052 estudiantes de entrenamiento (promedio general: 250 puntos)</figcaption>
+          <div class="nodo raiz">¿Hay computador en el hogar?</div>
+          <div class="ramas">
+            <div class="rama">
+              <span class="rama-etiqueta">No</span>
+              <div class="nodo">¿Hay internet en el hogar?</div>
+              <div class="hojas">
+                <div class="hoja"><span class="respuesta">No</span><b>226</b><small>puntos en promedio<br>112.606 estudiantes</small></div>
+                <div class="hoja"><span class="respuesta">Sí</span><b>243</b><small>puntos en promedio<br>96.184 estudiantes</small></div>
+              </div>
+            </div>
+            <div class="rama">
+              <span class="rama-etiqueta">Sí</span>
+              <div class="nodo">¿La jornada es completa?</div>
+              <div class="hojas">
+                <div class="hoja"><span class="respuesta">No</span><b>258</b><small>puntos en promedio<br>172.440 estudiantes</small></div>
+                <div class="hoja"><span class="respuesta">Sí</span><b>294</b><small>puntos en promedio<br>44.822 estudiantes</small></div>
+              </div>
+            </div>
+          </div>
+        </figure>
+        <p>Con solo dos preguntas, el error promedio baja de 42,9 a 39,3 puntos. El Predictor usa 100 árboles con muchas más preguntas y baja el error a 34,7.</p>
+
+        <h3>Árbol, bosque y Gradient Boosting</h3>
+        <ul class="modelos">
+          <li><b>Árbol de decisión</b><span>Un solo diagrama de preguntas. Fácil de explicar, pero se equivoca más.</span></li>
+          <li><b>Bosque aleatorio</b><span>Muchos árboles distintos, cada uno con una parte de los datos. La estimación es el promedio de todos.</span></li>
+          <li class="destacado"><b>Gradient Boosting</b><span>Árboles pequeños en fila: el primero estima grueso y cada árbol nuevo corrige un poco el error de los anteriores. Es el que usa el Predictor.</span></li>
+        </ul>
+
+        <h3>¿Por qué funciona sin servidor?</h3>
+        <p>Un árbol son preguntas y números. Los 100 árboles viajan en el archivo <code>modelo.js</code> y el navegador los recorre en un instante: la página es gratis, rápida y privada, porque las respuestas no salen del computador de quien la usa. En la <a href="../#ficha">ficha del modelo</a> puedes ver las preguntas que hace el árbol 1 con tus respuestas.</p>
+      </section>
+
+      <!-- ================================================================ PARTE 2 -->
+      <section class="tarjeta" id="parte-2" aria-labelledby="parte-2-titulo">
+        <div class="parte-titulo"><p class="meta">Parte 2 · 10 minutos</p></div>
+        <h2 class="titulo-seccion" id="parte-2-titulo">Cómo leer los resultados</h2>
+        <p class="objetivo">Abre el <a href="../">Predictor</a> y busca estos indicadores. Los números son los del modelo publicado, medidos con 106.514 estudiantes que el modelo nunca vio.</p>
+        <dl class="indicadores">
+          <div><dt>La estimación</dt><dd>El número grande del medidor: lo que el modelo espera, en promedio, para estudiantes con esas respuestas.<span class="cifra">Con las respuestas más comunes: 260 puntos.</span></dd></div>
+          <div><dt>El rango aproximado</dt><dd>La estimación ± 35 puntos, el error típico del modelo.<span class="cifra">El puntaje real cayó dentro del rango en 56 de cada 100 estudiantes.</span></dd></div>
+          <div><dt>Qué suma y qué resta</dt><dd>Cuánto subió o bajó la estimación por cada respuesta. El modelo parte del promedio y las barras suman la estimación.<span class="cifra">250 de partida + 10 de las respuestas = 260.</span></dd></div>
+          <div><dt>MAE (error absoluto medio)</dt><dd>En promedio, ¿por cuánto se equivoca? Menos es mejor.<span class="cifra">34,7 puntos.</span></dd></div>
+          <div><dt>La línea base</dt><dd>Un «modelo» que siempre responde el promedio. Sirve para saber si el nuestro vale la pena.<span class="cifra">Se equivoca 42,9 puntos: el nuestro, un 19 % menos.</span></dd></div>
+          <div><dt>R²</dt><dd>Qué parte de las diferencias entre estudiantes explica el modelo (0 = nada, 1 = todo).<span class="cifra">0,32: explica el 32 %. El resto depende de lo que el modelo no ve.</span></dd></div>
+          <div><dt>Verificación «5 de 5»</dt><dd>La página calcula lo mismo que Python (scikit-learn) con 5 estudiantes de prueba. Si no coincidiera, no se publicaría.</dd></div>
+          <div><dt>Si predices una clase</dt><dd>Si el modelo estima sí/no o una clase (aprobado, reprobado…), la página muestra una <strong>probabilidad</strong> de 0 a 100 % y la ficha agrega la <strong>exactitud</strong>: de cada 100 casos, cuántos acierta.</dd></div>
+        </dl>
+
+        <h3>¿Qué modelo se equivoca menos?</h3>
+        <figure class="grafica" aria-labelledby="grafica-titulo">
+          <figcaption id="grafica-titulo">Error promedio (MAE) en los 106.514 estudiantes de prueba, en puntos. Menos es mejor.</figcaption>
+          <ul class="barras">
+            <li><span class="nombre">Línea base: siempre el promedio</span><span class="pista"><span class="barra" style="--v: 42.9"></span></span><span class="valor">42,9</span></li>
+            <li><span class="nombre">Árbol de decisión (uno solo)</span><span class="pista"><span class="barra" style="--v: 36.5"></span></span><span class="valor">36,5</span></li>
+            <li><span class="nombre">Bosque aleatorio (50 árboles)</span><span class="pista"><span class="barra" style="--v: 35.9"></span></span><span class="valor">35,9</span></li>
+            <li><span class="nombre">Regresión lineal</span><span class="pista"><span class="barra" style="--v: 35.5"></span></span><span class="valor">35,5</span></li>
+            <li class="destacada"><span class="nombre">Gradient Boosting · el del Predictor</span><span class="pista"><span class="barra" style="--v: 34.7"></span></span><span class="valor">34,7</span></li>
+          </ul>
+        </figure>
+        <p>Gana el Gradient Boosting, pero por poco. Con 9 preguntas sobre el contexto, la información tiene un techo: ningún modelo adivina lo que no está en los datos, como el esfuerzo o el colegio concreto. Un modelo más complejo exprime un poco más, pero no hace magia.</p>
+      </section>
+
+      <!-- ================================================================ PARTE 3 -->
+      <section class="tarjeta" id="parte-3" aria-labelledby="parte-3-titulo">
+        <div class="parte-titulo"><p class="meta">Parte 3 · 40 minutos</p></div>
+        <h2 class="titulo-seccion" id="parte-3-titulo">Publica tu modelo en 4 pasos</h2>
+        <p class="objetivo">Con los datos de tu proyecto final y el tipo de modelo que usaste. No escribes código: copias una plantilla, llenas un formulario y subes un archivo.</p>
         <ol class="idea">
           <li>
             <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M4 9h16M4 14h16M10 4v16"/></svg>
@@ -257,11 +398,11 @@
           </li>
           <li>
             <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7 3 12l5 5M16 7l5 5-5 5M13.5 4l-3 16"/></svg>
-            <b>Colab</b><span>Python entrena el modelo</span>
+            <b>Colab</b><span>Entrena y compara los modelos</span>
           </li>
           <li>
             <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg>
-            <b>modelo.js</b><span>El modelo convertido en números</span>
+            <b>modelo.js</b><span>Tu modelo convertido en números</span>
           </li>
           <li>
             <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h6l2 2h10v10H3z"/></svg>
@@ -269,202 +410,143 @@
           </li>
           <li>
             <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
-            <b>GitHub Pages</b><span>La publica en internet</span>
+            <b>GitHub Pages</b><span>Lo publica en internet</span>
           </li>
         </ol>
-      </section>
-
-      <section class="tarjeta" id="palabras" aria-labelledby="palabras-titulo">
-        <h2 class="titulo-seccion" id="palabras-titulo">Seis palabras que vas a oír</h2>
         <dl class="glosario">
-          <div><dt>GitHub</dt><dd>Un sitio para guardar proyectos. Se parece a Google Drive, pero guarda cada versión de cada archivo.</dd></div>
           <div><dt>Repositorio</dt><dd>La carpeta de tu proyecto en GitHub. Tu página vive en su carpeta <code>web</code>.</dd></div>
           <div><dt>Commit</dt><dd>Guardar un cambio con una nota corta, como «subo mi modelo».</dd></div>
-          <div><dt>GitHub Actions</dt><dd>Un asistente automático: cuando cambias algo, revisa tu modelo y publica la página.</dd></div>
-          <div><dt>GitHub Pages</dt><dd>Convierte la carpeta <code>web</code> en una página con dirección propia, gratis.</dd></div>
+          <div><dt>GitHub Actions</dt><dd>Un asistente que revisa tu modelo y publica la página cada vez que cambias algo.</dd></div>
           <div><dt>Colab</dt><dd>Python en el navegador, de Google. No se instala nada.</dd></div>
         </dl>
-      </section>
-
-      <section class="tarjeta paso" id="paso-0" aria-labelledby="paso-0-titulo">
-        <div class="paso-cabecera">
-          <span class="numero" aria-hidden="true">0</span>
-          <div><h2 id="paso-0-titulo">Crea tu cuenta de GitHub</h2><p class="meta">Antes de la clase · 5 minutos</p></div>
-        </div>
-        <ol class="pasos">
-          <li>Entra a <a class="mostrar-url" href="https://github.com/signup" rel="noopener">github.com/signup</a>.</li>
-          <li>Escribe tu correo, una contraseña y un <strong>nombre de usuario</strong>. El usuario será parte de la dirección de tu página: elige algo corto, sin espacios.</li>
-          <li>Revisa tu correo y escribe el código que te envió GitHub.</li>
-          <li>Si te pregunta por un plan, elige <span class="ui">Free</span>.</li>
-          <li>Ten a mano también una cuenta de Google (Gmail o la institucional) para usar Colab.</li>
-        </ol>
-        <div class="listo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><p><strong>Listo si</strong> al entrar a github.com ves tu ícono de usuario arriba a la derecha.</p></div>
+        <div class="nota"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.1"/></svg><p><strong>Antes de la clase:</strong> crea tu cuenta en <a class="mostrar-url" href="https://github.com/signup" rel="noopener">github.com/signup</a> (elige un usuario corto: será parte de tu dirección) y ten a mano tu cuenta de Google.</p></div>
       </section>
 
       <section class="tarjeta paso" id="paso-1" aria-labelledby="paso-1-titulo">
         <div class="paso-cabecera">
           <span class="numero" aria-hidden="true">1</span>
-          <div><h2 id="paso-1-titulo">Copia la plantilla</h2><p class="meta">5 minutos · en GitHub</p></div>
+          <div><h2 id="paso-1-titulo">Copia la plantilla y activa tu página</h2><p class="meta">10 minutos · en GitHub</p></div>
         </div>
-        <p class="objetivo">La plantilla trae todo listo: la página, el cuaderno y el asistente que publica. Vas a crear tu propia copia.</p>
         <ol class="pasos">
           <li>Con tu sesión iniciada, abre la plantilla:
             <div class="enlace-copiable"><a class="mostrar-url" href="https://github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning" rel="noopener">github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning</a><button class="copiar" type="button" data-copiar="https://github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning">Copiar</button></div>
           </li>
-          <li>Arriba a la derecha pulsa el botón verde <span class="ui ui-verde">Use this template</span> <span class="flecha">→</span> <span class="ui">Create a new repository</span>.</li>
-          <li>En <span class="ui">Repository name</span> escribe un nombre corto sin espacios ni tildes, por ejemplo <code>mi-modelo</code>.</li>
-          <li>Deja marcado <span class="ui">Public</span>. La página gratis solo funciona con repositorios públicos.</li>
-          <li>Pulsa <span class="ui ui-verde">Create repository</span>.</li>
+          <li>Pulsa el botón verde <span class="ui ui-verde">Use this template</span> <span class="flecha">→</span> <span class="ui">Create a new repository</span>. Nombre: <code>mi-modelo</code>. Deja <span class="ui">Public</span> y pulsa <span class="ui ui-verde">Create repository</span>.</li>
+          <li>En tu repositorio: <span class="ui">Settings</span> <span class="flecha">→</span> <span class="ui">Pages</span> <span class="flecha">→</span> en <span class="ui">Source</span> elige <span class="ui">GitHub Actions</span>.</li>
+          <li>Abre <span class="ui">Actions</span> <span class="flecha">→</span> <span class="ui">Publicar en GitHub Pages</span> <span class="flecha">→</span> <span class="ui">Run workflow</span> y el botón verde <span class="ui ui-verde">Run workflow</span>. Espera la ✓ verde (uno o dos minutos).</li>
         </ol>
-        <div class="listo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><p><strong>Listo si</strong> arriba a la izquierda dice <code>tu-usuario / mi-modelo</code>.</p></div>
-        <div class="nota"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.1"/></svg><p>Si en la pestaña <span class="ui">Actions</span> aparece una ejecución con una ✗ roja, es normal: todavía no has activado la página. Se arregla en el paso 2.</p></div>
+        <div class="listo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><p><strong>Listo si</strong> en <code>https://tu-usuario.github.io/mi-modelo/</code> ves el Predictor Saber 11 (tu copia).</p></div>
+        <div class="nota"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.1"/></svg><p>Si en <span class="ui">Actions</span> ves una ✗ roja antes del punto 3, es normal: la página todavía no estaba activada.</p></div>
       </section>
 
       <section class="tarjeta paso" id="paso-2" aria-labelledby="paso-2-titulo">
         <div class="paso-cabecera">
           <span class="numero" aria-hidden="true">2</span>
-          <div><h2 id="paso-2-titulo">Activa tu página</h2><p class="meta">7 minutos · en GitHub</p></div>
+          <div><h2 id="paso-2-titulo">Entrena tu modelo en Colab</h2><p class="meta">20 minutos · en Google Colab</p></div>
         </div>
-        <p class="objetivo">Le dices a GitHub que publique la carpeta <code>web</code>. Al terminar tendrás la página del Saber 11 en tu propia dirección; en el paso 3 la cambias por tu modelo.</p>
         <ol class="pasos">
-          <li>En tu repositorio, abre la pestaña <span class="ui">Settings</span> (la del engranaje, arriba).</li>
-          <li>En el menú de la izquierda, entra a <span class="ui">Pages</span>.</li>
-          <li>En <span class="ui">Build and deployment</span> <span class="flecha">→</span> <span class="ui">Source</span>, elige <span class="ui">GitHub Actions</span>. Se guarda solo.</li>
-          <li>Abre la pestaña <span class="ui">Actions</span>. A la izquierda elige <span class="ui">Publicar en GitHub Pages</span>.</li>
-          <li>Pulsa <span class="ui">Run workflow</span> y luego el botón verde <span class="ui ui-verde">Run workflow</span>.</li>
-          <li>Espera uno o dos minutos hasta que aparezca una ✓ verde.</li>
-          <li>Abre tu página: <span class="url">https://<em>tu-usuario</em>.github.io/<em>mi-modelo</em>/</span> (tu usuario en minúsculas y el nombre exacto de tu repositorio).</li>
+          <li>Abre el cuaderno plantilla e inicia sesión con Google:
+            <div class="enlace-copiable"><a class="mostrar-url" href="https://colab.research.google.com/github/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/blob/main/notebooks/plantilla_tu_modelo.ipynb" rel="noopener">Abrir plantilla_tu_modelo.ipynb en Colab</a><button class="copiar" type="button" data-copiar="https://colab.research.google.com/github/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/blob/main/notebooks/plantilla_tu_modelo.ipynb">Copiar enlace</button></div>
+          </li>
+          <li><strong>La primera vez no cambies nada.</strong> Menú <span class="ui">Entorno de ejecución</span> <span class="flecha">→</span> <span class="ui">Ejecutar todas</span> (en inglés: <span class="ui">Runtime → Run all</span>). Si aparece un aviso, pulsa <span class="ui">Ejecutar de todos modos</span>. Usa un ejemplo de precios de diamantes.</li>
+          <li><strong>Con tus datos:</strong> llena el formulario <strong>«1. Configura tu modelo»</strong>. Estos son los campos que importan:
+            <pre class="config" aria-label="Campos del formulario">TITULO    = "Predictor de ..."        <span class="c"># el nombre de tu página</span>
+URL_DATOS = ""                        <span class="c"># vacío = aparece un botón para subir tu CSV</span>
+OBJETIVO  = "columna_a_predecir"      <span class="c"># lo que quieres predecir</span>
+VARIABLES = "col_1, col_2, col_3"     <span class="c"># de 3 a 10 columnas (vacío = el cuaderno elige)</span>
+MODELO    = "boosting"                <span class="c"># boosting, bosque, arbol o lineal</span></pre>
+          </li>
+          <li><span class="ui">Ejecutar todas</span> otra vez. Mira la tabla: los cuatro modelos contra la línea base. El cuaderno te dice cuál se equivoca menos.</li>
+          <li>Al final se descarga <code>modelo.js</code>. Si el navegador pregunta, permite la descarga.</li>
         </ol>
-        <div class="listo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><p><strong>Listo si</strong> ves el Predictor Saber 11 funcionando en tu dirección.</p></div>
+        <div class="listo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><p><strong>Listo si</strong> el cuaderno dice «OK: JavaScript y scikit-learn coinciden» y tienes <code>modelo.js</code> en tus descargas.</p></div>
       </section>
 
       <section class="tarjeta paso" id="paso-3" aria-labelledby="paso-3-titulo">
         <div class="paso-cabecera">
           <span class="numero" aria-hidden="true">3</span>
-          <div><h2 id="paso-3-titulo">Entrena tu modelo en Colab</h2><p class="meta">20 minutos · en Google Colab</p></div>
+          <div><h2 id="paso-3-titulo">Sube tu modelo</h2><p class="meta">5 minutos · en GitHub</p></div>
         </div>
-        <p class="objetivo">El cuaderno plantilla hace todo el trabajo de Machine Learning: carga los datos, separa entrenamiento y prueba, entrena, evalúa y convierte el modelo en el archivo <code>modelo.js</code>. Tú solo cambias una celda.</p>
         <ol class="pasos">
-          <li>Abre el cuaderno plantilla e inicia sesión con tu cuenta de Google:
-            <div class="enlace-copiable"><a class="mostrar-url" href="https://colab.research.google.com/github/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/blob/main/notebooks/plantilla_tu_modelo.ipynb" rel="noopener">Abrir plantilla_tu_modelo.ipynb en Colab</a><button class="copiar" type="button" data-copiar="https://colab.research.google.com/github/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/blob/main/notebooks/plantilla_tu_modelo.ipynb">Copiar enlace</button></div>
-          </li>
-          <li><strong>La primera vez, no cambies nada:</strong> el cuaderno usa un ejemplo (precios de diamantes) para que veas el recorrido completo.</li>
-          <li>Menú <span class="ui">Entorno de ejecución</span> <span class="flecha">→</span> <span class="ui">Ejecutar todas</span> (en inglés: <span class="ui">Runtime</span> <span class="flecha">→</span> <span class="ui">Run all</span>). Si aparece un aviso de que el cuaderno no es de Google, pulsa <span class="ui">Ejecutar de todos modos</span>.</li>
-          <li>Espera a que termine (menos de un minuto con el ejemplo). En la sección 8 debe decir <strong>«OK: JavaScript y scikit-learn coinciden»</strong>.</li>
-          <li>Al final se descarga <code>modelo.js</code>. Si el navegador pregunta, permite la descarga.</li>
-          <li><strong>Con tus datos:</strong> cambia la celda <span class="ui">1. Configura</span> y vuelve a <span class="ui">Ejecutar todas</span>. Esto es lo que cambias:</li>
+          <li>En tu repositorio, pestaña <span class="ui">Code</span>, abre la carpeta <code>web</code>.</li>
+          <li><span class="ui">Add file</span> <span class="flecha">→</span> <span class="ui">Upload files</span> y arrastra tu <code>modelo.js</code>.</li>
+          <li>Pulsa el botón verde <span class="ui ui-verde">Commit changes</span>.</li>
+          <li>Abre <span class="ui">Actions</span> y espera la ✓ verde. Antes de publicar, GitHub revisa que tu modelo calcule lo mismo que Python.</li>
         </ol>
-<pre class="config"><span class="c"># 1. CONFIGURA AQUÍ</span>
-TITULO = "Predictor de ..."            <span class="c"># nombre de tu página</span>
-PREGUNTA = "¿...?"                     <span class="c"># la frase grande de la portada</span>
-AUTOR = "Tu nombre"
-URL_DATOS = None                       <span class="c"># None = aparece un botón para subir tu CSV</span>
-OBJETIVO = "columna_a_predecir"        <span class="c"># una columna de números</span>
-ETIQUETA_OBJETIVO = "Precio"           <span class="c"># cómo se llama en la página</span>
-UNIDAD = "pesos"                       <span class="c"># puntos, pesos, %, horas…</span>
-<span class="c"># de 3 a 10 columnas (con None, el cuaderno las elige)</span>
-VARIABLES = ["col_1", "col_2", "col_3"]</pre>
-        <div class="listo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><p><strong>Listo si</strong> tienes el archivo <code>modelo.js</code> en tu carpeta de descargas.</p></div>
-        <div class="nota"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.1"/></svg><p>Si el archivo quedó como <code>modelo (1).js</code> (pasa cuando descargas dos veces), cámbiale el nombre a <code>modelo.js</code>. La página solo lee ese nombre.</p></div>
+        <div class="listo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><p><strong>Listo si</strong> la ejecución más reciente en <span class="ui">Actions</span> tiene una ✓ verde.</p></div>
+        <div class="nota"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.1"/></svg><p>Si el archivo quedó como <code>modelo (1).js</code>, cámbiale el nombre a <code>modelo.js</code> antes de subirlo. Tiene que quedar dentro de la carpeta <code>web</code>.</p></div>
       </section>
 
       <section class="tarjeta paso" id="paso-4" aria-labelledby="paso-4-titulo">
         <div class="paso-cabecera">
           <span class="numero" aria-hidden="true">4</span>
-          <div><h2 id="paso-4-titulo">Sube tu modelo a GitHub</h2><p class="meta">8 minutos · en GitHub</p></div>
-        </div>
-        <p class="objetivo">Reemplazas el <code>modelo.js</code> del Saber 11 por el tuyo. En cuanto lo guardes, el asistente revisa que el modelo sea válido y publica la página de nuevo.</p>
-        <ol class="pasos">
-          <li>En tu repositorio, pestaña <span class="ui">Code</span>, abre la carpeta <code>web</code>.</li>
-          <li>Pulsa <span class="ui">Add file</span> <span class="flecha">→</span> <span class="ui">Upload files</span>.</li>
-          <li>Arrastra tu <code>modelo.js</code> a la zona punteada (o usa <span class="ui">choose your files</span>).</li>
-          <li>Abajo, pulsa el botón verde <span class="ui ui-verde">Commit changes</span>.</li>
-          <li>Abre la pestaña <span class="ui">Actions</span> y espera la ✓ verde (uno o dos minutos).</li>
-        </ol>
-        <div class="listo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><p><strong>Listo si</strong> la ejecución más reciente en <span class="ui">Actions</span> tiene una ✓ verde.</p></div>
-        <div class="nota"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.1"/></svg><p>El archivo tiene que quedar <strong>dentro de la carpeta <code>web</code></strong>. Si lo subiste afuera, la página no cambia: bórralo y súbelo otra vez desde la carpeta correcta.</p></div>
-      </section>
-
-      <section class="tarjeta paso" id="paso-5" aria-labelledby="paso-5-titulo">
-        <div class="paso-cabecera">
-          <span class="numero" aria-hidden="true">5</span>
-          <div><h2 id="paso-5-titulo">Revisa y comparte</h2><p class="meta">5 minutos</p></div>
+          <div><h2 id="paso-4-titulo">Abre y comparte</h2><p class="meta">5 minutos</p></div>
         </div>
         <ol class="pasos">
-          <li>Abre tu página y recarga sin caché: <span class="ui">Ctrl</span> + <span class="ui">F5</span> en Windows, <span class="ui">Cmd</span> + <span class="ui">Shift</span> + <span class="ui">R</span> en Mac.</li>
-          <li>Revisa que el título, la pregunta y tu nombre sean los tuyos.</li>
-          <li>Baja hasta <strong>Verificación en tu navegador</strong>: debe decir <strong>«5 de 5 coinciden»</strong>. Eso prueba que la página calcula lo mismo que Python.</li>
-          <li>Cambia respuestas en el formulario y mira qué suma y qué resta cada una.</li>
+          <li>Abre tu página y recarga sin caché: <span class="ui">Ctrl + F5</span> en Windows, <span class="ui">Cmd + Shift + R</span> en Mac.</li>
+          <li>Revisa que salgan tu título y tus preguntas, y que <strong>Verificación</strong> diga «5 de 5 coinciden».</li>
           <li>Comparte tu enlace con un compañero y ábrelo en tu celular.</li>
         </ol>
         <div class="listo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><p><strong>Listo si</strong> otra persona abre tu enlace y ve tu modelo funcionando.</p></div>
       </section>
 
+      <!-- ================================================================ DATOS -->
       <section class="tarjeta" id="datos" aria-labelledby="datos-titulo">
-        <h2 class="titulo-seccion" id="datos-titulo">Cómo preparar tus datos</h2>
+        <h2 class="titulo-seccion" id="datos-titulo">¿Sirve mi proyecto?</h2>
         <ul class="simple">
-          <li>Un archivo <strong>CSV</strong> con una fila por caso y los nombres de las columnas en la primera fila.</li>
-          <li>Una columna de <strong>números</strong> que quieras predecir (un precio, un puntaje, unas horas). Si es sí/no, usa 1 y 0: el modelo estimará un porcentaje.</li>
-          <li>Entre <strong>3 y 10 columnas</strong> que la expliquen. Pueden ser texto (una ciudad, una categoría) o números (una edad, un tamaño): el cuaderno convierte los números en rangos.</li>
-          <li>Desde Excel: <span class="ui">Archivo</span> <span class="flecha">→</span> <span class="ui">Guardar como</span> <span class="flecha">→</span> <span class="ui">CSV UTF-8 (delimitado por comas)</span>.</li>
-          <li><strong>No incluyas datos personales</strong> (nombres, documentos, correos, teléfonos) ni uses para predecir columnas como género o etnia: tu página es pública.</li>
+          <li>Un archivo <strong>CSV</strong> con una fila por caso y los nombres de las columnas en la primera fila. Desde Excel: <span class="ui">Archivo → Guardar como → CSV UTF-8</span>.</li>
+          <li>La columna que predices puede ser un <strong>número</strong> (un precio, un puntaje, unas horas): la página estima ese número. O <strong>sí/no</strong> o una <strong>clase</strong>: la página estima la probabilidad. Si hay más de dos clases, escribe en <code>CLASE_POSITIVA</code> la que te interesa.</li>
+          <li>De 3 a 10 columnas que la expliquen, de texto (una ciudad, una categoría) o de números (una edad, un tamaño).</li>
+          <li>No uses datos personales (nombres, documentos, correos) ni columnas como género o etnia para predecir: tu página es pública.</li>
         </ul>
+        <h3>¿Y si ya entrené mi modelo en otro cuaderno?</h3>
+        <p>Pasa tus datos limpios a un CSV y elige en la plantilla el mismo tipo de modelo. El cuaderno lo entrena igual y lo convierte en <code>modelo.js</code>. La página necesita el modelo como números, no un archivo <code>.pkl</code>.</p>
       </section>
 
+      <!-- ================================================================ PROBLEMAS -->
       <section class="tarjeta" id="problemas" aria-labelledby="problemas-titulo">
         <h2 class="titulo-seccion" id="problemas-titulo">Si algo falla</h2>
         <details>
           <summary>No veo el botón «Use this template»</summary>
-          <div><p>Revisa que iniciaste sesión en GitHub. Si aun así no aparece, usa <span class="ui">Fork</span> (arriba a la derecha) para crear tu copia. En una copia hecha con Fork, abre <span class="ui">Actions</span> y pulsa <span class="ui">I understand my workflows, go ahead and enable them</span> antes del paso 2.</p></div>
+          <div>Revisa que iniciaste sesión en GitHub. Si aun así no aparece, usa <span class="ui">Fork</span> (arriba a la derecha). En una copia hecha con Fork, abre <span class="ui">Actions</span> y pulsa <span class="ui">I understand my workflows, go ahead and enable them</span> antes de activar la página.</div>
         </details>
         <details>
           <summary>Mi página muestra «404»</summary>
-          <div><p>Espera uno o dos minutos y recarga. Si sigue: revisa que en <span class="ui">Settings</span> <span class="flecha">→</span> <span class="ui">Pages</span> la fuente sea <span class="ui">GitHub Actions</span>, que en <span class="ui">Actions</span> haya una ✓ verde y que la dirección tenga tu usuario en minúsculas, el nombre exacto del repositorio y la barra final.</p></div>
+          <div>Espera uno o dos minutos y recarga. Si sigue: revisa que en <span class="ui">Settings → Pages</span> la fuente sea <span class="ui">GitHub Actions</span>, que en <span class="ui">Actions</span> haya una ✓ verde y que la dirección tenga tu usuario en minúsculas, el nombre exacto del repositorio y la barra final.</div>
         </details>
         <details>
           <summary>En «Actions» hay una ✗ roja</summary>
-          <div>
-            <p>Ábrela y mira qué paso falló:</p>
-            <ul class="simple">
-              <li><strong>«Configurar GitHub Pages»</strong> (<em>Get Pages site failed</em>): falta activar la página. Haz el paso 2 y vuelve a pulsar <span class="ui">Run workflow</span>.</li>
-              <li><strong>«Prueba de paridad»</strong>: el <code>modelo.js</code> no es válido. Vuelve a descargarlo desde Colab y súbelo sin abrirlo ni editarlo.</li>
-            </ul>
-          </div>
+          <div>Ábrela y mira qué paso falló. <strong>«Configurar GitHub Pages»</strong>: falta activar la página (paso 1, punto 3) y volver a pulsar <span class="ui">Run workflow</span>. <strong>«Prueba de paridad»</strong>: el <code>modelo.js</code> no es válido; descárgalo otra vez desde Colab y súbelo sin abrirlo ni editarlo.</div>
         </details>
         <details>
           <summary>Subí mi modelo pero la página sigue igual</summary>
-          <div><p>Recarga sin caché (<span class="ui">Ctrl</span> + <span class="ui">F5</span>). Revisa que el archivo se llame exactamente <code>modelo.js</code> y que esté dentro de la carpeta <code>web</code>. Mira también que la última ejecución en <span class="ui">Actions</span> haya terminado en verde.</p></div>
+          <div>Recarga sin caché (<span class="ui">Ctrl + F5</span>). Revisa que el archivo se llame exactamente <code>modelo.js</code>, que esté dentro de la carpeta <code>web</code> y que la última ejecución en <span class="ui">Actions</span> esté en verde.</div>
         </details>
         <details>
-          <summary>Mi repositorio quedó privado</summary>
-          <div><p>La página gratis necesita un repositorio público. En <span class="ui">Settings</span> <span class="flecha">→</span> <span class="ui">General</span>, al final de la página, pulsa <span class="ui">Change visibility</span> y elige <span class="ui">Public</span>.</p></div>
+          <summary>Colab dice «No encuentro la columna» o «Tu objetivo tiene N clases»</summary>
+          <div>Copia el nombre exacto de la columna desde la tabla del cuaderno (mayúsculas, tildes y espacios incluidos). Si tu objetivo tiene más de dos clases, escribe en <code>CLASE_POSITIVA</code> la clase cuya probabilidad quieres estimar.</div>
         </details>
         <details>
-          <summary>Colab dice «No encuentro la columna OBJETIVO» o «no es numérica»</summary>
-          <div><p>Copia el nombre exacto de la columna desde la tabla de la sección 3 del cuaderno (mayúsculas, tildes y espacios incluidos). El objetivo tiene que ser una columna de números.</p></div>
-        </details>
-        <details>
-          <summary>Colab dice que mi modelo casi no le gana a la línea base</summary>
-          <div><p>Tus columnas explican poco lo que quieres predecir. Prueba con otras columnas en <code>VARIABLES</code>, o escribe <code>VARIABLES = None</code> para que el cuaderno elija las que más explican.</p></div>
+          <summary>Mi modelo casi no le gana a la línea base</summary>
+          <div>Tus columnas explican poco lo que quieres predecir. Prueba otras columnas en <code>VARIABLES</code>, o déjalo vacío para que el cuaderno elija las que más explican.</div>
         </details>
         <details>
           <summary>No logro correr Colab en clase</summary>
-          <div><p>Sigue con los pasos 4 y 5 usando el modelo de ejemplo ya listo: en tu repositorio abre <code>ejemplos/diamantes/modelo.js</code>, descárgalo (botón de descarga arriba a la derecha del archivo) y súbelo a la carpeta <code>web</code>.</p></div>
+          <div>Sigue con los pasos 3 y 4 usando el modelo de ejemplo ya listo: en tu repositorio abre <code>ejemplos/diamantes/modelo.js</code>, descárgalo (botón de descarga arriba a la derecha del archivo) y súbelo a la carpeta <code>web</code>.</div>
         </details>
       </section>
 
+      <!-- ================================================================ CHEQUEO -->
       <section class="tarjeta" id="chequeo" aria-labelledby="chequeo-titulo">
         <h2 class="titulo-seccion" id="chequeo-titulo">Lista final</h2>
-        <p class="objetivo">Marca cada punto cuando lo termines. Se guarda en este navegador.</p>
+        <p>Marca cada punto cuando lo termines. Se guarda en este navegador.</p>
         <ul class="lista-chequeo" id="lista-chequeo">
-          <li><label><input type="checkbox" id="chk-1"><span>Tengo cuenta de GitHub.</span></label></li>
-          <li><label><input type="checkbox" id="chk-2"><span>Copié la plantilla en un repositorio público.</span></label></li>
-          <li><label><input type="checkbox" id="chk-3"><span>Activé GitHub Pages con la fuente «GitHub Actions».</span></label></li>
-          <li><label><input type="checkbox" id="chk-4"><span>Mi página abre en tu-usuario.github.io/mi-modelo.</span></label></li>
-          <li><label><input type="checkbox" id="chk-5"><span>Entrené mi modelo en Colab y descargué modelo.js.</span></label></li>
-          <li><label><input type="checkbox" id="chk-6"><span>Subí modelo.js a la carpeta web y Actions quedó en verde.</span></label></li>
-          <li><label><input type="checkbox" id="chk-7"><span>La verificación dice «5 de 5 coinciden».</span></label></li>
-          <li><label><input type="checkbox" id="chk-8"><span>Compartí mi enlace.</span></label></li>
+          <li><label><input type="checkbox" id="chk-1"><span>Entiendo qué hace un árbol de decisión y un Gradient Boosting.</span></label></li>
+          <li><label><input type="checkbox" id="chk-2"><span>Sé leer la estimación, el MAE, la línea base y el R².</span></label></li>
+          <li><label><input type="checkbox" id="chk-3"><span>Copié la plantilla y veo el Predictor en mi dirección.</span></label></li>
+          <li><label><input type="checkbox" id="chk-4"><span>Entrené mi modelo en Colab y descargué <code>modelo.js</code>.</span></label></li>
+          <li><label><input type="checkbox" id="chk-5"><span>Subí <code>modelo.js</code> a la carpeta <code>web</code> y Actions quedó en verde.</span></label></li>
+          <li><label><input type="checkbox" id="chk-6"><span>Mi página dice «5 de 5 coinciden» y compartí mi enlace.</span></label></li>
         </ul>
         <p class="progreso" id="progreso" aria-live="polite"></p>
       </section>
@@ -544,7 +626,7 @@ VARIABLES = ["col_1", "col_2", "col_3"]</pre>
   });
 
   // Lista final: se guarda en este navegador (si el almacenamiento está disponible).
-  var CLAVE = 'guia-tu-modelo-chequeo';
+  var CLAVE = 'guia-tu-modelo-chequeo-v2';
   var casillas = Array.prototype.slice.call(document.querySelectorAll('#lista-chequeo input'));
   var marcadas = {};
   try { marcadas = JSON.parse(localStorage.getItem(CLAVE) || '{}') || {}; } catch (e) { marcadas = {}; }
