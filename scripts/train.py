@@ -13,11 +13,11 @@ Pasos:
  2. Limpia: puntaje a número, quita filas sin puntaje, faltantes -> "Sin información".
  3. Separa train/test ANTES de ajustar cualquier cosa.
  4. Agrupa las categorías con muy pocos casos (aprendido SOLO con train).
- 5. Entrena OneHotEncoder + Ridge y lo compara con una línea base y con
-    HistGradientBoosting.
- 6. Exporta web/modelo.js y web/modelo.json.
- 7. Prueba de paridad: Node recalcula las predicciones y deben coincidir con
-    scikit-learn (tolerancia 1e-6).
+ 5. Compara cinco modelos en el set de prueba: línea base, regresión lineal,
+    árbol de decisión, bosque aleatorio y Gradient Boosting.
+ 6. Exporta el Gradient Boosting (sus 100 árboles) a web/modelo.js y web/modelo.json.
+ 7. Prueba de paridad: Node recalcula las predicciones con web/motor.js (el mismo
+    código de la página) y deben coincidir con scikit-learn (tolerancia 1e-6).
 
 Requisitos: pandas, numpy, scikit-learn, requests (y Node.js para la paridad).
 """
@@ -43,19 +43,20 @@ import requests
 import sklearn
 from sklearn.compose import ColumnTransformer
 from sklearn.dummy import DummyRegressor
-from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.ensemble import HistGradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.tree import DecisionTreeRegressor
 
 RAIZ = Path(__file__).resolve().parent.parent
 
 # ---------------------------------------------------------------------------
 # Configuración
 # ---------------------------------------------------------------------------
-VERSION = "1.0.0"
+VERSION = "2.0.0"
 DATASET_ID = "kgxf-xxbe"
 API = f"https://www.datos.gov.co/resource/{DATASET_ID}"
 URL_CONJUNTO = f"https://www.datos.gov.co/d/{DATASET_ID}"
@@ -314,19 +315,33 @@ def agrupar_raras(datos: pd.DataFrame, frecuentes: dict) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # 4. Modelos y métricas
 # ---------------------------------------------------------------------------
-def crear_modelo(variables: list[str], alpha: float = ALPHA) -> Pipeline:
-    preprocesamiento = ColumnTransformer(
-        [("categoricas", OneHotEncoder(handle_unknown="ignore"), variables)])
-    return Pipeline([("preprocesamiento", preprocesamiento),
-                     ("regresion", Ridge(alpha=alpha))])
+# Los modelos que se comparan. Todos reciben las mismas columnas one-hot; el que
+# se publica en la página es el Gradient Boosting.
+MODELOS = {
+    "lineal": "Regresión lineal (Ridge)",
+    "arbol": "Árbol de decisión (profundidad 8)",
+    "bosque": "Bosque aleatorio (50 árboles)",
+    "boosting": "Gradient Boosting (100 árboles)",
+}
+PUBLICADO = "boosting"
 
 
-def crear_boosting(variables: list[str]) -> Pipeline:
-    codificador = ColumnTransformer([("categoricas", OrdinalEncoder(
-        handle_unknown="use_encoded_value", unknown_value=-1), variables)])
-    boosting = HistGradientBoostingRegressor(
-        categorical_features=list(range(len(variables))), random_state=SEMILLA)
-    return Pipeline([("preprocesamiento", codificador), ("regresion", boosting)])
+def crear_modelo(variables: list[str], tipo: str = PUBLICADO) -> Pipeline:
+    """Un Pipeline: one-hot de las categorías y después el modelo elegido."""
+    regresores = {
+        "lineal": Ridge(alpha=ALPHA),
+        "arbol": DecisionTreeRegressor(max_depth=8, min_samples_leaf=100, random_state=SEMILLA),
+        "bosque": RandomForestRegressor(n_estimators=50, max_depth=10, min_samples_leaf=100,
+                                        max_features=0.5, n_jobs=-1, random_state=SEMILLA),
+        # Los valores por defecto de scikit-learn: 100 árboles de hasta 31 hojas.
+        "boosting": HistGradientBoostingRegressor(random_state=SEMILLA),
+    }
+    # El Gradient Boosting necesita una matriz densa; a la regresión lineal le basta una dispersa.
+    codificador = OneHotEncoder(handle_unknown="ignore", sparse_output=tipo == "lineal")
+    return Pipeline([
+        ("preprocesamiento", ColumnTransformer([("categoricas", codificador, variables)])),
+        ("regresion", regresores[tipo]),
+    ])
 
 
 def metricas(y_real, y_pred) -> dict:
@@ -364,39 +379,119 @@ def posicion_categoria(variable: str, valor: str, etiqueta: str) -> tuple:
     return (0, llaves.index(clave(valor)), "") if clave(valor) in llaves else (1, 0, clave(etiqueta))
 
 
-def exportar_modelo(modelo: Pipeline, variables: list[str], x_train: pd.DataFrame,
-                    y_train: pd.Series, extras: dict) -> dict:
-    """Arma el diccionario que usa la página: intercepto + coeficientes por categoría."""
-    codificador = modelo.named_steps["preprocesamiento"].named_transformers_["categoricas"]
-    ridge = modelo.named_steps["regresion"]
-    salida_variables = []
-    inicio = 0
-    for indice, variable in enumerate(variables):
-        categorias = list(codificador.categories_[indice])
-        coeficientes = ridge.coef_[inicio:inicio + len(categorias)]
-        inicio += len(categorias)
+def arboles_de(regresor) -> dict:
+    """Los árboles de un modelo de scikit-learn como listas de números (lo que lee web/motor.js).
+
+    Por cada nodo: la columna por la que pregunta (c; -1 en las hojas), el umbral (u),
+    el hijo si columna <= umbral (i), el hijo si no (d) y el valor del nodo (v).
+    estimación = base + escala x (suma de las hojas a las que llega cada árbol).
+    modo: "suma" (Gradient Boosting), "promedio" (bosque aleatorio) o "arbol" (uno solo).
+    """
+    def entero(a):
+        return np.asarray(a).astype(np.int64)  # algunos índices vienen sin signo (uint32)
+
+    def arbol(columna, umbral, izquierda, derecha, valor):
+        hoja = entero(izquierda) < 0
+        return {"c": np.where(hoja, -1, entero(columna)).tolist(),
+                "u": np.where(hoja, 0.0, np.asarray(umbral, dtype=float)).tolist(),
+                "i": np.where(hoja, -1, entero(izquierda)).tolist(),
+                "d": np.where(hoja, -1, entero(derecha)).tolist(),
+                "v": np.asarray(valor, dtype=float).tolist()}
+
+    if isinstance(regresor, HistGradientBoostingRegressor):
+        # scikit-learn guarda estos árboles en _predictors, un atributo interno. Si una
+        # versión futura lo cambia, este paso falla (o falla la prueba de paridad).
+        lista = []
+        for (predictor,) in regresor._predictors:
+            nodos = predictor.nodes
+            if nodos["is_categorical"].any():
+                raise ValueError("Se esperaban solo columnas numéricas o one-hot")
+            hoja = nodos["is_leaf"].astype(bool)
+            izquierda = np.where(hoja, -1, entero(nodos["left"]))
+            derecha = np.where(hoja, -1, entero(nodos["right"]))
+            # Las hojas ya traen la tasa de aprendizaje. Cada nodo interno recibe el promedio
+            # de sus dos hijos, ponderado por casos: con eso se reparten los aportes.
+            valor = nodos["value"].astype(float)
+            for n in range(len(nodos) - 1, -1, -1):
+                if not hoja[n]:
+                    i, d = izquierda[n], derecha[n]
+                    if min(i, d) <= n:
+                        raise ValueError("Orden de nodos inesperado en el árbol")
+                    casos_i, casos_d = float(nodos["count"][i]), float(nodos["count"][d])
+                    valor[n] = (casos_i * valor[i] + casos_d * valor[d]) / (casos_i + casos_d)
+            lista.append(arbol(nodos["feature_idx"], nodos["num_threshold"], izquierda, derecha, valor))
+        return {"modo": "suma", "base": float(np.ravel(regresor._baseline_prediction)[0]),
+                "escala": 1.0, "float32": False, "lista": lista}
+    if isinstance(regresor, RandomForestRegressor):
+        arboles, escala, modo = [e.tree_ for e in regresor.estimators_], 1.0 / len(regresor.estimators_), "promedio"
+    elif isinstance(regresor, DecisionTreeRegressor):
+        arboles, escala, modo = [regresor.tree_], 1.0, "arbol"
+    else:
+        raise TypeError(f"No sé exportar {type(regresor).__name__}")
+    # Estos árboles de scikit-learn comparan en float32; motor.js hace lo mismo.
+    return {"modo": modo, "base": 0.0, "escala": escala, "float32": True,
+            "lista": [arbol(a.feature, a.threshold, a.children_left, a.children_right, a.value[:, 0, 0])
+                      for a in arboles]}
+
+
+def recorrer_arboles(arboles: dict, x, variable_de_columna, n_variables: int):
+    """Hace en Python lo mismo que web/motor.js, para muchas filas a la vez.
+
+    Devuelve la estimación, el punto de partida y el aporte de cada variable: cuánto
+    cambió el valor del nodo en los pasos del camino que preguntaron por ella.
+    """
+    x = np.asarray(x, dtype=float)
+    if arboles["float32"]:
+        x = x.astype(np.float32).astype(float)
+    variable_de_columna = np.asarray(variable_de_columna)
+    filas = np.arange(len(x))
+    escala = arboles["escala"]
+    estimacion = np.full(len(x), arboles["base"])
+    partida = arboles["base"]
+    aportes = np.zeros((len(x), n_variables))
+    for arbol in arboles["lista"]:
+        c, u, i, d, v = (np.asarray(arbol[k]) for k in ("c", "u", "i", "d", "v"))
+        partida += escala * v[0]
+        nodo = np.zeros(len(x), dtype=int)
+        activas = c[nodo] >= 0
+        while activas.any():
+            f, n = filas[activas], nodo[activas]
+            hijo = np.where(x[f, c[n]] <= u[n], i[n], d[n])
+            np.add.at(aportes, (f, variable_de_columna[c[n]]), escala * (v[hijo] - v[n]))
+            nodo[f] = hijo
+            activas = c[nodo] >= 0
+        estimacion += escala * v[nodo]
+    return estimacion, partida, aportes
+
+
+def describir_variables(variables: list[str], categorias: list, x_train: pd.DataFrame,
+                        raras: dict, coeficientes: list | None = None) -> list[dict]:
+    """Lo que la página necesita de cada pregunta: etiquetas, orden y frecuencia de sus respuestas."""
+    salida = []
+    for k, variable in enumerate(variables):
         conteo = x_train[variable].value_counts()
         filas = []
-        for valor, coeficiente in zip(categorias, coeficientes):
+        for j, valor in enumerate(categorias[k]):
             etiqueta = etiqueta_categoria(variable, valor)
-            fila = {
-                "valor": str(valor),
-                "etiqueta": etiqueta,
-                "coeficiente": float(coeficiente),
+            fila = {"valor": str(valor), "etiqueta": etiqueta}
+            if coeficientes is not None:
+                fila["coeficiente"] = float(coeficientes[k][j])
+            fila.update({
                 "frecuencia": float(conteo.get(valor, 0) / len(x_train)),
                 "n": int(conteo.get(valor, 0)),
                 # Una categoría con muy pocos casos sigue en el modelo, pero no se
                 # ofrece como respuesta en el formulario.
                 "en_formulario": bool(conteo.get(valor, 0) >= MIN_CASOS),
-            }
+            })
             if valor == OTRA:
-                agrupadas = [etiqueta_categoria(variable, r) for r in extras["raras"].get(variable, [])]
+                agrupadas = [etiqueta_categoria(variable, r) for r in raras.get(variable, [])]
                 fila["agrupa"] = sorted(set(agrupadas), key=clave)
             filas.append(fila)
         filas.sort(key=lambda f: posicion_categoria(variable, f["valor"], f["etiqueta"]))
         nombre, corta, grupo, ayuda = INFO_VARIABLES[variable]
-        salida_variables.append({
+        salida.append({
             "nombre": variable,
+            "tipo": "categoria",
             "etiqueta": nombre,
             "etiqueta_corta": corta,
             "grupo": grupo,
@@ -404,18 +499,17 @@ def exportar_modelo(modelo: Pipeline, variables: list[str], x_train: pd.DataFram
             "mas_frecuente": str(conteo.idxmax()),
             "categorias": filas,
         })
-    if inicio != len(ridge.coef_):
-        raise RuntimeError("El número de coeficientes no coincide con las categorías")
+    return salida
 
-    # Identidad útil para la gráfica de contribuciones:
-    # intercepto + sum(frecuencia * coeficiente) = promedio de y en train.
+
+def exportar_modelo(modelo: Pipeline, variables: list[str], x_train: pd.DataFrame,
+                    y_train: pd.Series, extras: dict) -> dict:
+    """Arma el diccionario que usa la página (web/motor.js lo sabe recorrer)."""
+    preprocesamiento = modelo.named_steps["preprocesamiento"]
+    categorias = [list(c) for c in preprocesamiento.named_transformers_["categoricas"].categories_]
+    regresor = modelo.named_steps["regresion"]
     promedio_train = float(np.mean(y_train))
-    reconstruido = float(ridge.intercept_) + sum(
-        c["frecuencia"] * c["coeficiente"] for v in salida_variables for c in v["categorias"])
-    if abs(reconstruido - promedio_train) > 1e-6:
-        raise RuntimeError(f"La identidad del promedio falla: {reconstruido} vs {promedio_train}")
-
-    return {
+    salida = {
         "version": VERSION,
         "proyecto": "Predictor Saber 11",
         "fuente": {
@@ -432,29 +526,82 @@ def exportar_modelo(modelo: Pipeline, variables: list[str], x_train: pd.DataFram
         "n_prueba": extras["n_prueba"],
         "semilla": SEMILLA,
         "min_casos": MIN_CASOS,
-        "algoritmo": f"Ridge (alpha = {ALPHA:g}) con codificación one-hot",
         "sklearn_version": sklearn.__version__,
         "objetivo": {"nombre": OBJETIVO, "etiqueta": "Puntaje global", "minimo": 0, "maximo": 500},
         "metricas": extras["metricas"],
         "cobertura_mae": extras["cobertura_mae"],
         "promedio_nacional": extras["promedio_nacional"],
         "promedio_entrenamiento": promedio_train,
-        "intercepto": float(ridge.intercept_),
-        "variables": salida_variables,
-        "excluidas": [
-            {"nombre": "estu_genero",
-             "motivo": "Decisión ética: el modelo no debe cambiar su predicción por el género."},
-            {"nombre": "cole_nombre_establecimiento, cole_cod_dane_*, cole_codigo_icfes",
-             "motivo": "Nombres y códigos de colegio: identifican instituciones y no describen el contexto."},
-        ] + [{"nombre": v, "motivo": MOTIVOS_FUERA.get(v, "No mejora la validación.")}
-             for v in CANDIDATAS if v not in variables],
-        "casos_prueba": extras["casos_prueba"],
     }
+    excluidas = [
+        {"nombre": "estu_genero",
+         "motivo": "Decisión ética: el modelo no debe cambiar su predicción por el género."},
+        {"nombre": "cole_nombre_establecimiento, cole_cod_dane_*, cole_codigo_icfes",
+         "motivo": "Nombres y códigos de colegio: identifican instituciones y no describen el contexto."},
+    ] + [{"nombre": v, "motivo": MOTIVOS_FUERA.get(v, "No mejora la validación.")}
+         for v in CANDIDATAS if v not in variables]
+
+    if isinstance(regresor, Ridge):
+        coeficientes, inicio = [], 0
+        for lista in categorias:
+            coeficientes.append(regresor.coef_[inicio:inicio + len(lista)])
+            inicio += len(lista)
+        if inicio != len(regresor.coef_):
+            raise RuntimeError("El número de coeficientes no coincide con las categorías")
+        salida_variables = describir_variables(variables, categorias, x_train, extras["raras"], coeficientes)
+        # Identidad que usa la gráfica de aportes:
+        # intercepto + suma(frecuencia * coeficiente) = promedio de y en train.
+        reconstruido = float(regresor.intercept_) + sum(
+            c["frecuencia"] * c["coeficiente"] for v in salida_variables for c in v["categorias"])
+        if abs(reconstruido - promedio_train) > 1e-6:
+            raise RuntimeError(f"La identidad del promedio falla: {reconstruido} vs {promedio_train}")
+        return {**salida, "tipo": "lineal", "algoritmo": f"Ridge (alpha = {ALPHA:g}) con codificación one-hot",
+                "algoritmo_corto": "Regresión lineal", "intercepto": float(regresor.intercept_),
+                "variables": salida_variables, "excluidas": excluidas, "casos_prueba": extras["casos_prueba"]}
+
+    arboles = arboles_de(regresor)
+    arboles["columnas"] = [[v, str(c)] for v, lista in zip(variables, categorias) for c in lista]
+    variable_de_columna = [variables.index(columna[0]) for columna in arboles["columnas"]]
+    # Con una muestra de entrenamiento: se comprueba que los números exportados reproducen
+    # a scikit-learn y se mide cuánto aporta cada pregunta (importancia).
+    muestra = x_train.sample(n=min(5000, len(x_train)), random_state=SEMILLA)
+    estimacion, _, aportes = recorrer_arboles(arboles, preprocesamiento.transform(muestra),
+                                              variable_de_columna, len(variables))
+    diferencia = float(np.max(np.abs(estimacion - modelo.predict(muestra))))
+    if diferencia > 1e-6:
+        raise RuntimeError(f"Los árboles exportados no reproducen a scikit-learn (diferencia {diferencia})")
+    salida_variables = describir_variables(variables, categorias, x_train, extras["raras"])
+    for k, variable in enumerate(salida_variables):
+        variable["importancia"] = float(np.mean(np.abs(aportes[:, k])))
+    arboles["max_aporte"] = float(np.max(np.abs(aportes)))
+    if isinstance(regresor, HistGradientBoostingRegressor):
+        algoritmo = (f"Gradient Boosting (HistGradientBoostingRegressor): {regresor.n_iter_} árboles "
+                     f"de hasta {regresor.max_leaf_nodes} hojas, tasa de aprendizaje "
+                     f"{regresor.learning_rate:g}".replace(".", ","))
+        corto = "Gradient Boosting"
+    elif isinstance(regresor, RandomForestRegressor):
+        algoritmo = f"Bosque aleatorio (RandomForestRegressor): {len(regresor.estimators_)} árboles"
+        corto = "Bosque aleatorio"
+    else:
+        algoritmo = f"Árbol de decisión (DecisionTreeRegressor), profundidad {regresor.get_depth()}"
+        corto = "Árbol de decisión"
+    return {**salida, "tipo": "arboles", "algoritmo": algoritmo,
+            "algoritmo_corto": corto, "variables": salida_variables, "excluidas": excluidas,
+            "casos_prueba": extras["casos_prueba"], "arboles": arboles}
+
+
+def a_json(modelo_dict: dict) -> str:
+    """JSON legible, pero con los árboles en una sola línea (son miles de números)."""
+    if "arboles" not in modelo_dict:
+        return json.dumps(modelo_dict, ensure_ascii=False, indent=2)
+    marcador = "__ARBOLES__"
+    texto = json.dumps({**modelo_dict, "arboles": marcador}, ensure_ascii=False, indent=2)
+    return texto.replace(f'"{marcador}"', json.dumps(modelo_dict["arboles"], separators=(",", ":")))
 
 
 def escribir_modelo(modelo_dict: dict, carpeta_web: Path) -> tuple[Path, Path]:
     carpeta_web.mkdir(parents=True, exist_ok=True)
-    texto = json.dumps(modelo_dict, ensure_ascii=False, indent=2)
+    texto = a_json(modelo_dict)
     ruta_json = carpeta_web / "modelo.json"
     ruta_js = carpeta_web / "modelo.js"
     ruta_json.write_text(texto + "\n", encoding="utf-8")
@@ -525,7 +672,8 @@ def main() -> int:
     parser.add_argument("--periodo", help="código del periodo, p. ej. 20224 (por defecto, el más reciente)")
     parser.add_argument("--datos", default=str(RAIZ / "datos"), help="carpeta para la copia local de los datos")
     parser.add_argument("--salida", default=str(RAIZ / "web"), help="carpeta donde se escriben modelo.js y modelo.json")
-    parser.add_argument("--sin-boosting", action="store_true", help="omite la comparación con HistGradientBoosting")
+    parser.add_argument("--rapido", action="store_true",
+                        help="entrena solo el Gradient Boosting (omite la comparación con los demás modelos)")
     args = parser.parse_args()
     carpeta_datos = Path(args.datos)
 
@@ -562,18 +710,28 @@ def main() -> int:
 
     print("5) Entrenamiento y evaluación en test")
     base = DummyRegressor(strategy="mean").fit(x_train, y_train)
-    modelo = crear_modelo(VARIABLES).fit(x_train, y_train)
+    comparacion = [{"clave": "linea_base", "nombre": "Línea base: siempre el promedio",
+                    **metricas(y_test, base.predict(x_test))}]
+    modelos = {}
+    for tipo in ([PUBLICADO] if args.rapido else list(MODELOS)):
+        inicio = time.time()
+        modelos[tipo] = crear_modelo(VARIABLES, tipo).fit(x_train, y_train)
+        nombre = MODELOS[tipo]
+        if tipo == "boosting":  # con parada temprana podría usar menos de 100 árboles
+            nombre = f"Gradient Boosting ({modelos[tipo].named_steps['regresion'].n_iter_} árboles)"
+        fila = {"clave": tipo, "nombre": nombre, **metricas(y_test, modelos[tipo].predict(x_test))}
+        if tipo == PUBLICADO:
+            fila["publicado"] = True
+        comparacion.append(fila)
+        print(f"   {fila['nombre']:<36} MAE {fila['mae']:6.2f}  RMSE {fila['rmse']:6.2f}  "
+              f"R² {fila['r2']:.3f}  ({time.time() - inicio:.0f} s)")
+    modelo = modelos[PUBLICADO]
     pred_modelo = modelo.predict(x_test)
     resultados = {
-        "modelo": {"nombre": "Regresión lineal (Ridge)", **metricas(y_test, pred_modelo)},
-        "linea_base": {"nombre": "Línea base: siempre el promedio", **metricas(y_test, base.predict(x_test))},
+        "modelo": next(f for f in comparacion if f.get("publicado")),
+        "linea_base": comparacion[0],
+        "comparacion": comparacion,
     }
-    if not args.sin_boosting:
-        boosting = crear_boosting(VARIABLES).fit(x_train, y_train)
-        resultados["boosting"] = {"nombre": "HistGradientBoosting (solo comparación)",
-                                  **metricas(y_test, boosting.predict(x_test))}
-    for fila in resultados.values():
-        print(f"   {fila['nombre']:<40} MAE {fila['mae']:6.2f}  RMSE {fila['rmse']:6.2f}  R² {fila['r2']:.3f}")
     mae = resultados["modelo"]["mae"]
     cobertura = float(np.mean(np.abs(y_test.to_numpy() - pred_modelo) <= mae))
 
@@ -592,7 +750,7 @@ def main() -> int:
     }
     modelo_dict = exportar_modelo(modelo, VARIABLES, x_train, y_train, extras)
     ruta_js, ruta_json = escribir_modelo(modelo_dict, Path(args.salida))
-    print(f"   {ruta_js}\n   {ruta_json}")
+    print(f"   {ruta_js} ({ruta_js.stat().st_size / 1024:.0f} KB)\n   {ruta_json}")
 
     print("7) Prueba de paridad JavaScript vs scikit-learn")
     # Además de los 5 casos de la página, se verifican 2000 filas de test más.

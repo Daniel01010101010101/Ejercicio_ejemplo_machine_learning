@@ -252,6 +252,15 @@
   .campo.distinta select { border-color: var(--accent); background: var(--accent-wash); }
   .marca-cambio { display: none; margin-left: 6px; font-size: .75rem; font-weight: 500; color: var(--accent); }
   .campo.distinta .marca-cambio { display: inline; }
+  .numero { display: grid; grid-template-columns: minmax(0, 1fr) 7rem; gap: 12px; align-items: center; }
+  .numero input { font: inherit; font-size: .9375rem; color: var(--ink); }
+  .numero input[type="range"] { width: 100%; min-height: 32px; margin: 0; accent-color: var(--accent); cursor: pointer; }
+  .numero input[type="number"] {
+    width: 100%; min-height: 46px; padding: 10px 12px; font-variant-numeric: tabular-nums;
+    background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 11px;
+  }
+  .numero input[type="number"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .campo.distinta input[type="number"] { border-color: var(--accent); background: var(--accent-wash); }
 
   .botones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
   .boton {
@@ -406,6 +415,11 @@
     background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px;
     overflow-x: auto; white-space: pre;
   }
+  .titulo-recorrido { font-size: .75rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 20px 0 8px; }
+  .recorrido { margin: 0; padding-left: 1.7em; display: grid; gap: 5px; font-size: .875rem; color: var(--ink-2); }
+  .recorrido li::marker { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .recorrido strong { color: var(--ink); font-weight: 600; }
+  .hoja-recorrido { margin: 10px 0 0; padding: 9px 12px; border-radius: 10px; background: var(--accent-wash); font-size: .9375rem; }
   .estado-verificacion { margin-bottom: 16px; }
   .estado-verificacion .chip { white-space: normal; max-width: 100%; line-height: 1.4; padding-block: 5px; }
   .ok { color: var(--ok); font-weight: 600; }
@@ -484,7 +498,7 @@
   <section class="portada contenedor" aria-labelledby="titulo">
     <p class="etiqueta-superior" id="texto-periodo">Saber 11 · datos abiertos del ICFES</p>
     <h1 id="titulo">¿Cuánto pesa el contexto en el puntaje del Saber 11?</h1>
-    <p class="entrada" id="texto-entrada">Responde las preguntas sobre el hogar y el colegio. Un modelo de regresión entrenado con resultados reales estima el puntaje global (de 0 a 500) y muestra qué suma y qué resta cada respuesta.</p>
+    <p class="entrada" id="texto-entrada">Responde las preguntas sobre el hogar y el colegio. Un modelo de Machine Learning entrenado con resultados reales estima el puntaje global (de 0 a 500) y muestra qué suma y qué resta cada respuesta.</p>
     <div class="avisos">
       <div class="aviso aviso-etico" role="note" aria-labelledby="titulo-etico">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 10v4.5M12 17.2v.1"/></svg>
@@ -587,7 +601,7 @@
         <table>
           <caption class="sr-only">Aporte de cada respuesta a la estimación</caption>
           <thead>
-            <tr><th scope="col">Pregunta</th><th scope="col">Respuesta</th><th scope="col" class="num">Aporte</th><th scope="col" class="num">Frente a la más común</th></tr>
+            <tr><th scope="col">Pregunta</th><th scope="col">Respuesta</th><th scope="col" class="num">Aporte</th><th scope="col" class="num" id="th-frente">Frente a la más común</th></tr>
           </thead>
           <tbody id="cuerpo-tabla-aportes"></tbody>
         </table>
@@ -607,7 +621,7 @@
           <div class="contenedor-tabla">
             <table>
               <caption class="sr-only">Métricas en el set de prueba</caption>
-              <thead><tr><th scope="col">Modelo</th><th scope="col" class="num">MAE</th><th scope="col" class="num">RMSE</th><th scope="col" class="num">R²</th></tr></thead>
+              <thead><tr id="cabeza-metricas"><th scope="col">Modelo</th><th scope="col" class="num">MAE</th><th scope="col" class="num">RMSE</th><th scope="col" class="num">R²</th></tr></thead>
               <tbody id="ficha-metricas"></tbody>
             </table>
           </div>
@@ -618,6 +632,7 @@
           <h3>Cómo calcula la estimación</h3>
           <pre class="formula" id="ficha-formula">estimación = intercepto + Σ coeficiente(respuesta)</pre>
           <p class="tarjeta-intro" style="margin-bottom:0" id="ficha-formula-texto">Es una suma. Por eso el modelo completo cabe en un archivo pequeño y corre en tu navegador.</p>
+          <div id="ficha-recorrido" hidden></div>
         </div>
         <div class="tarjeta">
           <h3>Límites que debes conocer</h3>
@@ -627,16 +642,16 @@
             <li><strong>Es un promedio por perfil.</strong> Dentro de cada perfil hay estudiantes muy por encima y muy por debajo de la estimación.</li>
             <li id="limite-periodo"><strong>Usa un solo periodo.</strong> No refleja cambios posteriores en el examen ni en el país.</li>
             <li><strong>Las respuestas del hogar son autorreportadas</strong> y algunas faltan (aparecen como «Sin información»).</li>
-            <li><strong>Es aditivo.</strong> No captura interacciones, por ejemplo que el efecto del estrato cambie según el departamento.</li>
+            <li id="limite-aditivo"><strong>Es aditivo.</strong> No captura interacciones, por ejemplo que el efecto del estrato cambie según el departamento.</li>
           </ul>
         </div>
         <div class="tarjeta completa">
           <h3>Variables del modelo</h3>
-          <p class="tarjeta-intro" style="margin-bottom:14px">Ordenadas por la distancia entre su categoría con mayor y menor coeficiente: cuánto puede mover la estimación cada pregunta por sí sola.</p>
+          <p class="tarjeta-intro" style="margin-bottom:14px" id="texto-variables">Ordenadas por la distancia entre su categoría con mayor y menor coeficiente: cuánto puede mover la estimación cada pregunta por sí sola.</p>
           <div class="contenedor-tabla">
             <table>
               <caption class="sr-only">Variables del modelo</caption>
-              <thead><tr><th scope="col">Pregunta</th><th scope="col" id="th-columna">Columna del ICFES</th><th scope="col" class="num">Categorías</th><th scope="col" class="num">Mayor − menor</th></tr></thead>
+              <thead><tr><th scope="col">Pregunta</th><th scope="col" id="th-columna">Columna del ICFES</th><th scope="col" class="num">Categorías</th><th scope="col" class="num" id="th-importancia">Mayor − menor</th></tr></thead>
               <tbody id="ficha-variables"></tbody>
             </table>
           </div>
@@ -694,12 +709,14 @@
 </div>
 <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
 
+<script src="motor.js"></script>
 <script src="modelo.js"></script>
 <script>
 (function () {
   'use strict';
 
   var M = window.MODELO;
+  var MOTOR = window.MotorModelo;
   var raiz = document.documentElement;
   var movimientoReducido = window.matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -734,9 +751,10 @@
   else if (consultaOscuro.addListener) consultaOscuro.addListener(pintarBotonTema);
   pintarBotonTema();
 
-  if (!M || !Array.isArray(M.variables)) {
-    var aviso = crear('p', 'error-modelo',
-      'No se encontró el modelo. Verifica que el archivo modelo.js esté en la misma carpeta que index.html.');
+  if (!MOTOR || !M || !Array.isArray(M.variables)) {
+    var aviso = crear('p', 'error-modelo', !MOTOR
+      ? 'No se encontró motor.js. Verifica que el archivo esté en la misma carpeta que index.html.'
+      : 'No se encontró el modelo. Verifica que el archivo modelo.js esté en la misma carpeta que index.html.');
     $('resultado').appendChild(aviso);
     return;
   }
@@ -758,50 +776,69 @@
     var d = new Date(Date.UTC(+partes[0], +partes[1] - 1, +partes[2], 12));
     return new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(d);
   }
+  function limitar(x, a, b) { return Math.min(b, Math.max(a, x)); }
 
   // ---------------------------------------------------------------- Modelo
-  // Misma función que scripts/prueba_paridad.js: intercepto + suma de coeficientes.
-  function predecir(modelo, respuestas) {
-    var total = modelo.intercepto;
-    modelo.variables.forEach(function (variable) {
-      var valor = respuestas[variable.nombre];
-      var categoria = variable.categorias.find(function (c) { return c.valor === valor; });
-      if (categoria) total += categoria.coeficiente; // categoría desconocida: aporta 0
-    });
-    return total;
+  // La predicción la hace motor.js, el mismo código que revisa la prueba de paridad.
+  var ARBOLES = M.tipo === 'arboles';
+  var N_ARBOLES = ARBOLES ? M.arboles.lista.length : 0;
+  var MODO = ARBOLES ? (M.arboles.modo || 'suma') : 'lineal';
+  var PROBABILIDAD = !!(M.objetivo && M.objetivo.tipo === 'probabilidad');
+  var DESCRIPCION_MODELO = MODO === 'suma' ? 'Gradient Boosting (' + N_ARBOLES + ' árboles de decisión)'
+    : MODO === 'promedio' ? 'bosque aleatorio (' + N_ARBOLES + ' árboles de decisión)'
+    : MODO === 'arbol' ? 'árbol de decisión' : 'regresión lineal';
+
+  function predecir(modelo, respuestas) { return MOTOR.predecir(modelo, respuestas); }
+  function buscar(variable, valor) { return MOTOR.categoria(variable, valor); }
+  function esNumero(v) { return v.tipo === 'numero'; }
+  function valorComun(v) { return esNumero(v) ? v.mediana : v.mas_frecuente; }
+  var formatosNumero = {};
+  function formatoNumero(v, x) {
+    if (!formatosNumero[v.nombre]) {
+      formatosNumero[v.nombre] = new Intl.NumberFormat('es-CO', { maximumFractionDigits: v.decimales || 0 });
+    }
+    return formatosNumero[v.nombre].format(x);
   }
-  function buscar(variable, valor) {
-    return variable.categorias.find(function (c) { return c.valor === valor; }) || null;
+  function textoRespuesta(v, valor) {
+    if (esNumero(v)) return formatoNumero(v, valor);
+    var c = buscar(v, valor);
+    return c ? c.etiqueta : 'Respuesta desconocida';
   }
-  // Efecto promedio de una variable en train. Con estos promedios se cumple:
-  // intercepto + suma(efectos promedio) = promedio de entrenamiento.
-  var efectoMedio = {};
-  M.variables.forEach(function (v) {
-    efectoMedio[v.nombre] = v.categorias.reduce(function (s, c) { return s + c.frecuencia * c.coeficiente; }, 0);
-  });
+  function conValor(respuestas, nombre, valor) {
+    var copia = {};
+    Object.keys(respuestas).forEach(function (k) { copia[k] = respuestas[k]; });
+    copia[nombre] = valor;
+    return copia;
+  }
+  // Estimación, punto de partida y aporte de cada respuesta (punto de partida + aportes = estimación).
+  // «Frente a la típica»: cuánto cambia la estimación si esa respuesta fuera la más común (o la mediana).
   function calcularAportes(respuestas) {
-    return M.variables.map(function (v) {
-      var elegida = buscar(v, respuestas[v.nombre]);
-      var comun = buscar(v, v.mas_frecuente);
-      var coef = elegida ? elegida.coeficiente : 0;
+    var e = MOTOR.explicar(M, respuestas);
+    var lista = M.variables.map(function (v) {
+      var comun = valorComun(v);
+      var esComun = respuestas[v.nombre] === comun;
       return {
         variable: v,
-        elegida: elegida,
-        comun: comun,
-        aporte: coef - efectoMedio[v.nombre],
-        frenteAComun: coef - (comun ? comun.coeficiente : 0)
+        valor: respuestas[v.nombre],
+        conocida: esNumero(v) || !!buscar(v, respuestas[v.nombre]),
+        esComun: esComun,
+        aporte: e.aportes[v.nombre],
+        frenteAComun: esComun ? 0 : e.estimacion - predecir(M, conValor(respuestas, v.nombre, comun))
       };
     });
+    return { estimacion: e.estimacion, partida: e.partida, lista: lista };
   }
   function respuestasComunes() {
     var r = {};
-    M.variables.forEach(function (v) { r[v.nombre] = v.mas_frecuente; });
+    M.variables.forEach(function (v) { r[v.nombre] = valorComun(v); });
     return r;
   }
 
   var MAE = M.metricas.modelo.mae;
   var MIN = M.objetivo.minimo, MAX = M.objetivo.maximo;
   var respuestas = respuestasComunes();
+  var PARTIDA = MOTOR.explicar(M, respuestas).partida;
+  var HAY_NUMEROS = M.variables.some(esNumero);
 
   // Textos propios del modelo (los exporta el cuaderno plantilla). Si modelo.js no los
   // trae, la página usa los del Predictor Saber 11.
@@ -825,8 +862,8 @@
     $('titulo').textContent = T.pregunta || T.titulo || '';
     $('texto-periodo').textContent = T.etiqueta_superior || ('Datos: ' + M.fuente.nombre);
     $('chip-periodo').textContent = M.periodo ? 'Periodo ' + M.periodo_etiqueta : 'Modelo v' + M.version;
-    $('texto-entrada').textContent = T.entrada || ('Responde ' + M.variables.length + ' preguntas. Un modelo de regresión, ' +
-      'entrenado con ' + f0.format(M.n_entrenamiento) + ' registros, calcula una estimación de ' +
+    $('texto-entrada').textContent = T.entrada || ('Responde ' + M.variables.length + ' preguntas. Un modelo de ' +
+      DESCRIPCION_MODELO + ', entrenado con ' + f0.format(M.n_entrenamiento) + ' registros, calcula una estimación de ' +
       primeraMinuscula(M.objetivo.etiqueta) + ' y muestra qué suma y qué resta cada respuesta.');
     $('texto-etico').textContent = (T.aviso_etico || 'Es una estimación con error.') + ' En promedio se equivoca por ' +
       f0.format(MAE) + ' ' + UNIDAD + '.';
@@ -837,36 +874,50 @@
     $('texto-recordatorio').textContent = T.recordatorio || 'Es una estimación con error, no un valor exacto.';
     $('leyenda-suma').textContent = 'Suma';
     $('leyenda-resta').textContent = 'Resta';
-    var notaMetricas = $('nota-metricas');
-    notaMetricas.textContent = '';
-    [['MAE', ': error promedio, en ' + UNIDAD + '. '], ['RMSE', ': castiga más los errores grandes. '],
-     ['R²', ': parte de la variación que explica el modelo (0 equivale a responder siempre el promedio).']
-    ].forEach(function (par) {
-      notaMetricas.appendChild(crear('strong', null, par[0]));
-      notaMetricas.appendChild(document.createTextNode(par[1]));
-    });
     $('texto-cobertura').textContent = 'En el set de prueba, el valor real quedó dentro de ese rango en el ' +
       fPct.format(M.cobertura_mae) + ' de los casos.';
   } else {
     $('texto-periodo').textContent = 'Saber 11 · periodo ' + M.periodo_etiqueta + ' · datos abiertos del ICFES';
     $('chip-periodo').textContent = 'Periodo ' + M.periodo_etiqueta;
     $('texto-entrada').textContent = 'Responde ' + M.variables.length + ' preguntas sobre el hogar y el colegio. ' +
-      'Un modelo de regresión entrenado con ' + f0.format(M.n_entrenamiento) + ' resultados reales del ICFES estima ' +
-      'el puntaje global (de 0 a 500) y muestra qué suma y qué resta cada respuesta.';
+      'Un modelo de ' + DESCRIPCION_MODELO + ' entrenado con ' + f0.format(M.n_entrenamiento) + ' resultados reales ' +
+      'del ICFES estima el puntaje global (de 0 a 500) y muestra qué suma y qué resta cada respuesta.';
     $('texto-etico').textContent = 'Este modelo mide desigualdad de contexto, no capacidad. Estudiantes con las mismas ' +
       'respuestas obtienen puntajes muy distintos: la estimación se equivoca en promedio ' + f0.format(MAE) +
       ' puntos. Nunca la uses para juzgar, clasificar o seleccionar a un estudiante.';
     $('texto-cobertura').textContent = 'En el set de prueba, el puntaje real quedó dentro de ese rango en el ' +
       fPct.format(M.cobertura_mae) + ' de los casos.';
   }
+  var notaMetricas = $('nota-metricas');
+  notaMetricas.textContent = '';
+  [['MAE', ': error promedio, en ' + UNIDAD + '. '], ['RMSE', ': castiga más los errores grandes. '],
+   ['R²', ': parte de la variación que explica el modelo (0 equivale a responder siempre el promedio).']
+  ].forEach(function (par) {
+    notaMetricas.appendChild(crear('strong', null, par[0]));
+    notaMetricas.appendChild(document.createTextNode(par[1]));
+  });
+  if (M.metricas.modelo.exactitud !== undefined) {
+    notaMetricas.appendChild(document.createTextNode(' '));
+    notaMetricas.appendChild(crear('strong', null, 'Exactitud'));
+    notaMetricas.appendChild(document.createTextNode(': de cada 100 casos de prueba, cuántos acierta si decimos «sí» ' +
+      'cuando la probabilidad pasa del 50 %.'));
+  }
   $('medidor-de').textContent = (T && T.subetiqueta_medidor) || ('de ' + f0.format(MAX) + ' ' + UNIDAD);
   $('leyenda-promedio').textContent = ETIQ_PROM;
   $('dt-promedio').textContent = 'Frente al ' + primeraMinuscula(ETIQ_PROM);
   $('nota-rango').textContent = '± ' + f0.format(MAE) + ' ' + UNIDAD + ', el error absoluto medio (MAE) en el set de prueba';
   $('nota-promedio').textContent = ETIQ_PROM + (M.periodo ? ' del periodo' : '') + ': ' + f1.format(M.promedio_nacional);
-  $('texto-aportes').textContent = 'Cada barra compara tu respuesta con el efecto promedio de esa pregunta en los datos ' +
-    'de entrenamiento, dejando lo demás igual. Las barras suman, junto con el promedio de entrenamiento (' +
-    f1.format(M.promedio_entrenamiento) + '), la estimación.';
+  if (ARBOLES) {
+    $('texto-aportes').textContent = 'El modelo parte de ' + f1.format(PARTIDA) + ' ' + UNIDAD + ' (el promedio de ' +
+      'entrenamiento) y cada respuesta sube o baja la estimación. Cada barra suma lo que movió esa respuesta en ' +
+      (N_ARBOLES === 1 ? 'el camino del árbol' : 'los caminos de los ' + N_ARBOLES + ' árboles') +
+      '. Punto de partida + barras = estimación.';
+  } else {
+    $('texto-aportes').textContent = 'Cada barra compara tu respuesta con el efecto promedio de esa pregunta en los datos ' +
+      'de entrenamiento, dejando lo demás igual. Las barras suman, junto con el promedio de entrenamiento (' +
+      f1.format(M.promedio_entrenamiento) + '), la estimación.';
+  }
+  $('th-frente').textContent = HAY_NUMEROS ? 'Frente a la típica' : 'Frente a la más común';
   $('pie-periodo').textContent = (M.periodo ? 'Periodo usado: ' + periodoTexto + '. ' : '') +
     'Modelo entrenado el ' + fecha(M.fecha_entrenamiento) + '.';
   $('pie-version').textContent = ((T && T.titulo) || 'Predictor Saber 11') + ' · modelo v' + M.version +
@@ -876,19 +927,32 @@
     $('limite-periodo').lastChild.textContent = ' Solo el periodo ' + M.periodo_etiqueta +
       '; no refleja cambios posteriores en el examen ni en el país.';
   }
+  // Límites que cambian con el tipo de modelo.
+  function fijarLimite(li, titulo, texto) {
+    li.textContent = '';
+    li.appendChild(crear('strong', null, titulo));
+    li.appendChild(document.createTextNode(texto));
+  }
+  if (ARBOLES) {
+    fijarLimite($('limite-ajuste'), 'El aporte de una respuesta depende de las demás.',
+      ' Los árboles combinan respuestas: la misma respuesta puede sumar más o menos según el resto del perfil.');
+    fijarLimite($('limite-aditivo'), 'Captura combinaciones, no causas.',
+      ' Los árboles encuentran interacciones (por ejemplo, que una respuesta pese distinto según otra), pero no explican por qué pasan.');
+  }
   if (T) {
     // Límites generales (los del Saber 11 hablan de su propio contexto).
     var limites = $('ficha-limites');
     var itemAjuste = $('limite-ajuste');
+    var itemAditivo = $('limite-aditivo');
     limites.textContent = '';
     [
       ['Describe asociaciones, no causas.', ' Que una respuesta sume no significa que cambiarla cause ese cambio.'],
       ['Es un promedio por perfil.', ' Dentro de cada perfil hay casos muy por encima y muy por debajo de la estimación.'],
-      null,
+      itemAjuste,
       ['Depende de los datos de entrenamiento.', ' Si esos datos no representan bien a todos los casos, el modelo también falla.'],
-      ['Es aditivo.', ' No captura interacciones entre respuestas.']
+      ARBOLES ? itemAditivo : ['Es aditivo.', ' No captura interacciones entre respuestas.']
     ].forEach(function (item) {
-      if (!item) { limites.appendChild(itemAjuste); return; }
+      if (item && item.nodeType) { limites.appendChild(item); return; }
       var li = crear('li');
       li.appendChild(crear('strong', null, item[0]));
       li.appendChild(document.createTextNode(item[1]));
@@ -935,8 +999,8 @@
     }
     pieProyecto.appendChild(pAutor);
   }
-  // Si el modelo invierte el estrato (un estrato alto resta), se explica con los números del modelo.
-  var vEstrato = M.variables.filter(function (v) { return v.nombre === 'fami_estratovivienda'; })[0];
+  // Modelo lineal: si invierte el estrato (un estrato alto resta), se explica con sus números.
+  var vEstrato = ARBOLES ? null : M.variables.filter(function (v) { return v.nombre === 'fami_estratovivienda'; })[0];
   if (vEstrato) {
     var estratoComun = vEstrato.categorias.filter(function (c) { return c.valor === vEstrato.mas_frecuente; })[0];
     var estratoAlto = vEstrato.categorias.filter(function (c) { return /6$/.test(c.valor); })[0];
@@ -951,7 +1015,8 @@
 
   // ---------------------------------------------------------------- Formulario
   var formulario = $('formulario-contexto');
-  var selects = {};
+  var campos = {};
+  var casoActual = null;
   var titulosGrupo = { hogar: 'Hogar', colegio: 'Colegio', preguntas: 'Preguntas' };
   var ordenGrupos = [];
   M.variables.forEach(function (v) {
@@ -964,26 +1029,38 @@
     var fs = crear('fieldset');
     fs.appendChild(crear('legend', null, tituloGrupo + ' · ' + variables.length +
       (variables.length === 1 ? ' pregunta' : ' preguntas')));
-    var campos = crear('div', 'campos');
-    variables.forEach(function (v) { campos.appendChild(crearCampo(v)); });
-    fs.appendChild(campos);
+    var contenedorCampos = crear('div', 'campos');
+    variables.forEach(function (v) {
+      contenedorCampos.appendChild(esNumero(v) ? crearCampoNumero(v) : crearCampo(v));
+    });
+    fs.appendChild(contenedorCampos);
     formulario.appendChild(fs);
   });
 
   function etiquetaOpcion(c) {
     return c.agrupa && c.agrupa.length ? c.etiqueta + ': ' + c.agrupa.join(', ') : c.etiqueta;
   }
+  function cambiar(v, valor) {
+    respuestas[v.nombre] = valor;
+    casoActual = null;
+    $('caso-activo').hidden = true;
+    actualizar(v.nombre);
+  }
+  function etiquetaCampo(v, id) {
+    var label = crear('label', null, v.etiqueta);
+    label.htmlFor = id;
+    label.id = id + '-etiqueta';
+    var marca = crear('span', 'marca-cambio', 'cambiada');
+    marca.setAttribute('aria-hidden', 'true');
+    label.appendChild(marca);
+    return label;
+  }
   function crearCampo(v) {
     var id = 'campo-' + v.nombre;
     var opciones = v.categorias.filter(function (c) { return c.en_formulario !== false; });
     var largo = opciones.reduce(function (m, c) { return Math.max(m, etiquetaOpcion(c).length); }, 0);
     var campo = crear('div', 'campo' + (largo > 20 || opciones.length > 14 ? ' completo' : ''));
-    var label = crear('label', null, v.etiqueta);
-    label.htmlFor = id;
-    var marca = crear('span', 'marca-cambio', 'cambiada');
-    marca.setAttribute('aria-hidden', 'true');
-    label.appendChild(marca);
-    campo.appendChild(label);
+    campo.appendChild(etiquetaCampo(v, id));
     var select = crear('select');
     select.id = id;
     select.name = v.nombre;
@@ -993,40 +1070,77 @@
       select.setAttribute('aria-describedby', ayuda.id);
       campo.appendChild(ayuda);
     }
-    // Las categorías con muy pocos estudiantes siguen en el modelo, pero no se ofrecen.
+    // Las categorías con muy pocos casos siguen en el modelo, pero no se ofrecen.
     opciones.forEach(function (c) {
       var opcion = crear('option', null, etiquetaOpcion(c));
       opcion.value = c.valor;
       select.appendChild(opcion);
     });
     select.value = respuestas[v.nombre];
-    select.addEventListener('change', function () {
-      respuestas[v.nombre] = select.value;
-      casoActual = null;
-      $('caso-activo').hidden = true;
-      actualizar(v.nombre);
-    });
+    select.addEventListener('change', function () { cambiar(v, select.value); });
     var envoltura = crear('div', 'selector');
     envoltura.appendChild(select);
     campo.appendChild(envoltura);
-    selects[v.nombre] = { select: select, campo: campo };
+    campos[v.nombre] = { select: select, campo: campo };
+    return campo;
+  }
+  // Una pregunta numérica: una barra para arrastrar y una casilla para escribir el número.
+  function crearCampoNumero(v) {
+    var id = 'campo-' + v.nombre;
+    var campo = crear('div', 'campo');
+    var label = etiquetaCampo(v, id);
+    campo.appendChild(label);
+    var ayuda = crear('p', 'ayuda', (v.ayuda ? v.ayuda + ' ' : '') + 'Entre ' + formatoNumero(v, v.minimo) +
+      ' y ' + formatoNumero(v, v.maximo) + '.');
+    ayuda.id = id + '-ayuda';
+    campo.appendChild(ayuda);
+    var caja = crear('div', 'numero');
+    var barra = crear('input');
+    barra.type = 'range';
+    var casilla = crear('input');
+    casilla.type = 'number';
+    casilla.id = id;
+    casilla.name = v.nombre;
+    casilla.inputMode = 'decimal';
+    [barra, casilla].forEach(function (entrada) {
+      entrada.min = v.minimo;
+      entrada.max = v.maximo;
+      entrada.step = entrada === barra ? (v.paso || 'any') : 'any';
+      entrada.setAttribute('aria-describedby', ayuda.id);
+    });
+    barra.setAttribute('aria-labelledby', label.id);
+    barra.addEventListener('input', function () { cambiar(v, parseFloat(barra.value)); });
+    casilla.addEventListener('change', function () {
+      var x = parseFloat(String(casilla.value).replace(',', '.'));
+      if (!isFinite(x)) { sincronizarFormulario(); return; }
+      cambiar(v, limitar(x, v.minimo, v.maximo));
+    });
+    caja.appendChild(barra);
+    caja.appendChild(casilla);
+    campo.appendChild(caja);
+    campos[v.nombre] = { barra: barra, casilla: casilla, campo: campo };
     return campo;
   }
   formulario.addEventListener('submit', function (e) { e.preventDefault(); });
 
   function sincronizarFormulario() {
     M.variables.forEach(function (v) {
-      var s = selects[v.nombre];
+      var s = campos[v.nombre];
       var valor = respuestas[v.nombre];
-      var existe = Array.prototype.some.call(s.select.options, function (o) { return o.value === valor; });
-      if (!existe) {
-        var c = buscar(v, valor);
-        var extra = crear('option', null, c ? etiquetaOpcion(c) : valor);
-        extra.value = valor;
-        s.select.appendChild(extra);
+      if (esNumero(v)) {
+        s.barra.value = String(valor);
+        if (document.activeElement !== s.casilla || parseFloat(s.casilla.value) !== valor) s.casilla.value = String(valor);
+      } else {
+        var existe = Array.prototype.some.call(s.select.options, function (o) { return o.value === valor; });
+        if (!existe) {
+          var c = buscar(v, valor);
+          var extra = crear('option', null, c ? etiquetaOpcion(c) : valor);
+          extra.value = valor;
+          s.select.appendChild(extra);
+        }
+        s.select.value = valor;
       }
-      s.select.value = valor;
-      s.campo.classList.toggle('distinta', respuestas[v.nombre] !== v.mas_frecuente);
+      s.campo.classList.toggle('distinta', valor !== valorComun(v));
     });
   }
 
@@ -1040,7 +1154,6 @@
     svg.appendChild(n);
     return n;
   }
-  function limitar(x, a, b) { return Math.min(b, Math.max(a, x)); }
   function punto(valor, radio) {
     var t = Math.PI * (1 - (limitar(valor, MIN, MAX) - MIN) / (MAX - MIN));
     return [G.cx + radio * Math.cos(t), G.cy - radio * Math.sin(t)];
@@ -1091,16 +1204,22 @@
   // ---------------------------------------------------------------- Aportes
   var escala = (function () {
     var maximo = 0;
-    M.variables.forEach(function (v) {
-      v.categorias.forEach(function (c) { maximo = Math.max(maximo, Math.abs(c.coeficiente - efectoMedio[v.nombre])); });
-    });
+    if (ARBOLES) {
+      maximo = M.arboles.max_aporte || 0;
+    } else {
+      M.variables.forEach(function (v) {
+        var medio = v.categorias.reduce(function (s, c) { return s + c.frecuencia * c.coeficiente; }, 0);
+        v.categorias.forEach(function (c) { maximo = Math.max(maximo, Math.abs(c.coeficiente - medio)); });
+      });
+    }
+    if (!(maximo > 0)) return 1;
     var pasos = [5, 10, 15, 20, 25, 30, 40, 50, 60, 80, 100, 150, 200, 250];
     for (var i = 0; i < pasos.length; i++) { if (maximo <= pasos[i]) return pasos[i]; }
     return Math.ceil(maximo / pasoRedondo(maximo / 4)) * pasoRedondo(maximo / 4);
   })();
   var eje = $('eje-marcas');
   [-escala, -escala / 2, 0, escala / 2, escala].forEach(function (valor, i) {
-    var marca = crear('span', null, conSigno(valor, f0));
+    var marca = crear('span', null, conSigno(valor, escala < 10 ? f1 : f0));
     marca.style.left = (i * 25) + '%';
     eje.appendChild(marca);
   });
@@ -1128,9 +1247,12 @@
   var ultimosAportes = [];
 
   function textoComparacion(a) {
-    if (!a.comun || !a.elegida) return '';
-    if (a.elegida.valor === a.comun.valor) return 'Es la respuesta más común de esta pregunta.';
-    return 'Frente a «' + a.comun.etiqueta + '» (la respuesta más común): ' + conSigno(a.frenteAComun) + ' ' + UNIDAD + '.';
+    var v = a.variable;
+    if (!a.conocida) return '';
+    if (a.esComun) return esNumero(v) ? 'Es la mediana de los datos de entrenamiento.' : 'Es la respuesta más común de esta pregunta.';
+    var referencia = esNumero(v) ? 'la mediana (' + formatoNumero(v, v.mediana) + ')'
+      : '«' + textoRespuesta(v, v.mas_frecuente) + '» (la respuesta más común)';
+    return 'Frente a ' + referencia + ': ' + conSigno(a.frenteAComun) + ' ' + UNIDAD + '.';
   }
   function actualizarAportes(aportes) {
     ultimosAportes = aportes;
@@ -1138,7 +1260,7 @@
     cuerpo.textContent = '';
     aportes.forEach(function (a) {
       var f = filas[a.variable.nombre];
-      var etiqueta = a.elegida ? a.elegida.etiqueta : 'Respuesta desconocida';
+      var etiqueta = textoRespuesta(a.variable, a.valor);
       f.respuesta.textContent = etiqueta;
       var ancho = Math.min(50, Math.abs(a.aporte) / escala * 50);
       f.barra.style.width = ancho + '%';
@@ -1151,7 +1273,7 @@
       tr.appendChild(crear('td', null, a.variable.etiqueta_corta));
       tr.appendChild(crear('td', null, etiqueta));
       tr.appendChild(crear('td', 'num', conSigno(a.aporte)));
-      tr.appendChild(crear('td', 'num', a.elegida && a.comun && a.elegida.valor !== a.comun.valor ? conSigno(a.frenteAComun) : '—'));
+      tr.appendChild(crear('td', 'num', a.conocida && !a.esComun ? conSigno(a.frenteAComun) : '—'));
       cuerpo.appendChild(tr);
     });
   }
@@ -1163,7 +1285,9 @@
     if (!a) return;
     tooltip.textContent = '';
     tooltip.appendChild(crear('strong', null, conSigno(a.aporte) + ' ' + UNIDAD));
-    tooltip.appendChild(crear('span', null, 'Frente al efecto promedio de «' + a.variable.etiqueta_corta + '». '));
+    tooltip.appendChild(crear('span', null, ARBOLES
+      ? 'Lo que movió esta respuesta en ' + (N_ARBOLES === 1 ? 'el árbol. ' : 'los ' + N_ARBOLES + ' árboles. ')
+      : 'Frente al efecto promedio de «' + a.variable.etiqueta_corta + '». '));
     tooltip.appendChild(crear('span', null, textoComparacion(a)));
     tooltip.hidden = false;
     var ancho = tooltip.offsetWidth, alto = tooltip.offsetHeight;
@@ -1210,35 +1334,83 @@
     this.textContent = tabla.hidden ? 'Ver los aportes como tabla' : 'Ocultar la tabla';
   });
 
+  // ---------------------------------------------------------------- Recorrido del primer árbol
+  // Muestra, con las respuestas actuales, las preguntas de sí o no que hace el árbol 1.
+  function textoUmbral(v, umbral) {
+    return new Intl.NumberFormat('es-CO', { maximumFractionDigits: Math.max(2, v.decimales || 0) }).format(umbral);
+  }
+  function pintarRecorrido() {
+    var caja = $('ficha-recorrido');
+    var r = MOTOR.recorrido(M, respuestas, 0);
+    caja.textContent = '';
+    caja.appendChild(crear('p', 'titulo-recorrido', N_ARBOLES === 1 ? 'El árbol con tus respuestas'
+      : 'El árbol 1 de ' + N_ARBOLES + ' con tus respuestas'));
+    var ol = crear('ol', 'recorrido');
+    r.pasos.forEach(function (paso) {
+      var v = M.variables.filter(function (x) { return x.nombre === paso.columna.variable; })[0];
+      var li = crear('li');
+      var pregunta, respuesta;
+      if (paso.columna.numerica) {
+        pregunta = '¿' + v.etiqueta_corta + ' ≤ ' + textoUmbral(v, paso.umbral) + '? ';
+        respuesta = paso.cumple ? 'Sí' : 'No';
+      } else {
+        var c = buscar(v, paso.columna.categoria);
+        pregunta = '¿' + v.etiqueta_corta + ' es «' + (c ? c.etiqueta : paso.columna.categoria) + '»? ';
+        respuesta = paso.cumple ? 'No' : 'Sí'; // en one-hot, x ≤ 0,5 quiere decir «no es esa categoría»
+      }
+      li.appendChild(document.createTextNode(pregunta));
+      li.appendChild(crear('strong', null, respuesta));
+      ol.appendChild(li);
+    });
+    caja.appendChild(ol);
+    var hoja = crear('p', 'hoja-recorrido');
+    if (MODO === 'suma') {
+      hoja.appendChild(document.createTextNode('Llega a una hoja que ' + (r.hoja >= 0 ? 'suma ' : 'resta ')));
+      hoja.appendChild(crear('strong', null, f2.format(Math.abs(r.hoja * M.arboles.escala)) + ' ' + UNIDAD));
+      hoja.appendChild(document.createTextNode(' a la estimación. Los otros ' + (N_ARBOLES - 1) +
+        ' árboles hacen lo mismo con sus propias preguntas.'));
+    } else {
+      hoja.appendChild(document.createTextNode('Llega a una hoja con el valor '));
+      hoja.appendChild(crear('strong', null, f1.format(r.hoja) + ' ' + UNIDAD));
+      hoja.appendChild(document.createTextNode(MODO === 'promedio' ? '. El bosque promedia las hojas de sus ' +
+        N_ARBOLES + ' árboles.' : ': esa es la estimación.'));
+    }
+    caja.appendChild(hoja);
+  }
+
   // ---------------------------------------------------------------- Actualización general
   var temporizadorAnuncio = 0;
   function actualizar(variableCambiada) {
     sincronizarFormulario();
-    var estimacion = predecir(M, respuestas);
-    var aportes = calcularAportes(respuestas);
-    animarMedidor(estimacion);
-    actualizarAportes(aportes);
+    var resultado = calcularAportes(respuestas);
+    var estimacion = resultado.estimacion;
+    // Una probabilidad se muestra entre 0 y 100 %, aunque la suma se pase un poco.
+    var mostrada = PROBABILIDAD ? limitar(estimacion, MIN, MAX) : estimacion;
+    animarMedidor(mostrada);
+    actualizarAportes(resultado.lista);
+    if (ARBOLES) pintarRecorrido();
 
-    var desde = Math.max(MIN, estimacion - MAE), hasta = Math.min(MAX, estimacion + MAE);
+    var desde = Math.max(MIN, mostrada - MAE), hasta = Math.min(MAX, mostrada + MAE);
     $('cifra-rango').textContent = f0.format(desde) + ' – ' + f0.format(hasta);
-    var diferencia = estimacion - M.promedio_nacional;
+    var diferencia = mostrada - M.promedio_nacional;
     $('cifra-diferencia').textContent = conSigno(diferencia, f0) + ' ' + UNIDAD;
-    $('flotante-numero').textContent = f0.format(estimacion);
-    var sumaAportes = aportes.reduce(function (s, a) { return s + a.aporte; }, 0);
+    $('flotante-numero').textContent = f0.format(mostrada);
+    var sumaAportes = resultado.lista.reduce(function (s, a) { return s + a.aporte; }, 0);
     var suma = $('suma-aportes');
     suma.textContent = '';
-    suma.appendChild(crear('span', null, 'Promedio de entrenamiento ' + f1.format(M.promedio_entrenamiento)));
+    suma.appendChild(crear('span', null, (ARBOLES ? 'Punto de partida ' : 'Promedio de entrenamiento ') +
+      f1.format(resultado.partida)));
     suma.appendChild(crear('span', null, (sumaAportes < 0 ? '−' : '+') + ' aportes ' + f1.format(Math.abs(sumaAportes))));
     suma.appendChild(crear('span', null, '='));
     suma.appendChild(crear('strong', null, 'estimación ' + f1.format(estimacion)));
 
-    var descripcion = 'Estimación: ' + f0.format(estimacion) + ' ' + UNIDAD + ', en una escala de ' + f0.format(MIN) +
+    var descripcion = 'Estimación: ' + f0.format(mostrada) + ' ' + UNIDAD + ', en una escala de ' + f0.format(MIN) +
       ' a ' + f0.format(MAX) + '. Rango aproximado de ' + f0.format(desde) + ' a ' + f0.format(hasta) + '. ' +
       ETIQ_PROM + ': ' + f0.format(M.promedio_nacional) + '.';
     $('medidor-descripcion').textContent = descripcion;
     clearTimeout(temporizadorAnuncio);
     temporizadorAnuncio = setTimeout(function () {
-      $('anuncio').textContent = 'Estimación actualizada: ' + f0.format(estimacion) + ' ' + UNIDAD + ', ' +
+      $('anuncio').textContent = 'Estimación actualizada: ' + f0.format(mostrada) + ' ' + UNIDAD + ', ' +
         (diferencia >= 0 ? f0.format(diferencia) + ' por encima' : f0.format(-diferencia) + ' por debajo') +
         ' del ' + primeraMinuscula(ETIQ_PROM) + '.';
     }, 400);
@@ -1251,13 +1423,17 @@
   }
 
   // ---------------------------------------------------------------- Casos del set de prueba
-  var casoActual = null;
   function cargarCaso(indice) {
     var caso = M.casos_prueba[indice];
     casoActual = indice;
     M.variables.forEach(function (v) {
       var valor = caso.entradas[v.nombre];
-      respuestas[v.nombre] = buscar(v, valor) ? valor : v.mas_frecuente;
+      if (esNumero(v)) {
+        var x = typeof valor === 'number' ? valor : parseFloat(valor);
+        respuestas[v.nombre] = isFinite(x) ? x : v.mediana;
+      } else {
+        respuestas[v.nombre] = buscar(v, valor) ? valor : v.mas_frecuente;
+      }
     });
     var aviso = $('caso-activo');
     aviso.textContent = '';
@@ -1288,58 +1464,112 @@
     if (detalle) dd.appendChild(crear('span', null, detalle));
     dl.appendChild(dd);
   }
+  var nNumeros = M.variables.filter(esNumero).length, nOpciones = M.variables.length - nNumeros;
+  var tiposVariables = (nOpciones ? nOpciones + (nOpciones === 1 ? ' pregunta de opciones' : ' preguntas de opciones') : '') +
+    (nOpciones && nNumeros ? ' y ' : '') + (nNumeros ? nNumeros + (nNumeros === 1 ? ' numérica' : ' numéricas') : '');
   filaDatos('Fuente', M.fuente.nombre, M.fuente.id ? M.fuente.portal + ', conjunto ' + M.fuente.id : (M.fuente.portal || ''));
   if (M.periodo) filaDatos('Periodo', periodoTexto, 'El más reciente disponible en el conjunto al entrenar');
   filaDatos('Registros', f0.format(M.n_total) + (T ? ' registros válidos' : ' con puntaje válido'),
     f0.format(M.n_entrenamiento) + ' para entrenar y ' + f0.format(M.n_prueba) + ' para evaluar (80/20)');
   filaDatos('Objetivo', M.objetivo.etiqueta + ' (' + M.objetivo.nombre + ')', 'Escala de ' + f0.format(MIN) + ' a ' + f0.format(MAX) + ' ' + UNIDAD);
-  filaDatos('Algoritmo', M.algoritmo, M.variables.length + ' variables categóricas, entrenado con scikit-learn ' + M.sklearn_version);
+  filaDatos('Algoritmo', M.algoritmo, tiposVariables + ', entrenado con scikit-learn ' + M.sklearn_version);
   if (M.min_casos) {
-    filaDatos('Categorías raras', 'Menos de ' + f0.format(M.min_casos) + ' estudiantes en entrenamiento',
+    filaDatos('Categorías raras', 'Menos de ' + f0.format(M.min_casos) + (T ? ' casos' : ' estudiantes') + ' en entrenamiento',
       'Se agrupan en «Otra (pocos casos)» y no aparecen como opción del formulario');
   }
   filaDatos('Entrenado', fecha(M.fecha_entrenamiento), 'Versión ' + M.version + ' · semilla ' + M.semilla);
 
-  var cuerpoMetricas = $('ficha-metricas');
-  ['modelo', 'linea_base', 'boosting'].forEach(function (clave) {
+  // Métricas: la comparación de modelos (versión 2) o las filas de la versión 1.
+  var filasMetricas = M.metricas.comparacion || ['modelo', 'linea_base', 'boosting'].map(function (clave) {
     var m = M.metricas[clave];
-    if (!m) return;
-    var tr = crear('tr', clave === 'modelo' ? 'destacada' : null);
-    tr.appendChild(crear('td', null, m.nombre));
+    if (!m) return null;
+    var fila = { clave: clave, publicado: clave === 'modelo' };
+    Object.keys(m).forEach(function (k) { fila[k] = m[k]; });
+    return fila;
+  }).filter(Boolean);
+  var conExactitud = filasMetricas.some(function (m) { return m.exactitud !== undefined; });
+  if (conExactitud) {
+    var thExactitud = crear('th', 'num', 'Exactitud');
+    thExactitud.scope = 'col';
+    $('cabeza-metricas').appendChild(thExactitud);
+  }
+  var cuerpoMetricas = $('ficha-metricas');
+  filasMetricas.forEach(function (m) {
+    var tr = crear('tr', m.publicado ? 'destacada' : null);
+    tr.appendChild(crear('td', null, m.nombre + (m.publicado && M.metricas.comparacion ? ' · publicado' : '')));
     tr.appendChild(crear('td', 'num', f1.format(m.mae)));
     tr.appendChild(crear('td', 'num', f1.format(m.rmse)));
     tr.appendChild(crear('td', 'num', f3.format(m.r2)));
+    if (conExactitud) tr.appendChild(crear('td', 'num', m.exactitud === undefined ? '—' : fPct.format(m.exactitud)));
     cuerpoMetricas.appendChild(tr);
   });
-  if (M.metricas.boosting) {
+  if (M.metricas.comparacion) {
+    var publicado = filasMetricas.filter(function (m) { return m.publicado; })[0] || { nombre: '', mae: MAE };
+    var modelos = filasMetricas.filter(function (m) { return m.clave !== 'linea_base'; });
+    // Con una clase gana el que más acierta; con un número, el que menos se equivoca.
+    var mejor = modelos.reduce(function (a, b) {
+      return (conExactitud ? b.exactitud > a.exactitud : b.mae < a.mae) ? b : a;
+    }, modelos[0]);
+    var mejora = 1 - publicado.mae / M.metricas.linea_base.mae;
+    $('nota-boosting').textContent = 'Se publica el modelo de la fila resaltada' +
+      (mejor === publicado ? (conExactitud ? ', que es el que más acierta' : ', que es el que menos se equivoca') : '') +
+      ': en promedio se equivoca un ' +
+      fPct.format(mejora) + ' menos que la línea base.' + (modelos.length > 1
+        ? ' Todos se entrenaron y se evaluaron con los mismos datos.' : '');
+  } else if (M.metricas.boosting) {
     $('nota-boosting').textContent = 'El modelo publicado es el lineal (fila resaltada). HistGradientBoosting logra MAE ' +
       f1.format(M.metricas.boosting.mae) + ' frente a ' + f1.format(MAE) + ': un poco mejor, pero sin coeficientes que se ' +
       'puedan leer ni una suma que se pueda publicar así de simple. Por eso preferimos el lineal.';
   }
 
-  var ejemplo = M.variables.slice(0, 2).map(function (v) {
-    var c = buscar(v, v.mas_frecuente);
-    return 'coef(' + v.etiqueta_corta + ' = ' + c.etiqueta + ') ' + (c.coeficiente < 0 ? '− ' : '+ ') + f2.format(Math.abs(c.coeficiente));
-  });
-  $('ficha-formula').textContent = 'estimación = intercepto + Σ coeficiente(respuesta)\n\n' +
-    'intercepto = ' + f2.format(M.intercepto) + '\n' + ejemplo.join('\n') + '\n… una suma por cada una de las ' + M.variables.length + ' preguntas';
-  $('ficha-formula-texto').textContent = 'Cada categoría de cada pregunta tiene un coeficiente. La estimación es el intercepto ' +
-    'más los coeficientes de las respuestas elegidas: ' + M.variables.length + ' sumas. Por eso el modelo completo cabe en un ' +
-    'archivo pequeño y corre en tu navegador.';
+  if (ARBOLES) {
+    var formula = MODO === 'suma'
+      ? 'estimación = punto de partida\n           + árbol 1 + árbol 2 + … + árbol ' + N_ARBOLES +
+        '\n\npunto de partida = ' + f2.format(M.arboles.base) + ' ' + UNIDAD
+      : MODO === 'promedio'
+        ? 'estimación = (árbol 1 + árbol 2 + … + árbol ' + N_ARBOLES + ')\n           ÷ ' + N_ARBOLES
+        : 'estimación = el número de la hoja\n             a la que llegan tus respuestas';
+    $('ficha-formula').textContent = formula + '\n\ncada árbol: preguntas de sí o no\n            → una hoja con un número';
+    $('ficha-formula-texto').textContent = 'Cada árbol hace preguntas de sí o no sobre las respuestas hasta llegar a una ' +
+      'hoja, que tiene un número. ' + (MODO === 'suma'
+        ? 'El Gradient Boosting suma las hojas de sus ' + N_ARBOLES + ' árboles: cada árbol corrige un poco el error ' +
+          'que dejaron los anteriores.'
+        : MODO === 'promedio' ? 'El bosque promedia las hojas de sus ' + N_ARBOLES + ' árboles.'
+        : 'La estimación es el número de esa hoja.') +
+      ' Todos los árboles vienen en modelo.js y tu navegador los recorre al instante, sin servidor.';
+    $('ficha-recorrido').hidden = false;
+  } else {
+    var ejemplo = M.variables.slice(0, 2).map(function (v) {
+      var c = buscar(v, v.mas_frecuente);
+      return 'coef(' + v.etiqueta_corta + ' = ' + c.etiqueta + ') ' + (c.coeficiente < 0 ? '− ' : '+ ') + f2.format(Math.abs(c.coeficiente));
+    });
+    $('ficha-formula').textContent = 'estimación = intercepto + Σ coeficiente(respuesta)\n\n' +
+      'intercepto = ' + f2.format(M.intercepto) + '\n' + ejemplo.join('\n') + '\n… una suma por cada una de las ' + M.variables.length + ' preguntas';
+    $('ficha-formula-texto').textContent = 'Cada categoría de cada pregunta tiene un coeficiente. La estimación es el intercepto ' +
+      'más los coeficientes de las respuestas elegidas: ' + M.variables.length + ' sumas. Por eso el modelo completo cabe en un ' +
+      'archivo pequeño y corre en tu navegador.';
+  }
 
+  // Variables: ordenadas por cuánto pueden mover la estimación.
   var cuerpoVariables = $('ficha-variables');
+  if (ARBOLES) {
+    $('texto-variables').textContent = 'Ordenadas por su aporte típico: cuánto sube o baja la estimación, en promedio, ' +
+      'por esa pregunta (medido en ' + f0.format(Math.min(5000, M.n_entrenamiento)) + ' casos de entrenamiento).';
+    $('th-importancia').textContent = 'Aporte típico';
+  }
   M.variables.map(function (v) {
+    if (ARBOLES) return { v: v, n: esNumero(v) ? null : v.categorias.filter(function (c) { return c.en_formulario !== false; }).length, orden: v.importancia || 0 };
     var visibles = v.categorias.filter(function (c) { return c.en_formulario !== false; });
     var coefs = visibles.map(function (c) { return c.coeficiente; });
-    return { v: v, n: visibles.length, rango: Math.max.apply(null, coefs) - Math.min.apply(null, coefs) };
-  }).sort(function (a, b) { return b.rango - a.rango; }).forEach(function (item) {
+    return { v: v, n: visibles.length, orden: Math.max.apply(null, coefs) - Math.min.apply(null, coefs) };
+  }).sort(function (a, b) { return b.orden - a.orden; }).forEach(function (item) {
     var tr = crear('tr');
     tr.appendChild(crear('td', null, item.v.etiqueta));
     var celdaColumna = crear('td');
     celdaColumna.appendChild(crear('code', null, item.v.nombre));
     tr.appendChild(celdaColumna);
-    tr.appendChild(crear('td', 'num', String(item.n)));
-    tr.appendChild(crear('td', 'num', f1.format(item.rango) + ' ' + UNIDAD));
+    tr.appendChild(crear('td', 'num', item.n === null ? 'número' : String(item.n)));
+    tr.appendChild(crear('td', 'num', (ARBOLES ? '± ' : '') + f1.format(item.orden) + ' ' + UNIDAD));
     cuerpoVariables.appendChild(tr);
   });
   if (M.excluidas && M.excluidas.length) {
@@ -1363,8 +1593,10 @@
     var resumen = (T ? M.variables.slice(0, 3) : M.variables.slice(0, 1).concat(M.variables.filter(function (v) {
       return v.nombre === 'cole_naturaleza' || v.nombre === 'cole_depto_ubicacion';
     }))).map(function (v) {
-      var c = buscar(v, caso.entradas[v.nombre]);
-      return c ? c.etiqueta : caso.entradas[v.nombre];
+      var valor = caso.entradas[v.nombre];
+      if (esNumero(v)) return v.etiqueta_corta + ' ' + formatoNumero(v, typeof valor === 'number' ? valor : parseFloat(valor));
+      var c = buscar(v, valor);
+      return c ? c.etiqueta : valor;
     });
     perfil.appendChild(document.createTextNode(resumen.join(' · ')));
     tr.appendChild(perfil);
@@ -1407,8 +1639,13 @@
     observador.observe($('formulario'));
   }
 
-  // Para experimentar en la consola del navegador: PredictorSaber11.predecir(PredictorSaber11.modelo, {...})
-  window.PredictorSaber11 = { modelo: M, predecir: predecir };
+  // Para experimentar en la consola del navegador:
+  // PredictorSaber11.predecir(PredictorSaber11.modelo, {...}) o PredictorSaber11.explicar({...})
+  window.PredictorSaber11 = {
+    modelo: M,
+    predecir: predecir,
+    explicar: function (r) { return MOTOR.explicar(M, r); }
+  };
 
   actualizar();
 })();
