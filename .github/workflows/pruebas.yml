@@ -1,0 +1,33 @@
+# Revisa cada pull request antes de fusionarlo: pruebas de Python y prueba de paridad.
+# No necesita secretos. Con la regla de rama de main («Require status checks»),
+# nadie puede fusionar si esto queda en rojo.
+name: Pruebas
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v7
+
+      - name: Instalar Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt pytest
+
+      - name: Pruebas de scripts/entrenar.py
+        run: python -m pytest tests/ -q
+
+      - name: Prueba de paridad (JavaScript vs scikit-learn)
+        run: node scripts/prueba_paridad.js web/modelo.js

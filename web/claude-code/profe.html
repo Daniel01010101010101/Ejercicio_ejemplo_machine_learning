@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+<title>Guion de la clase</title>
+<meta name="description" content="Guion docente de la clase de Claude Code avanzado: acceso, preparación, minuto a minuto, demos, ideas y plan B.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d1726'/%3E%3Cpath d='M7 22a9 9 0 0 1 18 0' fill='none' stroke='%236da7ec' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap">
+<script>
+  try {
+    var temaGuardado = localStorage.getItem('predictor-saber11-tema');
+    if (temaGuardado === 'light' || temaGuardado === 'dark') document.documentElement.setAttribute('data-theme', temaGuardado);
+  } catch (e) { /* sin almacenamiento: tema del sistema */ }
+</script>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f3f5f8; --surface: #ffffff; --surface-2: #f7f9fb;
+    --ink: #0d1726; --ink-2: #435066; --muted: #5f6b7e;
+    --line: #e2e6ed; --line-strong: #cbd2dc;
+    --accent: #1c5cab; --accent-ink: #ffffff; --accent-soft: #cde2fb; --accent-wash: #eef4fd;
+    --verde: #1a7f37; --verde-ink: #ffffff; --ok: #006300;
+    --warn-bg: #fff6e5; --warn-line: #f0d49b; --warn-ink: #6b4a00; --barra-gris: #8792a2;
+    --sombra: 0 1px 2px rgba(13, 23, 38, .04), 0 10px 28px rgba(13, 23, 38, .06);
+    --fuente: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --fuente-titulos: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --fuente-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0a0f17; --surface: #111823; --surface-2: #0d141e;
+      --ink: #edf1f7; --ink-2: #b5bfcd; --muted: #8d98a9;
+      --line: #222d3b; --line-strong: #334155;
+      --accent: #6da7ec; --accent-ink: #0a0f17; --accent-soft: #1d3a5f; --accent-wash: #132338;
+      --verde: #2ea043; --verde-ink: #ffffff; --ok: #3fb950;
+      --warn-bg: #221a0b; --warn-line: #5c4516; --warn-ink: #f2d59a; --barra-gris: #5d6a7d;
+      --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px rgba(0, 0, 0, .35);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0a0f17; --surface: #111823; --surface-2: #0d141e;
+    --ink: #edf1f7; --ink-2: #b5bfcd; --muted: #8d98a9;
+    --line: #222d3b; --line-strong: #334155;
+    --accent: #6da7ec; --accent-ink: #0a0f17; --accent-soft: #1d3a5f; --accent-wash: #132338;
+    --verde: #2ea043; --verde-ink: #ffffff; --ok: #3fb950;
+    --warn-bg: #221a0b; --warn-line: #5c4516; --warn-ink: #f2d59a; --barra-gris: #5d6a7d;
+    --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px rgba(0, 0, 0, .35);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 80px; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 1rem/1.65 var(--fuente); -webkit-font-smoothing: antialiased; }
+  [hidden] { display: none !important; }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: .2em; }
+  a:hover { text-decoration-thickness: 2px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  p { margin: 0 0 12px; }
+  code { font-family: var(--fuente-mono); font-size: .875em; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; overflow-wrap: anywhere; }
+  .contenedor { width: 100%; max-width: 1120px; margin-inline: auto; padding-inline: clamp(16px, 4vw, 40px); }
+
+  .cabecera { position: sticky; top: 0; z-index: 20; padding-top: env(safe-area-inset-top, 0px);
+    background: color-mix(in srgb, var(--bg) 85%, transparent); -webkit-backdrop-filter: saturate(1.4) blur(12px); backdrop-filter: saturate(1.4) blur(12px);
+    border-bottom: 1px solid var(--line); }
+  .cabecera .contenedor { display: flex; align-items: center; gap: 12px; min-height: 60px; }
+  .marca { display: flex; align-items: center; gap: 11px; color: var(--ink); text-decoration: none; margin-right: auto; min-width: 0; }
+  .marca svg { width: 32px; height: 32px; flex: none; }
+  .marca b { display: block; font-weight: 600; line-height: 1.15; }
+  .marca small { display: block; font-size: .75rem; color: var(--muted); line-height: 1.3; }
+  .boton-icono { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+  .boton-icono svg { width: 18px; height: 18px; }
+  .icono-sol { display: none; } .tema-oscuro .icono-sol { display: block; } .tema-oscuro .icono-luna { display: none; }
+  .boton { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line-strong);
+    background: var(--surface); color: var(--ink); font: 500 .9375rem/1.2 var(--fuente); text-decoration: none; cursor: pointer; }
+  .boton:hover { background: var(--accent-wash); border-color: var(--accent); }
+  .boton svg { width: 16px; height: 16px; flex: none; }
+
+  .portada { padding-block: clamp(36px, 6vw, 64px) 12px; }
+  .etiqueta-superior { margin: 0 0 12px; font-size: .75rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-family: var(--fuente-titulos); font-weight: 500; font-size: clamp(2.25rem, 1.3rem + 3.4vw, 3.75rem); line-height: 1.04; letter-spacing: -.02em; margin: 0 0 16px; max-width: 16ch; text-wrap: balance; }
+  .entrada { font-size: clamp(1.0625rem, 1rem + .3vw, 1.1875rem); color: var(--ink-2); max-width: 62ch; }
+  .resultado-final { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 18px; padding: 14px 16px; border-radius: 12px;
+    background: var(--surface); border: 1px solid var(--line); max-width: 760px; }
+  .resultado-final span { font-size: .875rem; color: var(--muted); }
+  .url { font-family: var(--fuente-mono); font-size: .9375rem; font-weight: 500; overflow-wrap: anywhere; }
+  .url em { font-style: normal; color: var(--accent); }
+
+  .tiempos { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin: 26px 0 0; padding: 0; list-style: none; max-width: 900px; }
+  .tiempos li { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .tiempos b { display: block; font-size: 1.125rem; font-weight: 600; letter-spacing: -.01em; }
+  .tiempos span { display: block; font-size: .8125rem; color: var(--ink-2); line-height: 1.35; }
+  @media (max-width: 760px) { .tiempos { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 420px) { .tiempos { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  .cuerpo { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 40px; align-items: start; padding-top: 32px; }
+  @media (max-width: 900px) { .cuerpo { grid-template-columns: minmax(0, 1fr); } .indice { display: none; } }
+  .indice { position: sticky; top: 84px; font-size: .875rem; }
+  .indice h2 { font: 600 .75rem/1.3 var(--fuente); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+  .indice ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .indice a { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 8px; color: var(--ink-2); text-decoration: none; }
+  .indice a:hover { background: var(--accent-wash); color: var(--ink); }
+  .indice a span { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  section { margin-bottom: 28px; }
+  .tarjeta { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--sombra); padding: clamp(18px, 2.6vw, 30px); }
+  h2.titulo-seccion { font-family: var(--fuente-titulos); font-weight: 500; font-size: clamp(1.625rem, 1.25rem + 1.3vw, 2.25rem); line-height: 1.1; letter-spacing: -.015em; margin: 0 0 10px; text-wrap: balance; }
+  h3 { font: 600 1rem/1.35 var(--fuente); margin: 20px 0 8px; }
+  .paso-cabecera { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 8px; }
+  .numero { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--ink); color: var(--surface); font-weight: 600; font-size: 1.125rem; }
+  .paso-cabecera h2 { margin: 2px 0 2px; font-family: var(--fuente-titulos); font-weight: 500; font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem); line-height: 1.12; letter-spacing: -.01em; text-wrap: balance; }
+  .meta { font-size: .875rem; color: var(--muted); }
+  .objetivo { color: var(--ink-2); max-width: 64ch; }
+  ol.pasos { margin: 14px 0 0; padding: 0; list-style: none; counter-reset: paso; display: grid; gap: 10px; }
+  ol.pasos > li { counter-increment: paso; position: relative; padding-left: 38px; min-width: 0; }
+  ol.pasos > li::before { content: counter(paso); position: absolute; left: 0; top: 1px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--accent-wash); color: var(--accent); font-weight: 600; font-size: .875rem; border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); }
+  .ui { display: inline-block; font: 500 .875rem/1.2 var(--fuente); padding: 3px 8px; border-radius: 7px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--ink); white-space: nowrap; }
+  .ui-verde { background: var(--verde); border-color: var(--verde); color: var(--verde-ink); }
+  .flecha { color: var(--muted); margin: 0 3px; }
+  .listo { display: flex; gap: 10px; align-items: flex-start; margin-top: 18px; padding: 12px 14px; border-radius: 12px;
+    background: color-mix(in srgb, var(--ok) 8%, var(--surface)); border: 1px solid color-mix(in srgb, var(--ok) 30%, transparent); }
+  .listo svg { width: 20px; height: 20px; flex: none; color: var(--ok); margin-top: 2px; }
+  .listo p { margin: 0; }
+  .nota { display: flex; gap: 10px; align-items: flex-start; margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: var(--warn-bg); border: 1px solid var(--warn-line); color: var(--warn-ink); }
+  .nota svg { width: 20px; height: 20px; flex: none; margin-top: 2px; }
+  .nota p { margin: 0; }
+  .enlace-copiable { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0 2px; }
+  .enlace-copiable a { font-family: var(--fuente-mono); font-size: .8125rem; overflow-wrap: anywhere; }
+  .copiar { font: 500 .8125rem/1 var(--fuente); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); cursor: pointer; }
+  .copiar:hover { border-color: var(--accent); background: var(--accent-wash); }
+  pre.config { max-width: 100%; font-family: var(--fuente-mono); font-size: .8125rem; line-height: 1.65; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; overflow-x: auto; margin: 10px 0 0; }
+  pre.config .c { color: var(--muted); }
+
+  .idea { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: 18px 0 6px; padding: 0; list-style: none; }
+  .idea li { position: relative; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+  .idea li:not(:last-child)::after { content: ""; position: absolute; right: -5px; top: 50%; width: 9px; height: 9px;
+    border-top: 2px solid var(--muted); border-right: 2px solid var(--muted); transform: translate(60%, -50%) rotate(45deg); }
+  .idea.idea-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .idea b { display: block; font-size: .9375rem; }
+  .idea span { display: block; font-size: .8125rem; color: var(--ink-2); line-height: 1.4; margin-top: 2px; }
+  .idea .icono { width: 26px; height: 26px; color: var(--accent); margin-bottom: 6px; }
+  @media (max-width: 760px) {
+    .idea, .idea.idea-3 { grid-template-columns: minmax(0, 1fr); }
+    .idea li:not(:last-child)::after { right: 50%; top: auto; bottom: -5px; transform: translate(50%, 60%) rotate(135deg); }
+  }
+  .glosario { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 16px 0 0; }
+  @media (max-width: 640px) { .glosario { grid-template-columns: minmax(0, 1fr); } }
+  .glosario div { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .glosario dt { font-weight: 600; }
+  .glosario dd { margin: 2px 0 0; font-size: .9375rem; color: var(--ink-2); }
+
+  details { border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); padding: 0 14px; }
+  details + details { margin-top: 8px; }
+  summary { cursor: pointer; padding: 12px 0; font-weight: 500; list-style-position: outside; }
+  details[open] summary { border-bottom: 1px solid var(--line); margin-bottom: 10px; }
+  details > div { padding-bottom: 12px; color: var(--ink-2); }
+  .lista-chequeo { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+  .lista-chequeo label { display: flex; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); cursor: pointer; }
+  .lista-chequeo input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
+  .lista-chequeo input:checked + span { color: var(--muted); text-decoration: line-through; }
+  .progreso { font-size: .875rem; color: var(--muted); margin-top: 10px; }
+  .etica { background: var(--warn-bg); border: 1px solid var(--warn-line); color: var(--warn-ink); }
+  .etica h2 { color: inherit; }
+  ul.simple { margin: 8px 0 0; padding-left: 1.2em; display: grid; gap: 6px; }
+  .pie { border-top: 1px solid var(--line); background: var(--surface); margin-top: 40px; }
+  .pie .contenedor { padding-block: 28px calc(28px + env(safe-area-inset-bottom, 0px)); font-size: .9375rem; color: var(--ink-2); }
+
+  .partes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 26px 0 0; padding: 0; list-style: none; max-width: 900px; }
+  .partes li { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .partes b { display: block; font-size: .8125rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .partes span { display: block; font-size: 1rem; font-weight: 600; line-height: 1.3; margin-top: 2px; }
+  .partes small { display: block; font-size: .8125rem; color: var(--ink-2); }
+  @media (max-width: 640px) { .partes { grid-template-columns: minmax(0, 1fr); } }
+  .parte-titulo { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .parte-titulo .meta { margin: 0; }
+
+  .arbol { margin: 18px 0 10px; padding: clamp(14px, 2.4vw, 22px); border: 1px solid var(--line); border-radius: 14px; background: var(--surface-2); }
+  .arbol figcaption { font-size: .8125rem; color: var(--muted); margin-bottom: 14px; }
+  .nodo { background: var(--surface); border: 1px solid var(--line-strong); border-radius: 12px; padding: 10px 12px; font-weight: 600; font-size: .9375rem; text-align: center; line-height: 1.35; }
+  .nodo small { display: block; font-weight: 400; font-size: .8125rem; color: var(--muted); }
+  .raiz { max-width: 360px; margin: 0 auto; }
+  .ramas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 14px; }
+  .rama { display: grid; gap: 10px; align-content: start; padding-top: 4px; border-top: 2px solid var(--line-strong); }
+  .rama-etiqueta { justify-self: center; font-size: .8125rem; font-weight: 600; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 2px 12px; margin-top: 6px; }
+  .hojas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .hoja { text-align: center; background: var(--accent-wash); border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent); border-radius: 12px; padding: 10px 8px; }
+  .hoja .respuesta { display: block; font-size: .75rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); }
+  .hoja b { display: block; font-size: 1.625rem; font-weight: 600; letter-spacing: -.02em; line-height: 1.2; }
+  .hoja small { display: block; font-size: .75rem; color: var(--ink-2); line-height: 1.35; }
+  @media (max-width: 560px) { .ramas { grid-template-columns: minmax(0, 1fr); } }
+
+  .modelos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 14px 0 0; padding: 0; list-style: none; }
+  .modelos li { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .modelos li.destacado { background: var(--accent-wash); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+  .modelos b { display: block; }
+  .modelos span { display: block; font-size: .9375rem; color: var(--ink-2); margin-top: 2px; }
+  @media (max-width: 760px) { .modelos { grid-template-columns: minmax(0, 1fr); } }
+
+  .indicadores { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 16px 0 0; }
+  @media (max-width: 640px) { .indicadores { grid-template-columns: minmax(0, 1fr); } }
+  .indicadores div { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .indicadores dt { font-weight: 600; }
+  .indicadores dd { margin: 2px 0 0; font-size: .9375rem; color: var(--ink-2); }
+  .indicadores .cifra { display: block; margin-top: 6px; font-size: .875rem; color: var(--ink); font-weight: 500; }
+
+  .grafica { margin: 16px 0 6px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+  .grafica figcaption { font-size: .875rem; color: var(--ink-2); margin-bottom: 12px; }
+  .barras { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .barras li { display: grid; grid-template-columns: minmax(8rem, 15rem) minmax(0, 1fr) 3.2rem; gap: 12px; align-items: center; font-size: .9375rem; padding: 2px 4px; border-radius: 8px; }
+  .barras li:hover { background: var(--surface-2); }
+  .barras .pista { display: block; height: 16px; border-left: 1px solid var(--line-strong); }
+  .barras .barra { display: block; height: 16px; width: calc(var(--v) / 45 * 100%); background: var(--barra-gris); border-radius: 0 4px 4px 0; }
+  .barras li.destacada { font-weight: 600; }
+  .barras li.destacada .barra { background: var(--accent); }
+  .barras .valor { text-align: right; font-variant-numeric: tabular-nums; }
+  @media (max-width: 520px) { .barras li { grid-template-columns: minmax(0, 1fr) 3.2rem; } .barras .nombre { grid-column: 1 / -1; } .barras .pista { grid-column: 1; } }
+
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  @media print {
+    :root { color-scheme: light; }
+    body { background: #ffffff; color: #000000; font-size: 11pt; }
+    .cabecera, .indice, .copiar, #boton-imprimir, .no-imprimir { display: none !important; }
+    .cuerpo { display: block; padding-top: 0; }
+    .tarjeta { box-shadow: none; border-color: #cccccc; break-inside: avoid-page; padding: 14px 16px; }
+    section { margin-bottom: 12px; }
+    .portada { padding-block: 0 8px; }
+    h1 { font-size: 28pt; max-width: none; }
+    .partes { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 14px; }
+    .modelos { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .ramas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .arbol, .grafica, .indicadores div { break-inside: avoid; }
+    .barras .barra, .hoja, .modelos li.destacado { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .idea { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .idea.idea-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .idea li:not(:last-child)::after { right: -5px; top: 50%; bottom: auto; transform: translate(60%, -50%) rotate(45deg); }
+    .listo, .nota { break-inside: avoid; }
+    details { border: 0; padding: 0; background: none; }
+    details > summary { list-style: none; font-weight: 600; }
+    details > div { display: block !important; }
+    pre.config { white-space: pre-wrap; }
+    a[href^="http"].mostrar-url::after { content: " (" attr(href) ")"; font-size: 9pt; color: #444444; overflow-wrap: anywhere; }
+  }
+
+  /* ---- Clase Claude Code ---- */
+  .agenda { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 6px; max-width: 900px; }
+  .agenda a { display: grid; grid-template-columns: 4.2rem minmax(0, 1fr) auto; gap: 12px; align-items: baseline;
+    padding: 10px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+  .agenda a:hover { border-color: var(--accent); background: var(--accent-wash); }
+  .agenda .hora { font-family: var(--fuente-mono); font-size: .875rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .agenda b { font-weight: 600; }
+  .agenda small { display: block; color: var(--ink-2); font-size: .875rem; line-height: 1.4; margin-top: 1px; }
+  .agenda .dura { font-size: .8125rem; color: var(--muted); white-space: nowrap; }
+  .agenda .pausa a { background: var(--surface-2); border-style: dashed; }
+  @media (max-width: 560px) { .agenda a { grid-template-columns: 3.6rem minmax(0, 1fr); } .agenda .dura { grid-column: 2; } }
+
+  .logros { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 22px 0 0; padding: 0; list-style: none; max-width: 900px; }
+  .logros li { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: .9375rem; line-height: 1.4; }
+  .logros li b { display: block; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  @media (max-width: 860px) { .logros { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 460px) { .logros { grid-template-columns: minmax(0, 1fr); } }
+
+  .bloque-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0 0 12px; font-size: .875rem; color: var(--muted); }
+  .bloque-meta span { display: inline-flex; align-items: center; gap: 6px; }
+  .chip { display: inline-block; font: 600 .75rem/1.2 var(--fuente); letter-spacing: .02em; padding: 3px 8px; border-radius: 999px;
+    background: var(--accent-wash); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); }
+  .chip.gris { background: var(--surface-2); color: var(--ink-2); border-color: var(--line-strong); }
+
+  .prompt { margin: 16px 0 0; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-2); overflow: hidden; }
+  .prompt > header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px 14px 0; }
+  .prompt .num { flex: none; font: 600 .8125rem/1 var(--fuente-mono); color: var(--accent-ink); background: var(--accent); border-radius: 8px; padding: 6px 8px; }
+  .prompt h3 { margin: 0; font-size: 1rem; flex: 1 1 14rem; min-width: 0; }
+  .prompt .cuando { margin: 6px 14px 10px; font-size: .9375rem; color: var(--ink-2); }
+  .caja-prompt { position: relative; margin: 0 14px; }
+  .caja-prompt pre { margin: 0; max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--fuente-mono); font-size: .8125rem; line-height: 1.65;
+    background: var(--surface); border: 1px solid var(--line-strong); border-radius: 10px; padding: 14px 14px 14px; padding-right: 92px; color: var(--ink); }
+  .caja-prompt .copiar { position: absolute; top: 8px; right: 8px; }
+  .prompt .espera { margin: 10px 14px 14px; font-size: .9375rem; color: var(--ink-2); }
+  .prompt .espera b { color: var(--ink); }
+  .comando { display: block; max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--fuente-mono); font-size: .8125rem; line-height: 1.6;
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin: 8px 0 12px; }
+
+  .capas { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: 16px 0 6px; padding: 0; list-style: none; }
+  .capas li { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; min-width: 0; }
+  .capas b { display: block; font-size: .9375rem; }
+  .capas i { display: block; font-style: normal; font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 4px; }
+  .capas span { display: block; font-size: .8125rem; color: var(--ink-2); line-height: 1.4; margin-top: 4px; }
+  .capas code { font-size: .75rem; }
+  @media (max-width: 860px) { .capas { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 460px) { .capas { grid-template-columns: minmax(0, 1fr); } }
+
+  .anatomia { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; counter-reset: parte; }
+  .anatomia li { counter-increment: parte; display: grid; grid-template-columns: 2rem 11rem minmax(0, 1fr); gap: 12px; align-items: start;
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .anatomia li::before { content: counter(parte); display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--ink); color: var(--surface); font-weight: 600; font-size: .8125rem; }
+  .anatomia b { font-weight: 600; }
+  .anatomia span { color: var(--ink-2); font-size: .9375rem; }
+  .anatomia em { display: block; font-style: normal; font-family: var(--fuente-mono); font-size: .8125rem; color: var(--ink); margin-top: 3px; }
+  @media (max-width: 640px) { .anatomia li { grid-template-columns: 2rem minmax(0, 1fr); } .anatomia span { grid-column: 2; } }
+
+  .comparar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 14px 0 0; }
+  .comparar > div { border-radius: 12px; padding: 12px 14px; border: 1px solid var(--line); background: var(--surface-2); min-width: 0; }
+  .comparar .mal { border-color: var(--warn-line); background: var(--warn-bg); color: var(--warn-ink); }
+  .comparar .bien { border-color: color-mix(in srgb, var(--ok) 35%, transparent); background: color-mix(in srgb, var(--ok) 7%, var(--surface)); }
+  .comparar b { display: block; margin-bottom: 4px; }
+  .comparar p { margin: 0; font-family: var(--fuente-mono); font-size: .8125rem; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+  @media (max-width: 640px) { .comparar { grid-template-columns: minmax(0, 1fr); } }
+
+  .tabla-envoltura { max-width: 100%; overflow-x: auto; margin: 14px 0 0; border: 1px solid var(--line); border-radius: 12px; }
+  table.tabla { width: 100%; border-collapse: collapse; font-size: .9375rem; background: var(--surface); }
+  .tabla th, .tabla td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .tabla thead th { background: var(--surface-2); font-size: .8125rem; letter-spacing: .02em; color: var(--ink-2); }
+  .tabla tbody tr:last-child td { border-bottom: 0; }
+  .tabla td:first-child { font-weight: 500; }
+  .si { color: var(--ok); font-weight: 600; } .no { color: var(--muted); }
+
+  .kit { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 6px; }
+  .kit li { display: grid; grid-template-columns: minmax(12rem, 19rem) minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 9px 12px;
+    border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+  .kit a { font-family: var(--fuente-mono); font-size: .8125rem; overflow-wrap: anywhere; }
+  .kit span { font-size: .9375rem; color: var(--ink-2); }
+  @media (max-width: 640px) { .kit li { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+
+  .flujo { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 4px; padding: 0; }
+  .flujo li { display: inline-flex; align-items: center; gap: 8px; font-size: .875rem; font-weight: 500; padding: 6px 10px; border-radius: 999px;
+    background: var(--surface-2); border: 1px solid var(--line-strong); }
+  .flujo li:not(:last-child)::after { content: "→"; color: var(--muted); margin-left: 2px; }
+  .teclas kbd { font-family: var(--fuente-mono); font-size: .8125rem; padding: 1px 6px; border-radius: 6px; border: 1px solid var(--line-strong);
+    border-bottom-width: 2px; background: var(--surface); white-space: nowrap; }
+  .dos-columnas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 760px) { .dos-columnas { grid-template-columns: minmax(0, 1fr); } }
+  .comparar { align-items: start; }
+  @media (max-width: 560px) {
+    .caja-prompt pre { padding: 46px 12px 12px; }
+    .cabecera .boton { display: none; }
+  }
+  @media (max-width: 640px) {
+    .tabla-envoltura { border: 0; overflow: visible; }
+    table.tabla, .tabla tbody, .tabla tr, .tabla td { display: block; width: 100%; }
+    table.tabla { background: none; }
+    .tabla thead { display: none; }
+    .tabla tr { border: 1px solid var(--line); border-radius: 12px; margin-bottom: 8px; background: var(--surface); overflow: hidden; }
+    .tabla td { padding: 8px 12px; }
+    .tabla td:first-child { background: var(--surface-2); border-bottom: 1px solid var(--line); }
+    .tabla td:not(:first-child) { border-bottom: 0; }
+    .tabla td[data-label]:not(:first-child):not([data-label=""])::before { content: attr(data-label); display: block; font-size: .75rem; font-weight: 600;
+      letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+  }
+  @media print {
+    .caja-prompt pre { padding-right: 14px; }
+    .prompt, .anatomia li, .kit li, .agenda li { break-inside: avoid; }
+    .logros { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .capas { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  }
+</style>
+</head>
+<body>
+<header class="cabecera">
+  <div class="contenedor">
+    <a class="marca" href="../" aria-label="Volver al Predictor Saber 11">
+      <svg viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="var(--ink)"/><path d="M8 23.5a9 9 0 0 1 18 0" fill="none" stroke="var(--accent-soft)" stroke-width="3.2"/><path d="M8 23.5a9 9 0 0 1 12.2-8.4" fill="none" stroke="#6da7ec" stroke-width="3.2"/><circle cx="20.2" cy="15.1" r="2.6" fill="var(--bg)"/></svg>
+      <span><b>Guion de la clase</b><small>Claude Code avanzado · para el profe</small></span>
+    </a>
+    <a class="boton no-imprimir" href="./"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Guía de estudiantes</a>
+    <button class="boton-icono" id="boton-tema" type="button" aria-label="Cambiar a modo oscuro"><svg class="icono-luna" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><svg class="icono-sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg></button>
+  </div>
+</header>
+
+<main class="contenedor">
+  <section class="portada" aria-labelledby="titulo">
+    <p class="etiqueta-superior">Para el profe · clase de 3 horas</p>
+    <h1 id="titulo">Guion de la clase: Claude Code avanzado</h1>
+    <p class="entrada">Qué preparar, qué decir y qué hacer en cada bloque. La guía de los estudiantes, con los 19 prompts, está en
+      <a href="./">la página de la clase</a>; aquí los prompts se citan por número (P1 a P19).</p>
+    <div class="resultado-final"><span>La idea que deben llevarse:</span><span class="url">Lo avanzado no es pedirle más a Claude: es darle <em>contexto</em>, ponerle <em>reglas</em> y exigirle <em>evidencia</em>.</span></div>
+  </section>
+
+  <div class="cuerpo">
+    <nav class="indice" aria-label="Contenido">
+      <h2>Contenido</h2>
+      <ol>
+        <li><a href="#acceso">Acceso de los estudiantes</a></li>
+        <li><a href="#preparacion">Preparación</a></li>
+        <li><a href="#minuto">Minuto a minuto</a></li>
+        <li><a href="#demo">Demo de apertura</a></li>
+        <li><a href="#trampa">Demo de la trampa</a></li>
+        <li><a href="#ideas">Ideas para que se quede</a></li>
+        <li><a href="#planb">Plan B</a></li>
+        <li><a href="#mensaje">Mensaje para estudiantes</a></li>
+      </ol>
+    </nav>
+
+    <div>
+      <section class="tarjeta etica" id="acceso" aria-labelledby="t-acceso">
+        <h2 class="titulo-seccion" id="t-acceso">Lo primero: ¿con qué cuenta trabaja cada estudiante?</h2>
+        <p>Claude Code viene en los planes de pago de Claude (Pro, Max, Team y Enterprise) o con créditos de la Claude Console. <b>El plan gratis no lo incluye.</b>
+          Decídelo una semana antes y ponlo en el mensaje para los estudiantes:</p>
+        <ul class="simple">
+          <li><b>Plan de la universidad.</b> Pregunta si la EAN tiene el plan de educación de Claude, que cubre a estudiantes y docentes.</li>
+          <li><b>Plan Pro individual</b> (en claude.com/pricing figura en USD 20 al mes; se puede cancelar después).</li>
+          <li><b>En parejas:</b> quien tiene plan maneja el teclado y el otro dirige los prompts y revisa los diffs. La clase funciona bien así.</li>
+          <li><b>Créditos de la Console</b> (pago por uso), con un límite de gasto.</li>
+          <li>Revisa si en tu Claude Code aparece <code>/passes</code>: algunas cuentas pueden regalar una semana de Claude Code. Solo aparece si tu cuenta es elegible.</li>
+        </ul>
+      </section>
+
+      <section class="tarjeta" id="preparacion" aria-labelledby="t-prep">
+        <h2 class="titulo-seccion" id="t-prep">Preparación</h2>
+        <h3>Una semana antes</h3>
+        <ol class="pasos">
+          <li>Define el acceso a Claude (arriba) y envía el <a href="#mensaje">mensaje para los estudiantes</a>.</li>
+          <li>Pide que creen su copia de la plantilla, activen Pages y, si pueden, instalen Claude Code. Todo está en «Antes de la clase» de la guía.</li>
+        </ol>
+        <h3>El día antes: tu repositorio de demo</h3>
+        <ol class="pasos">
+          <li>Crea una copia nueva de la plantilla para la demo (por ejemplo <code>demo-claude-code</code>) y activa Pages. No hagas la demo en la plantilla original: reemplazaría el Predictor Saber 11.</li>
+          <li>Clónala, instala las dependencias y abre <code>claude</code>: acepta la confianza en la carpeta y el servidor MCP.</li>
+          <li>Corre <code>/install-github-app</code> y elige los dos flujos (Claude y revisión). Así @claude y la revisión de PR quedan funcionando.</li>
+          <li>Crea el issue #1 con la plantilla <b>Tarea</b> y este texto:
+            <div class="caja-prompt"><pre>Título: [Tarea] Comparar los cuatro modelos y publicar el mejor
+
+Contexto
+La página todavía publica el modelo del Saber 11 que trae la plantilla. Queremos publicar
+nuestro propio modelo: el ejemplo de diamantes que describe la sección «Proyecto» de CLAUDE.md.
+
+Qué queremos
+Publicar el modelo que menos se equivoca, con su tabla de métricas en el README.
+
+Criterios de aceptación
+- [ ] Se comparan los cuatro modelos contra la línea base
+- [ ] El modelo publicado mejora el MAE de la línea base en al menos 10 %
+- [ ] python -m pytest tests/ -q pasa
+- [ ] node scripts/prueba_paridad.js web/modelo.js termina en OK
+- [ ] El README tiene la tabla de métricas
+
+Fuera de alcance
+El diseño de la página.</pre><button class="copiar" type="button">Copiar</button></div></li>
+          <li><b>Ensaya la demo completa una vez</b> y guarda el PR que resulte (o graba la pantalla): es tu plan B. Después borra la rama y vuelve a abrir el issue.</li>
+          <li>Prepara los datos de la <a href="#trampa">demo de la trampa</a> y sube el tamaño de letra de tu terminal para el proyector.</li>
+        </ol>
+        <h3>30 minutos antes</h3>
+        <ul class="simple">
+          <li>Revisa internet y abre las pestañas: la guía, tu repositorio de demo (issue #1 y Actions) y su página publicada.</li>
+          <li>En la terminal: <code>claude --version</code>, <code>claude mcp list</code> y, dentro de Claude, <code>/usage</code> para ver cuánta cuota te queda.</li>
+          <li>Silencia las notificaciones y cierra lo que no vayas a proyectar.</li>
+        </ul>
+      </section>
+
+      <section class="tarjeta" id="minuto" aria-labelledby="t-minuto">
+        <h2 class="titulo-seccion" id="t-minuto">Minuto a minuto</h2>
+        <p class="objetivo">Si vas tarde, recorta en este orden: P12 (Playwright), P15 (paralelo), P10 (hook propio). Nunca recortes la verificación ni la discusión de seguridad.</p>
+        <div class="tabla-envoltura">
+          <table class="tabla">
+            <thead><tr><th>Bloque</th><th>Qué haces y qué dices</th><th>Qué hacen ellos</th><th>Vamos bien si…</th></tr></thead>
+            <tbody><tr><td data-label="Bloque"><span class='meta'>0:00</span><br><b>Apertura</b><br><span class='meta'>10 min</span></td><td data-label="Qué haces y qué dices">Proyecta el repositorio de demo con el issue #1 abierto. Pega el prompt de la demo en modo auto y narra mientras Claude trabaja.<br><span class='meta'>«Hoy no van a aprender a pedirle cosas a una IA. Van a aprender a dirigir un agente: darle contexto, ponerle reglas y exigirle evidencia.»</span></td><td data-label="Qué hacen ellos">Observan: qué lee primero, cómo verifica, dónde pide permiso.</td><td data-label="Vamos bien si…">El PR aparece en GitHub y el check «Pruebas» arranca.</td></tr><tr><td data-label="Bloque"><span class='meta'>0:10</span><br><b>1. Cómo trabaja un agente</b><br><span class='meta'>20 min</span></td><td data-label="Qué haces y qué dices">Explica el ciclo (lee, planea, actúa, verifica, entrega) y las cinco palancas. Muestra Shift+Tab, Esc, Esc Esc y /context.<br><span class='meta'>«Un agente sin forma de verificar es un practicante sin jefe: hace cosas, pero nadie sabe si están bien.»</span></td><td data-label="Qué hacen ellos">Abren Claude Code en su copia y corren P1 en modo plan.</td><td data-label="Vamos bien si…">Todos tienen Claude abierto y ven pasar las pruebas.</td></tr><tr><td data-label="Bloque"><span class='meta'>0:30</span><br><b>2. El prompt profesional</b><br><span class='meta'>25 min</span></td><td data-label="Qué haces y qué dices">Muestra las seis partes con el ejemplo «Así no / Así sí». Luego haz P2 con tu proyecto en vivo: que vean las preguntas de opción múltiple.<br><span class='meta'>«Un buen prompt es un buen issue: otra persona lo podría resolver sin preguntarte nada.»</span></td><td data-label="Qué hacen ellos">P2 (entrevista y especificación) y P3 (CLAUDE.md) con su proyecto.</td><td data-label="Vamos bien si…">Cada uno tiene docs/ESPECIFICACION.md aprobado.</td></tr><tr><td data-label="Bloque"><span class='meta'>0:55</span><br><b>3. Del issue al PR</b><br><span class='meta'>30 min</span></td><td data-label="Qué haces y qué dices">Muestra el flujo profesional y scripts/entrenar.py. Acompaña P4 a P7 pasando por los puestos.<br><span class='meta'>«Nada se hace sin issue, nada llega a main sin PR y nada se fusiona sin pruebas en verde.»</span></td><td data-label="Qué hacen ellos">P4 explorador-datos · P5 issue · P6 plan y experimentos · P7 /publicar-modelo.</td><td data-label="Vamos bien si…">PR abiertos con la tabla de métricas. Si alguien va atrás, que use el ejemplo de diamantes.</td></tr><tr><td data-label="Bloque"><span class='meta'>1:25</span><br><b>Pausa</b><br><span class='meta'>10 min</span></td><td data-label="Qué haces y qué dices">Deja a Claude corriendo P6 en tu demo.</td><td data-label="Qué hacen ellos">Dejan a Claude trabajando.</td><td data-label="Vamos bien si…"></td></tr><tr><td data-label="Bloque"><span class='meta'>1:35</span><br><b>4. Skills, subagentes y hooks</b><br><span class='meta'>30 min</span></td><td data-label="Qué haces y qué dices">Abre .claude/ y explica la tabla. Haz la demo de la trampa (fuga de datos) y el bloqueo del hook. Luego P8.<br><span class='meta'>«CLAUDE.md es una instrucción: se puede olvidar. Un hook es código: se cumple siempre.»</span></td><td data-label="Qué hacen ellos">P8 revisor-ml · P9 su propia skill · P10 un hook (los más rápidos).</td><td data-label="Vamos bien si…">Cada uno crea al menos una skill o un hook.</td></tr><tr><td data-label="Bloque"><span class='meta'>2:05</span><br><b>5. MCP y GitHub</b><br><span class='meta'>25 min</span></td><td data-label="Qué haces y qué dices">Muestra /mcp y P11. Si hay Node, P12 con Playwright sobre tu página. Luego /install-github-app y P13 en un issue de tu demo: que vean a Claude responder en GitHub.<br><span class='meta'>«MCP es el puerto USB de Claude: cada servidor le conecta una herramienta nueva.»</span></td><td data-label="Qué hacen ellos">P11 · P12 (opcional) · configuran el secreto y prueban P13.</td><td data-label="Vamos bien si…">Al menos un @claude respondido en GitHub por grupo.</td></tr><tr><td data-label="Bloque"><span class='meta'>2:30</span><br><b>6. Escala y seguridad</b><br><span class='meta'>15 min</span></td><td data-label="Qué haces y qué dices">Muestra P15 (paralelo) y P16 (/goal) con la advertencia de la meta tramposa. Discute los cinco puntos de seguridad.<br><span class='meta'>«Si la meta es solo bajar el MAE, el agente puede hacer trampa. Pon la meta en lo verificable y las reglas en CLAUDE.md.»</span></td><td data-label="Qué hacen ellos">P18: leen sus permisos.</td><td data-label="Vamos bien si…">Responden: ¿quién responde por el código que escribe Claude?</td></tr><tr><td data-label="Bloque"><span class='meta'>2:45</span><br><b>Cierre</b><br><span class='meta'>10 min</span></td><td data-label="Qué haces y qué dices">Plantea el reto final y muestra /revisar-entrega. Recuerda la entrega en Canvas.<br><span class='meta'>«Su página y su repositorio ya son portafolio: un proyecto con issues, PR, pruebas y revisión.»</span></td><td data-label="Qué hacen ellos">P19 /revisar-entrega.</td><td data-label="Vamos bien si…">Saben qué les falta para la entrega.</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="tarjeta" id="demo" aria-labelledby="t-demo">
+        <h2 class="titulo-seccion" id="t-demo">Demo de apertura: del issue al PR</h2>
+        <p>En tu repositorio de demo, con <code>claude</code> abierto y el modo <b>auto</b> activo (<kbd>Shift</kbd>+<kbd>Tab</kbd>), pega:</p>
+        <div class="caja-prompt"><pre>Resuelve el issue #1 de principio a fin. Lee el issue y CLAUDE.md, crea una rama,
+compara los cuatro modelos con /experimento usando las columnas de CLAUDE.md,
+publica el de menor MAE con scripts/entrenar.py --publicar, actualiza el README con la tabla,
+corre las pruebas y abre un PR que cierre el issue. Al final muéstrame la evidencia.</pre><button class="copiar" type="button">Copiar</button></div>
+        <p>Mientras trabaja (unos 5 minutos), señala en voz alta:</p>
+        <ul class="simple">
+          <li>El mensaje del hook al iniciar: «Rama actual: main… crea una rama». La regla viene del proyecto, no del prompt.</li>
+          <li>Que lee <code>CLAUDE.md</code> y el issue antes de hacer nada.</li>
+          <li>La tabla de <code>/experimento</code>: decide con cifras, no con intuición.</li>
+          <li>La línea «OK» de la paridad y <code>6 passed</code> antes de decir «listo».</li>
+          <li>En GitHub: el PR, el check <b>Pruebas</b> corriendo y, después, los comentarios de la <b>Revisión de Claude</b>.</li>
+        </ul>
+        <div class="nota"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg><p>Si algo se demora o falla, muestra el PR del ensayo. Que algo falle también enseña: pregunta «¿cómo nos dimos cuenta?».</p></div>
+      </section>
+
+      <section class="tarjeta" id="trampa" aria-labelledby="t-trampa">
+        <h2 class="titulo-seccion" id="t-trampa">Demo de la trampa (bloque 4)</h2>
+        <p>Une Machine Learning y agentes en un solo momento. En la terminal del repositorio de demo, crea una copia de los datos con una columna tramposa:</p>
+        <div class="caja-prompt"><pre>python -c &quot;import os, pandas as pd; os.makedirs(&#x27;datos&#x27;, exist_ok=True); d = pd.read_csv(&#x27;https://raw.githubusercontent.com/mwaskom/seaborn-data/master/diamonds.csv&#x27;); d[&#x27;precio_con_iva&#x27;] = (d[&#x27;price&#x27;] * 1.19).round(0); d.to_csv(&#x27;datos/diamantes_trampa.csv&#x27;, index=False)&quot;</pre><button class="copiar" type="button">Copiar</button></div>
+        <p>Luego, en Claude:</p>
+        <div class="caja-prompt"><pre>/experimento carat, cut, precio_con_iva  (datos: datos/diamantes_trampa.csv)</pre><button class="copiar" type="button">Copiar</button></div>
+        <p>El Gradient Boosting sale con R² 1,000 y MAE de unos 19 dólares (la línea base: 3.020). La skill debe detenerse a avisar de la fuga.
+          Pregunta a la clase: <b>«¿Celebramos o sospechamos?»</b> Después pídele a Claude «agrega un comentario al inicio de web/modelo.js» y muestra cómo el hook lo bloquea.</p>
+        <div class="listo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><p>Mensaje: el agente encontró la fuga porque se lo enseñamos (la skill <code>guia-ml</code>) y no pudo romper el modelo porque se lo prohibimos con código (el hook).</p></div>
+      </section>
+
+      <section class="tarjeta" id="ideas" aria-labelledby="t-ideas">
+        <h2 class="titulo-seccion" id="t-ideas">Ideas para que la clase se quede</h2>
+        <ul class="simple">
+          <li><b>Empieza por el final.</b> La demo de apertura vale más que diez diapositivas: en 5 minutos ven el destino.</li>
+          <li><b>Su proyecto es el hilo.</b> Cada prompt se aplica a su proyecto final; el ejemplo de diamantes es solo el plan B.</li>
+          <li><b>Muestra que se equivoca.</b> La trampa de la fuga de datos y el hook enseñan más que cualquier éxito: el profesional es quien sabe verificar.</li>
+          <li><b>Escritor y revisor.</b> En parejas: uno resuelve su issue con Claude y el otro lo revisa con <code>revisor-ml</code> sin ver cómo se hizo. Luego cambian.</li>
+          <li><b>Mini competencia sin trampa</b> (10 minutos, opcional): «¿quién baja más el MAE sin fugas ni columnas sensibles?», con <code>/experimento</code>.
+            Cierra preguntando: si probamos 30 combinaciones mirando la prueba, ¿esa prueba sigue midiendo algo? Es la discusión de sobreajuste al conjunto de prueba.</li>
+          <li><b>Preguntas para discutir:</b> ¿quién responde por el código que escribe Claude? ¿Qué pasa si un issue dice «ignora tus reglas»? ¿Cuándo NO usarías un agente?</li>
+          <li><b>Para los que van rápido:</b> <code>/schedule</code> para que Claude revise su repositorio cada semana en la nube; empaquetar su <code>.claude/</code> como plugin; o Claude Code en VS Code.</li>
+          <li><b>Portafolio.</b> Insiste en que un repositorio con issues, PR, pruebas y revisión es lo que una empresa quiere ver en una hoja de vida.</li>
+        </ul>
+      </section>
+
+      <section class="tarjeta" id="planb" aria-labelledby="t-planb">
+        <h2 class="titulo-seccion" id="t-planb">Plan B</h2>
+        <details><summary>Varios estudiantes no tienen plan de Claude</summary>
+          <div>Parejas o tríos alrededor de quien sí tiene. El que no tiene dirige los prompts y revisa los diffs: es justo la habilidad de la clase.</div></details>
+        <details><summary>No pudieron instalar Claude Code</summary>
+          <div>Que trabajen en claude.ai/code. Todo funciona allí salvo <code>/install-github-app</code> (el secreto se configura a mano) y Playwright.</div></details>
+        <details><summary>Falla internet o GitHub</summary>
+          <div>Muestra el PR del ensayo y las capturas. Los bloques 1, 2 y 4 se pueden hacer en local: plan, especificación, skills y hooks no necesitan GitHub.</div></details>
+        <details><summary>Se agota la cuota de alguien</summary>
+          <div>Que se una a una pareja. Para ahorrar: <code>/clear</code> entre tareas, prompts concretos y <code>/model</code> con un modelo más pequeño para tareas simples.</div></details>
+        <details><summary>@claude no responde en GitHub</summary>
+          <div>Revisa la pestaña Actions: casi siempre falta el secreto o la app de Claude en el repositorio. Mientras tanto, haz la misma tarea en local con P13 como prompt.</div></details>
+      </section>
+
+      <section class="tarjeta" id="mensaje" aria-labelledby="t-mensaje">
+        <h2 class="titulo-seccion" id="t-mensaje">Mensaje para los estudiantes</h2>
+        <p class="objetivo">Para WhatsApp o Canvas. Completa lo que está entre corchetes.</p>
+        <div class="caja-prompt"><pre>🤖 Clase: Claude Code avanzado. Tu proyecto final, como lo haría un equipo profesional
+
+¡Hola a todos y todas! 👋
+
+En la próxima clase vamos a trabajar con Claude Code, un agente de IA que no solo escribe código: lee tu proyecto, corre pruebas, compara modelos y abre pull requests en GitHub. Lo vamos a usar con su proyecto final de Machine Learning, de principio a fin. 🚀
+
+¿Qué vamos a hacer?
+✅ Escribir prompts profesionales, como los que usan los equipos de verdad.
+✅ Configurar a Claude con memoria, skills, subagentes y reglas automáticas.
+✅ Conectarlo con GitHub: issues, pull requests, @claude y revisión automática.
+✅ Publicar su modelo con pruebas y evidencia.
+
+Guía de la clase 👉 https://daniel01010101010101.github.io/Ejercicio_ejemplo_machine_learning/claude-code/
+
+¿Qué deben traer?
+💻 Portátil con su cargador. Esta vez sí hace falta un computador.
+📊 Los datos de su proyecto final (CSV o enlace). Si no los tienen, usamos un ejemplo.
+
+Antes de la clase:
+1️⃣ Cuenta de Claude con Claude Code: [cómo la van a tener: plan de la universidad, plan Pro o en parejas].
+2️⃣ Cuenta de GitHub y su copia de la plantilla. Los pasos están en la guía, en «Antes de la clase».
+3️⃣ Recomendado: instalar Claude Code en el portátil (10 minutos, pasos en la guía). Si no pueden, trabajamos desde el navegador en claude.ai/code.
+
+📅 [Fecha] · 🕒 [Hora] · 📍 [Lugar] · ⏱️ 3 horas
+
+¡Lleguen con las cuentas listas y muchas ganas! 🙌</pre><button class="copiar" type="button">Copiar</button></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer class="pie">
+  <div class="contenedor">
+    <p>Guion docente de la clase de Claude Code avanzado, Machine Learning 1, Universidad EAN. Guía de estudiantes: <a href="./">Claude Code avanzado</a> ·
+      Plantilla: <a href="https://github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning" rel="noopener">repositorio en GitHub</a> · Documentación: <a href="https://code.claude.com/docs" rel="noopener">code.claude.com/docs</a>.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  var raiz = document.documentElement;
+  var botonTema = document.getElementById('boton-tema');
+  function temaActual() {
+    var t = raiz.getAttribute('data-theme');
+    if (t) return t;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  function pintarBotonTema() {
+    var oscuro = temaActual() === 'dark';
+    botonTema.classList.toggle('tema-oscuro', oscuro);
+    botonTema.setAttribute('aria-label', oscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
+  }
+  botonTema.addEventListener('click', function () {
+    var nuevo = temaActual() === 'dark' ? 'light' : 'dark';
+    raiz.setAttribute('data-theme', nuevo);
+    try { localStorage.setItem('predictor-saber11-tema', nuevo); } catch (e) { /* sin almacenamiento */ }
+    pintarBotonTema();
+  });
+  pintarBotonTema();
+
+  // Botones «Copiar»: copian el prompt o el comando de su caja; si no hay portapapeles, lo seleccionan.
+  Array.prototype.forEach.call(document.querySelectorAll('.copiar'), function (boton) {
+    boton.addEventListener('click', function () {
+      var caja = boton.parentNode.querySelector('pre, code, a');
+      var texto = boton.getAttribute('data-copiar') || caja.textContent;
+      var original = boton.textContent;
+      function marcar(mensaje) {
+        boton.textContent = mensaje;
+        setTimeout(function () { boton.textContent = original; }, 1600);
+      }
+      function seleccionar() {
+        var rango = document.createRange();
+        rango.selectNodeContents(caja);
+        var seleccion = window.getSelection();
+        seleccion.removeAllRanges();
+        seleccion.addRange(rango);
+        marcar('Ctrl + C');
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texto).then(function () { marcar('Copiado'); }, seleccionar);
+      } else {
+        seleccionar();
+      }
+    });
+  });
+
+  // Al imprimir, abre los desplegables.
+  var cerrados = [];
+  window.addEventListener('beforeprint', function () {
+    cerrados = Array.prototype.filter.call(document.querySelectorAll('details'), function (d) { return !d.open; });
+    cerrados.forEach(function (d) { d.open = true; });
+  });
+  window.addEventListener('afterprint', function () {
+    cerrados.forEach(function (d) { d.open = false; });
+    cerrados = [];
+  });
+
+  // Lista final: se guarda en este navegador (si el almacenamiento está disponible).
+  var lista = document.getElementById('lista-chequeo');
+  if (!lista) return;
+  var CLAVE = lista.getAttribute('data-clave');
+  var casillas = Array.prototype.slice.call(lista.querySelectorAll('input'));
+  var marcadas = {};
+  try { marcadas = JSON.parse(localStorage.getItem(CLAVE) || '{}') || {}; } catch (e) { marcadas = {}; }
+  function pintarProgreso() {
+    var hechas = casillas.filter(function (c) { return c.checked; }).length;
+    document.getElementById('progreso').textContent = hechas === casillas.length
+      ? lista.getAttribute('data-final')
+      : hechas + ' de ' + casillas.length + ' listos.';
+  }
+  casillas.forEach(function (casilla) {
+    casilla.checked = !!marcadas[casilla.id];
+    casilla.addEventListener('change', function () {
+      marcadas[casilla.id] = casilla.checked;
+      try { localStorage.setItem(CLAVE, JSON.stringify(marcadas)); } catch (e) { /* sin almacenamiento */ }
+      pintarProgreso();
+    });
+  });
+  pintarProgreso();
+})();
+</script>
+
+</body>
+</html>

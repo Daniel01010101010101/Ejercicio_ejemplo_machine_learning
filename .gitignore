@@ -26,3 +26,13 @@ Thumbs.db
 
 # Salida local del cuaderno plantilla
 mi_modelo/
+
+# Claude Code: experimentos locales, ajustes personales y worktrees
+experimentos/
+.claude/settings.local.json
+.claude/worktrees/
+CLAUDE.local.md
+
+# Secretos
+.env
+.env.*

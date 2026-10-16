@@ -1,0 +1,61 @@
+# Claude responde cuando alguien escribe @claude en un issue, en un comentario o en una revisión de un PR.
+#
+# Para activarlo (una vez por repositorio):
+#   1. Instala la app de Claude en el repositorio: https://github.com/apps/claude
+#   2. En Settings → Secrets and variables → Actions, crea UNO de estos secretos:
+#        CLAUDE_CODE_OAUTH_TOKEN  usa tu plan de Claude (el token lo da `claude setup-token`)
+#        ANTHROPIC_API_KEY        usa una clave de la Claude Console
+#   Con Claude Code en la terminal, /install-github-app hace los dos pasos por ti.
+#
+# Solo responde a quien tenga permiso de escritura en el repositorio.
+name: Claude
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
+  issues:
+    types: [opened, assigned]
+
+jobs:
+  claude:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - name: Instalar Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependencias (para entrenar y correr las pruebas)
+        run: pip install -r requirements.txt pytest
+
+      - name: Claude Code
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Los comandos que puede correr sin pedir permiso (los mismos de .claude/settings.json).
+          claude_args: >-
+            --max-turns 40
+            --allowedTools "Bash(python scripts/entrenar.py *)" "Bash(python -m pytest *)"
+            "Bash(node scripts/prueba_paridad.js *)" "Bash(node scripts/resumen_modelo.js *)"

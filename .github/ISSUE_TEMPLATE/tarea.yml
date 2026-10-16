@@ -1,0 +1,39 @@
+name: Tarea
+description: Algo que hay que hacer, escrito para que lo pueda resolver una persona o Claude (@claude).
+title: "[Tarea] "
+body:
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto
+      description: Qué pasa hoy y por qué importa. Menciona los archivos si los conoces.
+    validations:
+      required: true
+  - type: textarea
+    id: objetivo
+    attributes:
+      label: Qué queremos
+      description: El resultado esperado, en una o dos frases.
+    validations:
+      required: true
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Criterios de aceptación
+      description: Una lista que se pueda comprobar con un sí o un no.
+      value: |
+        - [ ]
+        - [ ] `python -m pytest tests/ -q` pasa
+        - [ ] `node scripts/prueba_paridad.js web/modelo.js` termina en OK
+    validations:
+      required: true
+  - type: textarea
+    id: verificacion
+    attributes:
+      label: Cómo verificarlo
+      description: Comandos o pasos para comprobar el resultado.
+  - type: textarea
+    id: fuera
+    attributes:
+      label: Fuera de alcance
+      description: Lo que NO se debe tocar en esta tarea.

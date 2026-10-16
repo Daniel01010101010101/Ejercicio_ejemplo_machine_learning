@@ -7,6 +7,7 @@ Proyecto de clase del curso **Machine Learning 1**, Universidad EAN (Bogotá).
 - **Página publicada:** https://daniel01010101010101.github.io/Ejercicio_ejemplo_machine_learning/ (GitHub Pages; se actualiza sola con cada cambio en `main`)
 - **Cuaderno en Colab:** [abrir `notebooks/saber11_modelo.ipynb`](https://colab.research.google.com/github/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/blob/main/notebooks/saber11_modelo.ipynb)
 - **Guía de clase «Tu modelo en la web»:** https://daniel01010101010101.github.io/Ejercicio_ejemplo_machine_learning/guia/ ([PDF](https://daniel01010101010101.github.io/Ejercicio_ejemplo_machine_learning/guia/guia_de_clase.pdf)). Cada estudiante copia este repositorio y publica su propio modelo en 60 minutos, sin instalar nada.
+- **Clase «Claude Code avanzado» (3 horas):** https://daniel01010101010101.github.io/Ejercicio_ejemplo_machine_learning/claude-code/ ([guion para el profe](https://daniel01010101010101.github.io/Ejercicio_ejemplo_machine_learning/claude-code/profe.html)). El repositorio ya viene configurado para Claude Code: memoria, skills, subagentes, hooks, MCP y GitHub Actions.
 
 > **Uso responsable.** El modelo mide desigualdad de contexto, no capacidad. Nunca debe usarse para juzgar, clasificar o seleccionar a un estudiante.
 
@@ -34,16 +35,28 @@ web/
   modelo.js           el modelo: window.MODELO = {...}  (generado, no se edita a mano)
   modelo.json         el mismo contenido en JSON
   guia/               guía de clase para estudiantes (página y PDF)
+  claude-code/        clase de Claude Code avanzado: guía de estudiantes y guion del profe
 notebooks/
   saber11_modelo.ipynb        cuaderno de clase, ejecutado con los datos reales
   plantilla_tu_modelo.ipynb   plantilla: de un CSV propio a modelo.js
 ejemplos/diamantes/
   modelo.js           modelo de ejemplo hecho con la plantilla (plan B en clase)
 scripts/
-  train.py            lo mismo que el cuaderno, desde la terminal
+  train.py            lo mismo que el cuaderno del Saber 11, desde la terminal
+  entrenar.py         el cuaderno plantilla desde la terminal: entrena, compara y publica (--publicar)
   prueba_paridad.js   prueba de paridad JavaScript vs scikit-learn
-.github/workflows/
-  pages.yml           publica web/ en GitHub Pages, después de la prueba de paridad
+  resumen_modelo.js   resumen de un modelo.js sin los árboles
+tests/                pruebas de entrenar.py (python -m pytest tests/ -q)
+CLAUDE.md             memoria del proyecto para Claude Code
+.claude/              skills, subagentes, hooks, reglas y permisos de Claude Code
+.mcp.json             servidores MCP del proyecto (documentación de Claude Code)
+.github/
+  workflows/pages.yml           publica web/ en GitHub Pages, después de la prueba de paridad
+  workflows/pruebas.yml         pytest y prueba de paridad en cada pull request
+  workflows/claude.yml          @claude en issues y pull requests (necesita un secreto)
+  workflows/claude-revision.yml Claude revisa cada pull request (se salta sin secreto)
+  ISSUE_TEMPLATE/tarea.yml      plantilla de issue con criterios de aceptación
+  pull_request_template.md      plantilla de PR con evidencia y uso de IA
 netlify.toml          alternativa: publicar en Netlify
 requirements.txt      dependencias para correr train.py fuera de Colab
 ```
@@ -150,6 +163,35 @@ La misma página sirve para el modelo del proyecto final de cada estudiante: Gra
 3. **Plan B:** si Colab falla en clase, [`ejemplos/diamantes/modelo.js`](ejemplos/diamantes/modelo.js) es un modelo listo para subir a `web/`.
 
 **Una sola vez, antes de la clase:** *Settings → General →* marca **Template repository**. Así aparece el botón **Use this template** y cada copia trae la página, los cuadernos y el workflow de publicación. En cada copia, el estudiante activa *Settings → Pages → Source:* **GitHub Actions** (paso 1 de la guía).
+
+## Clase: Claude Code avanzado
+
+Una clase de 3 horas para que cada estudiante trabaje su proyecto final con [Claude Code](https://code.claude.com/docs) como lo haría un equipo profesional: issue, plan, experimentos, pruebas, pull request, revisión y publicación.
+
+- **Guía de estudiantes:** [`web/claude-code/`](https://daniel01010101010101.github.io/Ejercicio_ejemplo_machine_learning/claude-code/). Agenda, la estructura de un prompt profesional, 19 prompts listos para copiar, el kit archivo por archivo, chuleta y solución de problemas.
+- **Guion del profe:** [`web/claude-code/profe.html`](https://daniel01010101010101.github.io/Ejercicio_ejemplo_machine_learning/claude-code/profe.html). Acceso de los estudiantes a Claude, preparación, minuto a minuto, demos (del issue al PR y la trampa de la fuga de datos), plan B y el mensaje para los estudiantes.
+
+El kit de Claude Code viaja en cada copia de la plantilla:
+
+| Pieza | Qué hace |
+|---|---|
+| `CLAUDE.md` | Comandos, reglas y la sección «Proyecto» que cada estudiante llena con sus datos |
+| `.claude/skills/` | `/experimento` (compara modelos y anota en `docs/experimentos.md`), `/publicar-modelo` (publica y abre el PR), `/revisar-entrega` (revisa la entrega del 10 %) y `guia-ml` (criterios del curso) |
+| `.claude/agents/` | `explorador-datos` (perfil de un CSV nuevo) y `revisor-ml` (revisión independiente: línea base, fuga de datos, uso responsable) |
+| `.claude/hooks/` | Bloquean editar `web/modelo.js`, los datos crudos y `.env`; revisan cada archivo editado (sintaxis, JSON, paridad); recuerdan la rama al iniciar e instalan dependencias en la nube |
+| `.claude/settings.json` | Permisos: qué corre sin preguntar y qué está prohibido (leer `.env`, `push --force`, push a `main`) |
+| `.github/` | Pruebas en cada PR, `@claude`, revisión automática y plantillas de issue y PR |
+
+`scripts/entrenar.py` ejecuta el mismo cuaderno de Colab desde la terminal, así Claude Code puede entrenar y leer las métricas sin abrir Colab:
+
+```bash
+python scripts/entrenar.py                     # el ejemplo de diamantes
+python scripts/entrenar.py --datos datos/mis_datos.csv --objetivo nota --variables "a, b, c" --salida experimentos/prueba-1
+python scripts/entrenar.py ... --publicar      # copia el modelo a web/ si le gana a la línea base y pasa la paridad
+python -m pytest tests/ -q                     # 6 pruebas con datos inventados
+```
+
+`@claude` y la revisión automática necesitan la app de Claude en el repositorio y un secreto `CLAUDE_CODE_OAUTH_TOKEN` (plan de Claude) o `ANTHROPIC_API_KEY` (Claude Console). En la terminal, `/install-github-app` configura las dos cosas. Sin secreto, la revisión se salta y no deja el PR en rojo.
 
 ## Uso responsable
 

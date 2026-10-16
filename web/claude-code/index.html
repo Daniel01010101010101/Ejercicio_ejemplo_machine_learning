@@ -1,0 +1,957 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+<title>Claude Code avanzado</title>
+<meta name="description" content="Clase de 3 horas: Claude Code con tu proyecto de Machine Learning en GitHub. Prompts profesionales, skills, subagentes, hooks, MCP, @claude y revisión de PR.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d1726'/%3E%3Cpath d='M7 22a9 9 0 0 1 18 0' fill='none' stroke='%236da7ec' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap">
+<script>
+  try {
+    var temaGuardado = localStorage.getItem('predictor-saber11-tema');
+    if (temaGuardado === 'light' || temaGuardado === 'dark') document.documentElement.setAttribute('data-theme', temaGuardado);
+  } catch (e) { /* sin almacenamiento: tema del sistema */ }
+</script>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f3f5f8; --surface: #ffffff; --surface-2: #f7f9fb;
+    --ink: #0d1726; --ink-2: #435066; --muted: #5f6b7e;
+    --line: #e2e6ed; --line-strong: #cbd2dc;
+    --accent: #1c5cab; --accent-ink: #ffffff; --accent-soft: #cde2fb; --accent-wash: #eef4fd;
+    --verde: #1a7f37; --verde-ink: #ffffff; --ok: #006300;
+    --warn-bg: #fff6e5; --warn-line: #f0d49b; --warn-ink: #6b4a00; --barra-gris: #8792a2;
+    --sombra: 0 1px 2px rgba(13, 23, 38, .04), 0 10px 28px rgba(13, 23, 38, .06);
+    --fuente: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --fuente-titulos: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --fuente-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0a0f17; --surface: #111823; --surface-2: #0d141e;
+      --ink: #edf1f7; --ink-2: #b5bfcd; --muted: #8d98a9;
+      --line: #222d3b; --line-strong: #334155;
+      --accent: #6da7ec; --accent-ink: #0a0f17; --accent-soft: #1d3a5f; --accent-wash: #132338;
+      --verde: #2ea043; --verde-ink: #ffffff; --ok: #3fb950;
+      --warn-bg: #221a0b; --warn-line: #5c4516; --warn-ink: #f2d59a; --barra-gris: #5d6a7d;
+      --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px rgba(0, 0, 0, .35);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0a0f17; --surface: #111823; --surface-2: #0d141e;
+    --ink: #edf1f7; --ink-2: #b5bfcd; --muted: #8d98a9;
+    --line: #222d3b; --line-strong: #334155;
+    --accent: #6da7ec; --accent-ink: #0a0f17; --accent-soft: #1d3a5f; --accent-wash: #132338;
+    --verde: #2ea043; --verde-ink: #ffffff; --ok: #3fb950;
+    --warn-bg: #221a0b; --warn-line: #5c4516; --warn-ink: #f2d59a; --barra-gris: #5d6a7d;
+    --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px rgba(0, 0, 0, .35);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 80px; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 1rem/1.65 var(--fuente); -webkit-font-smoothing: antialiased; }
+  [hidden] { display: none !important; }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: .2em; }
+  a:hover { text-decoration-thickness: 2px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  p { margin: 0 0 12px; }
+  code { font-family: var(--fuente-mono); font-size: .875em; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; overflow-wrap: anywhere; }
+  .contenedor { width: 100%; max-width: 1120px; margin-inline: auto; padding-inline: clamp(16px, 4vw, 40px); }
+
+  .cabecera { position: sticky; top: 0; z-index: 20; padding-top: env(safe-area-inset-top, 0px);
+    background: color-mix(in srgb, var(--bg) 85%, transparent); -webkit-backdrop-filter: saturate(1.4) blur(12px); backdrop-filter: saturate(1.4) blur(12px);
+    border-bottom: 1px solid var(--line); }
+  .cabecera .contenedor { display: flex; align-items: center; gap: 12px; min-height: 60px; }
+  .marca { display: flex; align-items: center; gap: 11px; color: var(--ink); text-decoration: none; margin-right: auto; min-width: 0; }
+  .marca svg { width: 32px; height: 32px; flex: none; }
+  .marca b { display: block; font-weight: 600; line-height: 1.15; }
+  .marca small { display: block; font-size: .75rem; color: var(--muted); line-height: 1.3; }
+  .boton-icono { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+  .boton-icono svg { width: 18px; height: 18px; }
+  .icono-sol { display: none; } .tema-oscuro .icono-sol { display: block; } .tema-oscuro .icono-luna { display: none; }
+  .boton { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line-strong);
+    background: var(--surface); color: var(--ink); font: 500 .9375rem/1.2 var(--fuente); text-decoration: none; cursor: pointer; }
+  .boton:hover { background: var(--accent-wash); border-color: var(--accent); }
+  .boton svg { width: 16px; height: 16px; flex: none; }
+
+  .portada { padding-block: clamp(36px, 6vw, 64px) 12px; }
+  .etiqueta-superior { margin: 0 0 12px; font-size: .75rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-family: var(--fuente-titulos); font-weight: 500; font-size: clamp(2.25rem, 1.3rem + 3.4vw, 3.75rem); line-height: 1.04; letter-spacing: -.02em; margin: 0 0 16px; max-width: 16ch; text-wrap: balance; }
+  .entrada { font-size: clamp(1.0625rem, 1rem + .3vw, 1.1875rem); color: var(--ink-2); max-width: 62ch; }
+  .resultado-final { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 18px; padding: 14px 16px; border-radius: 12px;
+    background: var(--surface); border: 1px solid var(--line); max-width: 760px; }
+  .resultado-final span { font-size: .875rem; color: var(--muted); }
+  .url { font-family: var(--fuente-mono); font-size: .9375rem; font-weight: 500; overflow-wrap: anywhere; }
+  .url em { font-style: normal; color: var(--accent); }
+
+  .tiempos { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin: 26px 0 0; padding: 0; list-style: none; max-width: 900px; }
+  .tiempos li { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .tiempos b { display: block; font-size: 1.125rem; font-weight: 600; letter-spacing: -.01em; }
+  .tiempos span { display: block; font-size: .8125rem; color: var(--ink-2); line-height: 1.35; }
+  @media (max-width: 760px) { .tiempos { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 420px) { .tiempos { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  .cuerpo { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 40px; align-items: start; padding-top: 32px; }
+  @media (max-width: 900px) { .cuerpo { grid-template-columns: minmax(0, 1fr); } .indice { display: none; } }
+  .indice { position: sticky; top: 84px; font-size: .875rem; }
+  .indice h2 { font: 600 .75rem/1.3 var(--fuente); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+  .indice ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .indice a { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 8px; color: var(--ink-2); text-decoration: none; }
+  .indice a:hover { background: var(--accent-wash); color: var(--ink); }
+  .indice a span { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  section { margin-bottom: 28px; }
+  .tarjeta { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--sombra); padding: clamp(18px, 2.6vw, 30px); }
+  h2.titulo-seccion { font-family: var(--fuente-titulos); font-weight: 500; font-size: clamp(1.625rem, 1.25rem + 1.3vw, 2.25rem); line-height: 1.1; letter-spacing: -.015em; margin: 0 0 10px; text-wrap: balance; }
+  h3 { font: 600 1rem/1.35 var(--fuente); margin: 20px 0 8px; }
+  .paso-cabecera { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 8px; }
+  .numero { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--ink); color: var(--surface); font-weight: 600; font-size: 1.125rem; }
+  .paso-cabecera h2 { margin: 2px 0 2px; font-family: var(--fuente-titulos); font-weight: 500; font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem); line-height: 1.12; letter-spacing: -.01em; text-wrap: balance; }
+  .meta { font-size: .875rem; color: var(--muted); }
+  .objetivo { color: var(--ink-2); max-width: 64ch; }
+  ol.pasos { margin: 14px 0 0; padding: 0; list-style: none; counter-reset: paso; display: grid; gap: 10px; }
+  ol.pasos > li { counter-increment: paso; position: relative; padding-left: 38px; min-width: 0; }
+  ol.pasos > li::before { content: counter(paso); position: absolute; left: 0; top: 1px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--accent-wash); color: var(--accent); font-weight: 600; font-size: .875rem; border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); }
+  .ui { display: inline-block; font: 500 .875rem/1.2 var(--fuente); padding: 3px 8px; border-radius: 7px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--ink); white-space: nowrap; }
+  .ui-verde { background: var(--verde); border-color: var(--verde); color: var(--verde-ink); }
+  .flecha { color: var(--muted); margin: 0 3px; }
+  .listo { display: flex; gap: 10px; align-items: flex-start; margin-top: 18px; padding: 12px 14px; border-radius: 12px;
+    background: color-mix(in srgb, var(--ok) 8%, var(--surface)); border: 1px solid color-mix(in srgb, var(--ok) 30%, transparent); }
+  .listo svg { width: 20px; height: 20px; flex: none; color: var(--ok); margin-top: 2px; }
+  .listo p { margin: 0; }
+  .nota { display: flex; gap: 10px; align-items: flex-start; margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: var(--warn-bg); border: 1px solid var(--warn-line); color: var(--warn-ink); }
+  .nota svg { width: 20px; height: 20px; flex: none; margin-top: 2px; }
+  .nota p { margin: 0; }
+  .enlace-copiable { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0 2px; }
+  .enlace-copiable a { font-family: var(--fuente-mono); font-size: .8125rem; overflow-wrap: anywhere; }
+  .copiar { font: 500 .8125rem/1 var(--fuente); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); cursor: pointer; }
+  .copiar:hover { border-color: var(--accent); background: var(--accent-wash); }
+  pre.config { max-width: 100%; font-family: var(--fuente-mono); font-size: .8125rem; line-height: 1.65; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; overflow-x: auto; margin: 10px 0 0; }
+  pre.config .c { color: var(--muted); }
+
+  .idea { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: 18px 0 6px; padding: 0; list-style: none; }
+  .idea li { position: relative; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+  .idea li:not(:last-child)::after { content: ""; position: absolute; right: -5px; top: 50%; width: 9px; height: 9px;
+    border-top: 2px solid var(--muted); border-right: 2px solid var(--muted); transform: translate(60%, -50%) rotate(45deg); }
+  .idea.idea-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .idea b { display: block; font-size: .9375rem; }
+  .idea span { display: block; font-size: .8125rem; color: var(--ink-2); line-height: 1.4; margin-top: 2px; }
+  .idea .icono { width: 26px; height: 26px; color: var(--accent); margin-bottom: 6px; }
+  @media (max-width: 760px) {
+    .idea, .idea.idea-3 { grid-template-columns: minmax(0, 1fr); }
+    .idea li:not(:last-child)::after { right: 50%; top: auto; bottom: -5px; transform: translate(50%, 60%) rotate(135deg); }
+  }
+  .glosario { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 16px 0 0; }
+  @media (max-width: 640px) { .glosario { grid-template-columns: minmax(0, 1fr); } }
+  .glosario div { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .glosario dt { font-weight: 600; }
+  .glosario dd { margin: 2px 0 0; font-size: .9375rem; color: var(--ink-2); }
+
+  details { border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); padding: 0 14px; }
+  details + details { margin-top: 8px; }
+  summary { cursor: pointer; padding: 12px 0; font-weight: 500; list-style-position: outside; }
+  details[open] summary { border-bottom: 1px solid var(--line); margin-bottom: 10px; }
+  details > div { padding-bottom: 12px; color: var(--ink-2); }
+  .lista-chequeo { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+  .lista-chequeo label { display: flex; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); cursor: pointer; }
+  .lista-chequeo input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
+  .lista-chequeo input:checked + span { color: var(--muted); text-decoration: line-through; }
+  .progreso { font-size: .875rem; color: var(--muted); margin-top: 10px; }
+  .etica { background: var(--warn-bg); border: 1px solid var(--warn-line); color: var(--warn-ink); }
+  .etica h2 { color: inherit; }
+  ul.simple { margin: 8px 0 0; padding-left: 1.2em; display: grid; gap: 6px; }
+  .pie { border-top: 1px solid var(--line); background: var(--surface); margin-top: 40px; }
+  .pie .contenedor { padding-block: 28px calc(28px + env(safe-area-inset-bottom, 0px)); font-size: .9375rem; color: var(--ink-2); }
+
+  .partes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 26px 0 0; padding: 0; list-style: none; max-width: 900px; }
+  .partes li { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .partes b { display: block; font-size: .8125rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .partes span { display: block; font-size: 1rem; font-weight: 600; line-height: 1.3; margin-top: 2px; }
+  .partes small { display: block; font-size: .8125rem; color: var(--ink-2); }
+  @media (max-width: 640px) { .partes { grid-template-columns: minmax(0, 1fr); } }
+  .parte-titulo { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .parte-titulo .meta { margin: 0; }
+
+  .arbol { margin: 18px 0 10px; padding: clamp(14px, 2.4vw, 22px); border: 1px solid var(--line); border-radius: 14px; background: var(--surface-2); }
+  .arbol figcaption { font-size: .8125rem; color: var(--muted); margin-bottom: 14px; }
+  .nodo { background: var(--surface); border: 1px solid var(--line-strong); border-radius: 12px; padding: 10px 12px; font-weight: 600; font-size: .9375rem; text-align: center; line-height: 1.35; }
+  .nodo small { display: block; font-weight: 400; font-size: .8125rem; color: var(--muted); }
+  .raiz { max-width: 360px; margin: 0 auto; }
+  .ramas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 14px; }
+  .rama { display: grid; gap: 10px; align-content: start; padding-top: 4px; border-top: 2px solid var(--line-strong); }
+  .rama-etiqueta { justify-self: center; font-size: .8125rem; font-weight: 600; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 2px 12px; margin-top: 6px; }
+  .hojas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .hoja { text-align: center; background: var(--accent-wash); border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent); border-radius: 12px; padding: 10px 8px; }
+  .hoja .respuesta { display: block; font-size: .75rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); }
+  .hoja b { display: block; font-size: 1.625rem; font-weight: 600; letter-spacing: -.02em; line-height: 1.2; }
+  .hoja small { display: block; font-size: .75rem; color: var(--ink-2); line-height: 1.35; }
+  @media (max-width: 560px) { .ramas { grid-template-columns: minmax(0, 1fr); } }
+
+  .modelos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 14px 0 0; padding: 0; list-style: none; }
+  .modelos li { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .modelos li.destacado { background: var(--accent-wash); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+  .modelos b { display: block; }
+  .modelos span { display: block; font-size: .9375rem; color: var(--ink-2); margin-top: 2px; }
+  @media (max-width: 760px) { .modelos { grid-template-columns: minmax(0, 1fr); } }
+
+  .indicadores { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 16px 0 0; }
+  @media (max-width: 640px) { .indicadores { grid-template-columns: minmax(0, 1fr); } }
+  .indicadores div { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .indicadores dt { font-weight: 600; }
+  .indicadores dd { margin: 2px 0 0; font-size: .9375rem; color: var(--ink-2); }
+  .indicadores .cifra { display: block; margin-top: 6px; font-size: .875rem; color: var(--ink); font-weight: 500; }
+
+  .grafica { margin: 16px 0 6px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+  .grafica figcaption { font-size: .875rem; color: var(--ink-2); margin-bottom: 12px; }
+  .barras { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .barras li { display: grid; grid-template-columns: minmax(8rem, 15rem) minmax(0, 1fr) 3.2rem; gap: 12px; align-items: center; font-size: .9375rem; padding: 2px 4px; border-radius: 8px; }
+  .barras li:hover { background: var(--surface-2); }
+  .barras .pista { display: block; height: 16px; border-left: 1px solid var(--line-strong); }
+  .barras .barra { display: block; height: 16px; width: calc(var(--v) / 45 * 100%); background: var(--barra-gris); border-radius: 0 4px 4px 0; }
+  .barras li.destacada { font-weight: 600; }
+  .barras li.destacada .barra { background: var(--accent); }
+  .barras .valor { text-align: right; font-variant-numeric: tabular-nums; }
+  @media (max-width: 520px) { .barras li { grid-template-columns: minmax(0, 1fr) 3.2rem; } .barras .nombre { grid-column: 1 / -1; } .barras .pista { grid-column: 1; } }
+
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  @media print {
+    :root { color-scheme: light; }
+    body { background: #ffffff; color: #000000; font-size: 11pt; }
+    .cabecera, .indice, .copiar, #boton-imprimir, .no-imprimir { display: none !important; }
+    .cuerpo { display: block; padding-top: 0; }
+    .tarjeta { box-shadow: none; border-color: #cccccc; break-inside: avoid-page; padding: 14px 16px; }
+    section { margin-bottom: 12px; }
+    .portada { padding-block: 0 8px; }
+    h1 { font-size: 28pt; max-width: none; }
+    .partes { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 14px; }
+    .modelos { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .ramas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .arbol, .grafica, .indicadores div { break-inside: avoid; }
+    .barras .barra, .hoja, .modelos li.destacado { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .idea { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .idea.idea-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .idea li:not(:last-child)::after { right: -5px; top: 50%; bottom: auto; transform: translate(60%, -50%) rotate(45deg); }
+    .listo, .nota { break-inside: avoid; }
+    details { border: 0; padding: 0; background: none; }
+    details > summary { list-style: none; font-weight: 600; }
+    details > div { display: block !important; }
+    pre.config { white-space: pre-wrap; }
+    a[href^="http"].mostrar-url::after { content: " (" attr(href) ")"; font-size: 9pt; color: #444444; overflow-wrap: anywhere; }
+  }
+
+  /* ---- Clase Claude Code ---- */
+  .agenda { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 6px; max-width: 900px; }
+  .agenda a { display: grid; grid-template-columns: 4.2rem minmax(0, 1fr) auto; gap: 12px; align-items: baseline;
+    padding: 10px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+  .agenda a:hover { border-color: var(--accent); background: var(--accent-wash); }
+  .agenda .hora { font-family: var(--fuente-mono); font-size: .875rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .agenda b { font-weight: 600; }
+  .agenda small { display: block; color: var(--ink-2); font-size: .875rem; line-height: 1.4; margin-top: 1px; }
+  .agenda .dura { font-size: .8125rem; color: var(--muted); white-space: nowrap; }
+  .agenda .pausa a { background: var(--surface-2); border-style: dashed; }
+  @media (max-width: 560px) { .agenda a { grid-template-columns: 3.6rem minmax(0, 1fr); } .agenda .dura { grid-column: 2; } }
+
+  .logros { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 22px 0 0; padding: 0; list-style: none; max-width: 900px; }
+  .logros li { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: .9375rem; line-height: 1.4; }
+  .logros li b { display: block; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  @media (max-width: 860px) { .logros { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 460px) { .logros { grid-template-columns: minmax(0, 1fr); } }
+
+  .bloque-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0 0 12px; font-size: .875rem; color: var(--muted); }
+  .bloque-meta span { display: inline-flex; align-items: center; gap: 6px; }
+  .chip { display: inline-block; font: 600 .75rem/1.2 var(--fuente); letter-spacing: .02em; padding: 3px 8px; border-radius: 999px;
+    background: var(--accent-wash); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); }
+  .chip.gris { background: var(--surface-2); color: var(--ink-2); border-color: var(--line-strong); }
+
+  .prompt { margin: 16px 0 0; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-2); overflow: hidden; }
+  .prompt > header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px 14px 0; }
+  .prompt .num { flex: none; font: 600 .8125rem/1 var(--fuente-mono); color: var(--accent-ink); background: var(--accent); border-radius: 8px; padding: 6px 8px; }
+  .prompt h3 { margin: 0; font-size: 1rem; flex: 1 1 14rem; min-width: 0; }
+  .prompt .cuando { margin: 6px 14px 10px; font-size: .9375rem; color: var(--ink-2); }
+  .caja-prompt { position: relative; margin: 0 14px; }
+  .caja-prompt pre { margin: 0; max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--fuente-mono); font-size: .8125rem; line-height: 1.65;
+    background: var(--surface); border: 1px solid var(--line-strong); border-radius: 10px; padding: 14px 14px 14px; padding-right: 92px; color: var(--ink); }
+  .caja-prompt .copiar { position: absolute; top: 8px; right: 8px; }
+  .prompt .espera { margin: 10px 14px 14px; font-size: .9375rem; color: var(--ink-2); }
+  .prompt .espera b { color: var(--ink); }
+  .comando { display: block; max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--fuente-mono); font-size: .8125rem; line-height: 1.6;
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin: 8px 0 12px; }
+
+  .capas { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: 16px 0 6px; padding: 0; list-style: none; }
+  .capas li { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; min-width: 0; }
+  .capas b { display: block; font-size: .9375rem; }
+  .capas i { display: block; font-style: normal; font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 4px; }
+  .capas span { display: block; font-size: .8125rem; color: var(--ink-2); line-height: 1.4; margin-top: 4px; }
+  .capas code { font-size: .75rem; }
+  @media (max-width: 860px) { .capas { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 460px) { .capas { grid-template-columns: minmax(0, 1fr); } }
+
+  .anatomia { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; counter-reset: parte; }
+  .anatomia li { counter-increment: parte; display: grid; grid-template-columns: 2rem 11rem minmax(0, 1fr); gap: 12px; align-items: start;
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .anatomia li::before { content: counter(parte); display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--ink); color: var(--surface); font-weight: 600; font-size: .8125rem; }
+  .anatomia b { font-weight: 600; }
+  .anatomia span { color: var(--ink-2); font-size: .9375rem; }
+  .anatomia em { display: block; font-style: normal; font-family: var(--fuente-mono); font-size: .8125rem; color: var(--ink); margin-top: 3px; }
+  @media (max-width: 640px) { .anatomia li { grid-template-columns: 2rem minmax(0, 1fr); } .anatomia span { grid-column: 2; } }
+
+  .comparar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 14px 0 0; }
+  .comparar > div { border-radius: 12px; padding: 12px 14px; border: 1px solid var(--line); background: var(--surface-2); min-width: 0; }
+  .comparar .mal { border-color: var(--warn-line); background: var(--warn-bg); color: var(--warn-ink); }
+  .comparar .bien { border-color: color-mix(in srgb, var(--ok) 35%, transparent); background: color-mix(in srgb, var(--ok) 7%, var(--surface)); }
+  .comparar b { display: block; margin-bottom: 4px; }
+  .comparar p { margin: 0; font-family: var(--fuente-mono); font-size: .8125rem; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+  @media (max-width: 640px) { .comparar { grid-template-columns: minmax(0, 1fr); } }
+
+  .tabla-envoltura { max-width: 100%; overflow-x: auto; margin: 14px 0 0; border: 1px solid var(--line); border-radius: 12px; }
+  table.tabla { width: 100%; border-collapse: collapse; font-size: .9375rem; background: var(--surface); }
+  .tabla th, .tabla td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .tabla thead th { background: var(--surface-2); font-size: .8125rem; letter-spacing: .02em; color: var(--ink-2); }
+  .tabla tbody tr:last-child td { border-bottom: 0; }
+  .tabla td:first-child { font-weight: 500; }
+  .si { color: var(--ok); font-weight: 600; } .no { color: var(--muted); }
+
+  .kit { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 6px; }
+  .kit li { display: grid; grid-template-columns: minmax(12rem, 19rem) minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 9px 12px;
+    border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+  .kit a { font-family: var(--fuente-mono); font-size: .8125rem; overflow-wrap: anywhere; }
+  .kit span { font-size: .9375rem; color: var(--ink-2); }
+  @media (max-width: 640px) { .kit li { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+
+  .flujo { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 4px; padding: 0; }
+  .flujo li { display: inline-flex; align-items: center; gap: 8px; font-size: .875rem; font-weight: 500; padding: 6px 10px; border-radius: 999px;
+    background: var(--surface-2); border: 1px solid var(--line-strong); }
+  .flujo li:not(:last-child)::after { content: "→"; color: var(--muted); margin-left: 2px; }
+  .teclas kbd { font-family: var(--fuente-mono); font-size: .8125rem; padding: 1px 6px; border-radius: 6px; border: 1px solid var(--line-strong);
+    border-bottom-width: 2px; background: var(--surface); white-space: nowrap; }
+  .dos-columnas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 760px) { .dos-columnas { grid-template-columns: minmax(0, 1fr); } }
+  .comparar { align-items: start; }
+  @media (max-width: 560px) {
+    .caja-prompt pre { padding: 46px 12px 12px; }
+    .cabecera .boton { display: none; }
+  }
+  @media (max-width: 640px) {
+    .tabla-envoltura { border: 0; overflow: visible; }
+    table.tabla, .tabla tbody, .tabla tr, .tabla td { display: block; width: 100%; }
+    table.tabla { background: none; }
+    .tabla thead { display: none; }
+    .tabla tr { border: 1px solid var(--line); border-radius: 12px; margin-bottom: 8px; background: var(--surface); overflow: hidden; }
+    .tabla td { padding: 8px 12px; }
+    .tabla td:first-child { background: var(--surface-2); border-bottom: 1px solid var(--line); }
+    .tabla td:not(:first-child) { border-bottom: 0; }
+    .tabla td[data-label]:not(:first-child):not([data-label=""])::before { content: attr(data-label); display: block; font-size: .75rem; font-weight: 600;
+      letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+  }
+  @media print {
+    .caja-prompt pre { padding-right: 14px; }
+    .prompt, .anatomia li, .kit li, .agenda li { break-inside: avoid; }
+    .logros { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .capas { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  }
+</style>
+</head>
+<body>
+<header class="cabecera">
+  <div class="contenedor">
+    <a class="marca" href="../" aria-label="Volver al Predictor Saber 11">
+      <svg viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="var(--ink)"/><path d="M8 23.5a9 9 0 0 1 18 0" fill="none" stroke="var(--accent-soft)" stroke-width="3.2"/><path d="M8 23.5a9 9 0 0 1 12.2-8.4" fill="none" stroke="#6da7ec" stroke-width="3.2"/><circle cx="20.2" cy="15.1" r="2.6" fill="var(--bg)"/></svg>
+      <span><b>Claude Code avanzado</b><small>Clase · Machine Learning 1</small></span>
+    </a>
+    <a class="boton no-imprimir" href="profe.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H4zM8 20h8M12 16v4"/></svg>Guion del profe</a>
+    <button class="boton-icono" id="boton-tema" type="button" aria-label="Cambiar a modo oscuro"><svg class="icono-luna" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><svg class="icono-sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg></button>
+  </div>
+</header>
+
+<main class="contenedor">
+  <section class="portada" aria-labelledby="titulo">
+    <p class="etiqueta-superior">Clase · Machine Learning 1 · 3 horas · trae tu portátil</p>
+    <h1 id="titulo">Claude Code avanzado: tu proyecto, como lo haría un equipo profesional</h1>
+    <p class="entrada">Claude Code no es un chat que escribe código: es un <b>agente</b> que lee tu repositorio, corre comandos,
+      verifica su trabajo y abre pull requests. Hoy aprendes a darle contexto, ponerle reglas, conectarlo con GitHub y
+      ponerlo a trabajar en tu proyecto final. Todo con este mismo repositorio, que ya viene configurado.</p>
+    <ul class="logros" aria-label="Lo que tendrás al final">
+      <li><b>Configurado</b>Tu repositorio con Claude Code configurado: memoria, skills, subagentes y hooks</li>
+      <li><b>Flujo profesional</b>Un issue resuelto con un PR, pruebas en verde y evidencia</li>
+      <li><b>En GitHub</b>Claude trabajando dentro de GitHub: @claude y revisión de PR</li>
+      <li><b>Publicado</b>Tu modelo publicado y tu entrega del 10 % revisada</li>
+    </ul>
+    <ol class="agenda" aria-label="Agenda">
+      <li><a href="#apertura"><span class="hora">0:00</span><span><b>Apertura</b><small>Del issue al PR en vivo</small></span><span class="dura">10 min</span></a></li>
+      <li><a href="#bloque-1"><span class="hora">0:10</span><span><b>1. Cómo trabaja un agente</b><small>El ciclo, los modos y tu entorno listo</small></span><span class="dura">20 min</span></a></li>
+      <li><a href="#bloque-2"><span class="hora">0:30</span><span><b>2. El prompt profesional</b><small>Contexto, CLAUDE.md, modo plan y especificación</small></span><span class="dura">25 min</span></a></li>
+      <li><a href="#bloque-3"><span class="hora">0:55</span><span><b>3. Del issue al pull request</b><small>Con tu proyecto: experimentos, evidencia y PR</small></span><span class="dura">30 min</span></a></li>
+      <li class="pausa"><a href="#bloque-4"><span class="hora">1:25</span><span><b>Pausa</b><small>Deja a Claude trabajando</small></span><span class="dura">10 min</span></a></li>
+      <li><a href="#bloque-4"><span class="hora">1:35</span><span><b>4. Tu equipo: skills, subagentes y hooks</b><small>Automatiza lo que repites; vuelve obligatorio lo importante</small></span><span class="dura">30 min</span></a></li>
+      <li><a href="#bloque-5"><span class="hora">2:05</span><span><b>5. Conexiones: MCP y GitHub</b><small>Documentación, navegador, @claude y revisión automática</small></span><span class="dura">25 min</span></a></li>
+      <li><a href="#bloque-6"><span class="hora">2:30</span><span><b>6. Escala y seguridad</b><small>Paralelo, nube, /goal, permisos y ética</small></span><span class="dura">15 min</span></a></li>
+      <li><a href="#cierre"><span class="hora">2:45</span><span><b>Cierre</b><small>Reto final y entrega del 10 %</small></span><span class="dura">10 min</span></a></li>
+    </ol>
+  </section>
+
+  <div class="cuerpo">
+    <nav class="indice" aria-label="Contenido">
+      <h2>Contenido</h2>
+      <ol>
+        <li><a href="#antes">Antes de la clase</a></li>
+        <li><a href="#apertura">Apertura</a></li>
+        <li><a href="#bloque-1">1. Cómo trabaja un agente</a></li>
+        <li><a href="#bloque-2">2. El prompt profesional</a></li>
+        <li><a href="#bloque-3">3. Del issue al PR</a></li>
+        <li><a href="#bloque-4">4. Skills, subagentes, hooks</a></li>
+        <li><a href="#bloque-5">5. MCP y GitHub</a></li>
+        <li><a href="#bloque-6">6. Escala y seguridad</a></li>
+        <li><a href="#cierre">Cierre y entrega</a></li>
+        <li><a href="#kit">El kit, archivo por archivo</a></li>
+        <li><a href="#chuleta">Chuleta</a></li>
+        <li><a href="#problemas">Si algo falla</a></li>
+        <li><a href="#chequeo">Lista final</a></li>
+      </ol>
+    </nav>
+
+    <div>
+      <section class="tarjeta" id="antes" aria-labelledby="t-antes">
+        <h2 class="titulo-seccion" id="t-antes">Antes de la clase</h2>
+        <p class="objetivo">Tres cuentas y una decisión: ¿trabajas en la terminal o en la nube? Las dos sirven; la terminal tiene todo.</p>
+        <ol class="pasos">
+          <li><b>Una cuenta de Claude con Claude Code.</b> Viene en los planes de pago (Pro, Max, Team, Enterprise) o con créditos de la
+            <a href="https://platform.claude.com/" rel="noopener">Claude Console</a>. El plan gratis no incluye Claude Code. Pregunta si la universidad tiene un plan de educación.</li>
+          <li><b>Una cuenta de GitHub</b> y tu copia de la plantilla: en <a href="https://github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning" rel="noopener">el repositorio de la plantilla</a> pulsa
+            <span class="ui ui-verde">Use this template</span><span class="flecha">→</span><span class="ui">Create a new repository</span>, nómbrala
+            <code>mi-proyecto-ml</code> y déjala <b>Public</b>. Luego <span class="ui">Settings</span><span class="flecha">→</span><span class="ui">Pages</span><span class="flecha">→</span>Source:
+            <span class="ui">GitHub Actions</span>. ¿Ya tienes <code>mi-modelo</code> del taller anterior? Mira el <a href="#p0">prompt P0</a>.</li>
+          <li><b>Elige dónde trabajas:</b>
+            <div class="tabla-envoltura">
+              <table class="tabla">
+                <thead><tr><th></th><th>Terminal (recomendada)</th><th>Nube: claude.ai/code</th></tr></thead>
+                <tbody>
+                  <tr><td data-label="">Qué instalas</td><td data-label="Terminal (recomendada)">Claude Code, Git y Python (Node.js y <code>gh</code> opcionales)</td><td data-label="Nube: claude.ai/code">Nada: solo el navegador</td></tr>
+                  <tr><td data-label="">CLAUDE.md, skills, subagentes y hooks del repositorio</td><td data-label="Terminal (recomendada)" class="si">Sí</td><td data-label="Nube: claude.ai/code" class="si">Sí</td></tr>
+                  <tr><td data-label="">MCP del repositorio (<code>.mcp.json</code>)</td><td data-label="Terminal (recomendada)" class="si">Sí</td><td data-label="Nube: claude.ai/code" class="si">Sí</td></tr>
+                  <tr><td data-label="">MCP en tu computador (Playwright)</td><td data-label="Terminal (recomendada)" class="si">Sí</td><td data-label="Nube: claude.ai/code" class="no">No</td></tr>
+                  <tr><td data-label=""><code>/install-github-app</code></td><td data-label="Terminal (recomendada)" class="si">Sí</td><td data-label="Nube: claude.ai/code" class="no">No: GitHub se configura a mano</td></tr>
+                  <tr><td data-label="">Modos de permiso</td><td data-label="Terminal (recomendada)">Todos, con <kbd>Shift</kbd>+<kbd>Tab</kbd></td><td data-label="Nube: claude.ai/code">Aceptar ediciones, Plan y Auto</td></tr>
+                  <tr><td data-label="">Sigue trabajando si cierras el portátil</td><td data-label="Terminal (recomendada)" class="no">No</td><td data-label="Nube: claude.ai/code" class="si">Sí</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </li>
+        </ol>
+        <h3>Si eliges la terminal (10 minutos, en casa)</h3>
+        <div class="dos-columnas">
+          <div><p class="meta">macOS, Linux o WSL</p><div class="caja-prompt"><pre>curl -fsSL https://claude.ai/install.sh | bash</pre><button class="copiar" type="button">Copiar</button></div></div>
+          <div><p class="meta">Windows (PowerShell)</p><div class="caja-prompt"><pre>irm https://claude.ai/install.ps1 | iex</pre><button class="copiar" type="button">Copiar</button></div></div>
+        </div>
+        <p>En Windows instala también <a href="https://git-scm.com/downloads/win" rel="noopener">Git for Windows</a>: Claude Code lo usa para correr comandos y los hooks del kit.
+          Después, en la carpeta de tu copia:</p>
+        <div class="caja-prompt"><pre>git clone https://github.com/[tu-usuario]/mi-proyecto-ml
+cd mi-proyecto-ml
+python -m pip install -r requirements.txt pytest
+claude</pre><button class="copiar" type="button">Copiar</button></div>
+        <p>La primera vez, Claude Code te pide iniciar sesión, confiar en la carpeta y aprobar el servidor MCP <code>claude-code-docs</code>: acepta los tres.
+          Opcional: <a href="https://nodejs.org/" rel="noopener">Node.js</a> (prueba de paridad y Playwright) y <a href="https://cli.github.com/" rel="noopener">GitHub CLI</a> con <code>gh auth login</code> (issues y PR desde la terminal).</p>
+        <h3>Si eliges la nube</h3>
+        <p>Entra a <a href="https://claude.ai/code" rel="noopener">claude.ai/code</a>, conecta GitHub y elige tu repositorio <code>mi-proyecto-ml</code>. Al iniciar, un hook del kit instala las dependencias de Python.</p>
+        <div class="listo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><p><b>Listo si</b> le escribes «Corre python -m pytest tests/ -q» y responde <b>6 passed</b>.</p></div>
+      </section>
+
+      <section class="tarjeta" id="apertura" aria-labelledby="t-apertura">
+        <div class="paso-cabecera"><span class="numero">0</span><div><h2 id="t-apertura">Apertura: del issue al PR en vivo</h2><p class="meta">10 minutos · demostración del profe</p></div></div>
+        <p class="objetivo">El profe escribe un solo prompt y Claude resuelve un issue completo mientras explica: crea una rama, compara modelos, publica el mejor, corre las pruebas y abre el pull request.</p>
+        <ul class="flujo" aria-label="El flujo que vas a ver">
+          <li>Issue</li><li>Plan</li><li>Rama</li><li>Experimentos</li><li>Pruebas</li><li>Pull request</li><li>Revisión</li><li>Publicación</li>
+        </ul>
+        <p>Mira tres cosas: <b>qué lee primero</b> (CLAUDE.md), <b>cómo verifica</b> (pruebas y paridad antes de decir «listo») y <b>dónde se detiene a pedir permiso</b>. Al final de la clase tú harás lo mismo con tu proyecto.</p>
+      </section>
+
+      <section class="tarjeta" id="bloque-1" aria-labelledby="t-b1">
+        <div class="paso-cabecera"><span class="numero">1</span><div><h2 id="t-b1">Cómo trabaja un agente</h2><p class="meta">20 minutos · 0:10 a 0:30</p></div></div>
+        <p class="objetivo">Un agente repite un ciclo: <b>reúne contexto, actúa y verifica</b>, hasta que la tarea está hecha. Lo avanzado no son trucos:
+          es controlar cada paso del ciclo.</p>
+        <ul class="idea" aria-label="El ciclo del agente">
+          <li><b>Lee</b><span>CLAUDE.md, archivos, issues, documentación</span></li>
+          <li><b>Planea</b><span>Divide la tarea; en modo plan, te propone antes de actuar</span></li>
+          <li><b>Actúa</b><span>Edita archivos y corre comandos</span></li>
+          <li><b>Verifica</b><span>Pruebas, métricas, capturas: evidencia</span></li>
+          <li><b>Entrega</b><span>Commit, PR y un resumen</span></li>
+        </ul>
+        <h3>Las cinco palancas de hoy</h3>
+        <ul class="capas">
+          <li><i>Memoria</i><b>Qué sabe</b><span><code>CLAUDE.md</code> y <code>.claude/rules/</code>: se cargan en cada sesión.</span></li>
+          <li><i>Habilidades</i><b>Qué sabe hacer</b><span>Skills: <code>/experimento</code>, <code>/publicar-modelo</code>…</span></li>
+          <li><i>Equipo</i><b>Con quién trabaja</b><span>Subagentes con su propio contexto: <code>explorador-datos</code>, <code>revisor-ml</code>.</span></li>
+          <li><i>Reglas</i><b>Qué no puede hacer</b><span>Permisos y hooks: se cumplen siempre, no dependen de que Claude se acuerde.</span></li>
+          <li><i>Conexiones</i><b>Qué alcanza</b><span>MCP (documentación, navegador) y GitHub (@claude, revisión).</span></li>
+        </ul>
+        <h3>Modos de permiso y atajos</h3>
+        <p class="teclas"><kbd>Shift</kbd>+<kbd>Tab</kbd> cambia el modo: <b>manual</b> (pregunta antes de editar o correr comandos), <b>aceptar ediciones</b>,
+          <b>plan</b> (solo lee y propone) y <b>auto</b> (un segundo modelo revisa cada acción por ti). <kbd>Esc</kbd> detiene a Claude sin perder el contexto;
+          <kbd>Esc</kbd> <kbd>Esc</kbd> o <code>/rewind</code> vuelve a un punto anterior, archivos incluidos. <code>@archivo</code> le muestra un archivo; <code>/context</code> muestra
+          qué ocupa su memoria y <code>/clear</code> la limpia entre tareas.</p>
+        
+      <article class="prompt" id="p1">
+        <header><span class="num">P1</span><h3>Explora antes de tocar nada</h3><span class="chip">Modo plan</span><span class="chip gris">Terminal</span><span class="chip gris">Nube</span></header>
+        <p class="cuando">Al llegar a un repositorio. En modo plan, Claude lee y propone, pero no edita.</p>
+        <div class="caja-prompt"><pre>Estoy empezando en este repositorio y todavía no quiero cambiar nada.
+Explícame en español, citando las rutas de los archivos:
+1. Qué hace el proyecto y cómo viaja el dato desde el CSV hasta la página web.
+2. Qué archivos se generan y cuáles se editan a mano.
+3. Qué comandos verifican que todo funciona. Córrelos y muéstrame la salida.
+Termina con los 3 errores más probables de alguien nuevo en este proyecto.</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> Claude lee <code>CLAUDE.md</code>, recorre <code>scripts/</code> y <code>web/</code>, corre las pruebas y la paridad, y te devuelve un mapa del proyecto. Ningún archivo cambia.</p>
+      </article>
+      </section>
+
+      <section class="tarjeta" id="bloque-2" aria-labelledby="t-b2">
+        <div class="paso-cabecera"><span class="numero">2</span><div><h2 id="t-b2">El prompt profesional</h2><p class="meta">25 minutos · 0:30 a 0:55</p></div></div>
+        <p class="objetivo">Un buen prompt se parece a un buen issue: cualquiera lo podría resolver sin preguntarte nada. Tiene seis partes.</p>
+        <ol class="anatomia" aria-label="Las seis partes de un prompt profesional">
+          <li><b>Contexto</b><span>Dónde estamos y qué ya existe.<em>Vamos a resolver el issue #3. Lee CLAUDE.md y @docs/ESPECIFICACION.md.</em></span></li>
+          <li><b>Objetivo</b><span>El resultado, en una frase.<em>Publicar el primer modelo de mi proyecto.</em></span></li>
+          <li><b>Restricciones</b><span>Qué no tocar y qué usar.<em>Sin columnas sensibles. No cambies el diseño de web/.</em></span></li>
+          <li><b>Criterios de aceptación</b><span>Una lista que se responde con sí o no.<em>Mejora el MAE de la línea base en al menos 10 %.</em></span></li>
+          <li><b>Verificación</b><span>El comando o la evidencia que prueba que está hecho.<em>Muéstrame pytest y el «OK» de la paridad.</em></span></li>
+          <li><b>Entregable</b><span>Cómo debe quedar el trabajo.<em>Rama feature/primer-modelo y un PR que cierre el issue.</em></span></li>
+        </ol>
+        <div class="comparar">
+          <div class="mal"><b>Así no</b><p>haz mi modelo y súbelo</p></div>
+          <div class="bien"><b>Así sí</b><p>Resuelve el issue #3 (lee CLAUDE.md). Compara los 4 modelos con /experimento y recomiéndame uno. Sin columnas sensibles. Debe mejorar el MAE de la línea base en 10 %. Muéstrame la tabla y el OK de la paridad. No publiques: eso lo hago yo.</p></div>
+        </div>
+        <h3>Cuatro hábitos que separan al principiante del profesional</h3>
+        <ul class="simple">
+          <li><b>Explora, planea y después programa.</b> Usa el modo plan cuando el cambio toca varios archivos o no conoces el código. Si el cambio cabe en una frase, no hace falta.</li>
+          <li><b>Pide evidencia, no promesas.</b> «Listo» no basta: la salida de las pruebas, la tabla o la captura.</li>
+          <li><b>Corrige temprano.</b> Si a la segunda corrección sigue mal, <code>/clear</code> y un prompt mejor, con lo que aprendiste.</li>
+          <li><b>Una sesión, una tarea.</b> Mezclar temas llena la memoria de ruido. <code>/clear</code> entre tareas distintas.</li>
+        </ul>
+        
+      <article class="prompt" id="p2">
+        <header><span class="num">P2</span><h3>Que Claude te entreviste y escriba la especificación</h3><span class="chip">Modo plan</span><span class="chip gris">Terminal</span><span class="chip gris">Nube</span></header>
+        <p class="cuando">Antes de programar tu proyecto final. Las preguntas difíciles salen antes de escribir código.</p>
+        <div class="caja-prompt"><pre>Quiero adaptar esta plantilla a mi proyecto final: [tu pregunta y tus datos en dos líneas].
+Antes de tocar código, entrevístame con preguntas de opción múltiple, una por una, sobre lo difícil:
+la columna objetivo, qué columnas usar y cuáles excluir (por ética o por fuga de datos), cómo voy a medir el éxito frente a la línea base y para qué NO debe usarse el modelo.
+No hagas preguntas obvias.
+Al terminar, escribe docs/ESPECIFICACION.md con: pregunta, enlace a los datos, objetivo, columnas, exclusiones con su motivo, criterio de éxito y lo que queda fuera de alcance. Espera mi aprobación.</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> Varias preguntas con opciones y, al final, un <code>docs/ESPECIFICACION.md</code> corto que tú apruebas o corriges.</p>
+      </article>
+        
+      <article class="prompt" id="p3">
+        <header><span class="num">P3</span><h3>Enséñale tu proyecto a Claude (CLAUDE.md)</h3><span class="chip gris">Terminal</span><span class="chip gris">Nube</span></header>
+        <p class="cuando">Después de aprobar la especificación. Todo lo que pongas en CLAUDE.md, Claude lo lee en cada sesión.</p>
+        <div class="caja-prompt"><pre>Con docs/ESPECIFICACION.md, actualiza solo la sección «Proyecto» de CLAUDE.md: pregunta, enlace a los datos, objetivo, columnas, exclusiones con su motivo y el comando exacto para entrenar.
+No toques las demás secciones y deja CLAUDE.md por debajo de 80 líneas.
+Muéstrame el diff antes de guardar.</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> Un diff pequeño en <code>CLAUDE.md</code>. Desde ahora no tienes que repetir tus datos ni tu objetivo en cada prompt.</p>
+      </article>
+      </section>
+
+      <section class="tarjeta" id="bloque-3" aria-labelledby="t-b3">
+        <div class="paso-cabecera"><span class="numero">3</span><div><h2 id="t-b3">Del issue al pull request, con tu proyecto</h2><p class="meta">30 minutos · 0:55 a 1:25</p></div></div>
+        <p class="objetivo">Así trabaja un equipo profesional: nada se hace sin issue, nada llega a <code>main</code> sin PR y nada se fusiona sin pruebas en verde.</p>
+        <ul class="flujo" aria-label="Flujo de trabajo">
+          <li>Issue con criterios</li><li>Rama</li><li>Plan aprobado</li><li>Código y experimentos</li><li>Evidencia</li><li>PR</li><li>Check «Pruebas»</li><li>Revisión</li><li>Fusión y publicación</li>
+        </ul>
+        <p>El kit le da a Claude lo que necesita para este flujo: <code>scripts/entrenar.py</code> corre el mismo cuaderno de Colab desde la terminal,
+          así Claude puede entrenar, leer las métricas y comparar sin abrir Colab:</p>
+        <div class="caja-prompt"><pre>python scripts/entrenar.py --datos [csv o enlace] --objetivo [columna] --variables &quot;a, b, c&quot; --salida experimentos/prueba-1</pre><button class="copiar" type="button">Copiar</button></div>
+        
+      <article class="prompt" id="p4">
+        <header><span class="num">P4</span><h3>Perfil de tus datos con un subagente</h3><span class="chip">Subagente</span><span class="chip gris">Terminal</span><span class="chip gris">Nube</span></header>
+        <p class="cuando">Antes de elegir columnas. El subagente lee todo el CSV en su propio contexto y a ti solo te llega el resumen.</p>
+        <div class="caja-prompt"><pre>Usa el subagente explorador-datos con mis datos ([enlace o ruta del CSV]) y el objetivo [columna].
+Con su informe, propón dos combinaciones de columnas para comparar y explica en una frase por qué excluirías cada una de las demás.</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> Una tabla de columnas, alertas de fuga de datos y de variables sensibles, y dos propuestas de <code>--variables</code>.</p>
+      </article>
+        
+      <article class="prompt" id="p5">
+        <header><span class="num">P5</span><h3>Un issue que se puede verificar</h3><span class="chip gris">GitHub</span><span class="chip gris">Terminal</span><span class="chip gris">Nube</span></header>
+        <p class="cuando">Toda tarea empieza en un issue: queda escrita, tiene criterios de aceptación y la cierra un PR.</p>
+        <div class="caja-prompt"><pre>Crea un issue en GitHub con la plantilla «Tarea» para: «Entrenar y publicar el primer modelo de mi proyecto».
+Contexto: lo que dice docs/ESPECIFICACION.md.
+Criterios de aceptación verificables: el modelo mejora el MAE de la línea base en al menos 10 %, no usa columnas sensibles, la prueba de paridad termina en OK y el README tiene la tabla de métricas.
+Fuera de alcance: el diseño de la página.
+Dame el número y el enlace del issue.</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> Un issue nuevo con contexto, criterios con casillas y verificación. Si Claude no puede crearlo, créalo tú en GitHub con la plantilla <b>Tarea</b>.</p>
+      </article>
+        
+      <article class="prompt" id="p6">
+        <header><span class="num">P6</span><h3>Del issue al plan, con experimentos</h3><span class="chip">Modo plan</span><span class="chip gris">Terminal</span><span class="chip gris">Nube</span></header>
+        <p class="cuando">El corazón de la clase: Claude investiga, compara con evidencia y tú decides.</p>
+        <div class="caja-prompt"><pre>Vamos a resolver el issue #[número].
+1. Lee el issue y CLAUDE.md y propón un plan corto: comandos, archivos que cambian y riesgos. Espera mi OK.
+2. Crea la rama feature/primer-modelo.
+3. Con /experimento compara las dos combinaciones de columnas que propuso explorador-datos.
+4. Recomiéndame un modelo y unas columnas, con la tabla de métricas como evidencia.
+No publiques nada todavía: eso lo hago yo con /publicar-modelo.</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> Un plan aprobado por ti, dos filas nuevas en <code>docs/experimentos.md</code> y una recomendación con cifras.</p>
+      </article>
+        
+      <article class="prompt" id="p7">
+        <header><span class="num">P7</span><h3>Publica y abre el pull request</h3><span class="chip">Skill</span><span class="chip gris">Terminal</span><span class="chip gris">Nube</span></header>
+        <p class="cuando">Las acciones con efecto afuera (publicar, abrir un PR) las dispara una persona: esta skill solo corre si tú la escribes.</p>
+        <div class="caja-prompt"><pre>/publicar-modelo boosting</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> Claude entrena con <code>--publicar</code>, verifica la paridad, actualiza el README, sube la rama y abre un PR que cierra el issue. En GitHub corre el check <b>Pruebas</b>.</p>
+      </article>
+        <div class="nota"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg><p>Durante la pausa, deja a Claude trabajando en el P6. Si estás en la nube, sigue aunque cierres el portátil.</p></div>
+      </section>
+
+      <section class="tarjeta" id="bloque-4" aria-labelledby="t-b4">
+        <div class="paso-cabecera"><span class="numero">4</span><div><h2 id="t-b4">Tu equipo: skills, subagentes y hooks</h2><p class="meta">30 minutos · 1:35 a 2:05</p></div></div>
+        <p class="objetivo">Tres formas de extender a Claude. La pregunta para elegir: ¿es conocimiento que se usa a veces, trabajo que conviene aislar o una regla que no se puede romper?</p>
+        <div class="tabla-envoltura">
+          <table class="tabla">
+            <thead><tr><th></th><th>Skill</th><th>Subagente</th><th>Hook</th></tr></thead>
+            <tbody>
+              <tr><td data-label="">Qué es</td><td data-label="Skill">Instrucciones en un <code>SKILL.md</code></td><td data-label="Subagente">Otro Claude, con su propio contexto y herramientas</td><td data-label="Hook">Un script que corre en un momento fijo</td></tr>
+              <tr><td data-label="">Cuándo actúa</td><td data-label="Skill">Cuando escribes <code>/nombre</code> o cuando Claude ve que aplica</td><td data-label="Subagente">Cuando Claude le delega o lo pides</td><td data-label="Hook">Siempre: antes o después de cada acción</td></tr>
+              <tr><td data-label="">Úsalo para</td><td data-label="Skill">Procedimientos que repites</td><td data-label="Subagente">Leer mucho sin llenar la conversación; revisar con ojos frescos</td><td data-label="Hook">Reglas obligatorias y verificación automática</td></tr>
+              <tr><td data-label="">En el kit</td><td data-label="Skill"><code>/experimento</code>, <code>/publicar-modelo</code>, <code>/revisar-entrega</code>, <code>guia-ml</code></td><td data-label="Subagente"><code>explorador-datos</code>, <code>revisor-ml</code></td><td data-label="Hook">Proteger <code>modelo.js</code>, datos y <code>.env</code>; revisar cada archivo editado; recordar la rama</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Demo: la trampa de la fuga de datos</h3>
+        <p>El profe crea una copia de los datos con una columna tramposa, <code>precio_con_iva</code> (el precio × 1,19), y le pide a Claude
+          <code>/experimento carat, cut, precio_con_iva</code>. El R² sale casi perfecto y la skill se detiene a avisar: es una fuga de datos.
+          Después le pide editar <code>web/modelo.js</code> a mano y el hook lo bloquea. Una instrucción se puede olvidar; un hook no.</p>
+        
+      <article class="prompt" id="p8">
+        <header><span class="num">P8</span><h3>Revisión independiente antes de fusionar</h3><span class="chip">Subagente</span><span class="chip gris">Terminal</span><span class="chip gris">Nube</span></header>
+        <p class="cuando">Quien escribió el código no debería ser quien lo califica. El revisor no vio cómo se hizo: solo juzga el resultado.</p>
+        <div class="caja-prompt"><pre>Usa el subagente revisor-ml para revisar mi rama contra main antes de fusionar el PR #[número].
+Solo hallazgos que cambien una conclusión o rompan algo.
+Después corrige los 🔴, vuelve a correr las pruebas y sube los cambios a la misma rama.</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> Un informe con 🔴 y 🟡, cada hallazgo con su evidencia. También puedes escribir <code>@</code> y elegir <b>revisor-ml (agent)</b>.</p>
+      </article>
+        
+      <article class="prompt" id="p9">
+        <header><span class="num">P9</span><h3>Crea tu propia skill</h3><span class="chip">Skill</span><span class="chip gris">Terminal</span><span class="chip gris">Nube</span></header>
+        <p class="cuando">Cuando escribes el mismo prompt por tercera vez, conviértelo en skill.</p>
+        <div class="caja-prompt"><pre>Crea una skill de proyecto en .claude/skills/preguntas-sustentacion/SKILL.md que lea el proyecto (CLAUDE.md, README, docs/experimentos.md y node scripts/resumen_modelo.js) y genere las 8 preguntas más difíciles que me haría un jurado sobre mi modelo, ordenadas de menor a mayor dificultad, cada una con una pista de dónde está la respuesta, pero sin la respuesta.
+Que solo la pueda invocar yo (disable-model-invocation: true) y que no edite archivos.
+Pruébala y muéstrame el resultado.</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> Un archivo <code>SKILL.md</code> nuevo y, al escribir <code>/preguntas-sustentacion</code>, ocho preguntas para preparar tu sustentación.</p>
+      </article>
+        
+      <article class="prompt" id="p10">
+        <header><span class="num">P10</span><h3>Una regla que se cumple siempre (hook)</h3><span class="chip">Hook</span><span class="chip gris">Terminal</span></header>
+        <p class="cuando">Lo que está en CLAUDE.md es una instrucción: Claude puede olvidarla. Un hook es código: se cumple siempre.</p>
+        <div class="caja-prompt"><pre>Agrega a .claude/settings.json un hook Stop que, si en este turno cambiaste archivos de scripts/ o tests/, corra python -m pytest tests/ -q y no te deje terminar mientras fallen (exit 2 con el error).
+Que no entre en un ciclo infinito (revisa stop_hook_active).
+Explícame cómo lo probaste y cómo lo apago con /hooks si me estorba.</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> Un hook nuevo y una prueba: Claude rompe una prueba a propósito, el hook lo detiene y Claude la arregla antes de terminar.</p>
+      </article>
+      </section>
+
+      <section class="tarjeta" id="bloque-5" aria-labelledby="t-b5">
+        <div class="paso-cabecera"><span class="numero">5</span><div><h2 id="t-b5">Conexiones: MCP y Claude dentro de GitHub</h2><p class="meta">25 minutos · 2:05 a 2:30</p></div></div>
+        <p class="objetivo"><b>MCP</b> (Model Context Protocol) conecta a Claude con otros sistemas: documentación, navegadores, bases de datos, GitHub. Cada servidor le da herramientas nuevas.</p>
+        <h3>Servidores MCP</h3>
+        <ul class="simple">
+          <li><b>claude-code-docs</b>: ya está en <code>.mcp.json</code>, así que todos los que clonan el repositorio lo tienen. Revisa su estado con <code>/mcp</code>.</li>
+          <li><b>Playwright</b> (navegador; solo terminal y con Node.js). Se agrega en la terminal, fuera de Claude:
+            <div class="caja-prompt"><pre>claude mcp add playwright -- npx -y @playwright/mcp@latest</pre><button class="copiar" type="button">Copiar</button></div></li>
+          <li><b>GitHub</b> (opcional): <code>claude mcp add --transport http github https://api.githubcopilot.com/mcp/ --header "Authorization: Bearer [tu token]"</code>.
+            El token es tuyo: nunca va en <code>.mcp.json</code> ni en un commit. Para issues y PR también basta con <code>gh</code>.</li>
+        </ul>
+        
+      <article class="prompt" id="p11">
+        <header><span class="num">P11</span><h3>Pregúntale a la documentación oficial (MCP)</h3><span class="chip">MCP</span><span class="chip gris">Terminal</span><span class="chip gris">Nube</span></header>
+        <p class="cuando">El servidor claude-code-docs ya viene en .mcp.json. La primera vez, Claude Code te pide aprobarlo.</p>
+        <div class="caja-prompt"><pre>Usa el servidor MCP claude-code-docs para responder: ¿cuál es la diferencia entre una skill, un subagente y un hook? Dame un ejemplo de cada uno aplicado a mi proyecto y cita la página de la documentación.</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> La respuesta muestra llamadas a herramientas <code>claude-code-docs</code>: la información viene de la documentación de hoy, no de la memoria del modelo.</p>
+      </article>
+        
+      <article class="prompt" id="p12">
+        <header><span class="num">P12</span><h3>Que Claude pruebe tu página en un navegador</h3><span class="chip">MCP</span><span class="chip gris">Terminal</span></header>
+        <p class="cuando">Con el servidor de Playwright, Claude abre un navegador, hace clic y toma capturas. Necesita Node.js.</p>
+        <div class="caja-prompt"><pre>Con Playwright, abre mi página publicada (https://[usuario].github.io/[repositorio]/) en tamaño celular (375 × 812).
+Verifica que diga «5 de 5 coinciden», prueba 3 combinaciones distintas del formulario y toma una captura de cada una.
+Reporta cualquier texto cortado, scroll horizontal o número sin sentido, con la captura como evidencia.</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> Claude navega tu página como un usuario y te devuelve capturas y una lista de problemas, o la confirmación de que todo se ve bien.</p>
+      </article>
+        <h3>Claude dentro de GitHub</h3>
+        <p>El kit trae tres flujos en <code>.github/workflows/</code>: <b>Pruebas</b> (corre pytest y la paridad en cada PR, sin secretos),
+          <b>Claude</b> (responde cuando escribes <code>@claude</code>) y <b>Revisión de Claude</b> (deja comentarios en las líneas con errores de cada PR).
+          Los dos últimos necesitan una credencial:</p>
+        <ol class="pasos">
+          <li><b>En la terminal:</b> abre <code>claude</code> en tu repositorio y escribe <code>/install-github-app</code>. Instala la app de Claude y guarda el secreto por ti.</li>
+          <li><b>A mano (desde la nube o el navegador):</b> instala la app en <a href="https://github.com/apps/claude" rel="noopener">github.com/apps/claude</a> y, en
+            <span class="ui">Settings</span><span class="flecha">→</span><span class="ui">Secrets and variables</span><span class="flecha">→</span><span class="ui">Actions</span>, crea
+            <code>CLAUDE_CODE_OAUTH_TOKEN</code> (lo genera <code>claude setup-token</code> con tu plan) o <code>ANTHROPIC_API_KEY</code> (clave de la Console).</li>
+          <li><b>Protege <code>main</code></b> (opcional, muy profesional): <span class="ui">Settings</span><span class="flecha">→</span><span class="ui">Rules</span><span class="flecha">→</span><span class="ui">Rulesets</span>,
+            exige pull request y el check <b>Pruebas</b> para fusionar.</li>
+        </ol>
+        <p>¿Trabajas en la nube? Los PR que abre una sesión de claude.ai/code tienen <b>Auto-fix</b>: Claude vigila el PR y corrige las pruebas que fallan y los comentarios de revisión.</p>
+        
+      <article class="prompt" id="p13">
+        <header><span class="num">P13</span><h3>@claude en un issue de GitHub</h3><span class="chip gris">GitHub</span></header>
+        <p class="cuando">Escríbelo como comentario en un issue. Claude trabaja en GitHub Actions y responde allí mismo.</p>
+        <div class="caja-prompt"><pre>@claude Agrega al README una sección «Cómo usar mi modelo» con 3 pasos cortos y el enlace a la página publicada.
+Abre un PR que cierre este issue. No cambies nada dentro de web/.</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> Un comentario de Claude con su avance, una rama nueva y un PR listo para revisar. Requiere configurar el secreto (bloque 5).</p>
+      </article>
+        
+      <article class="prompt" id="p14">
+        <header><span class="num">P14</span><h3>@claude en un pull request</h3><span class="chip gris">GitHub</span></header>
+        <p class="cuando">Escríbelo en la conversación del PR después de una revisión.</p>
+        <div class="caja-prompt"><pre>@claude Corrige los comentarios de la revisión que señalan errores, corre las pruebas y sube los cambios a esta misma rama.
+Responde en cada comentario qué cambiaste.</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> Nuevos commits en la rama del PR y respuestas en cada comentario. El check <b>Pruebas</b> vuelve a correr.</p>
+      </article>
+      </section>
+
+      <section class="tarjeta" id="bloque-6" aria-labelledby="t-b6">
+        <div class="paso-cabecera"><span class="numero">6</span><div><h2 id="t-b6">Escala y seguridad</h2><p class="meta">15 minutos · 2:30 a 2:45</p></div></div>
+        <p class="objetivo">Cuando Claude trabaja más tiempo sin ti, importan más dos cosas: que tenga una forma de verificar, y que no pueda hacer daño.</p>
+        <h3>Más de un Claude a la vez</h3>
+        <ul class="simple">
+          <li><b>Subagentes en paralelo</b> dentro de una sesión (P15).</li>
+          <li><b>Worktrees:</b> <code>claude --worktree experimento-a</code> y, en otra terminal, <code>claude --worktree experimento-b</code>. Cada uno trabaja en su copia y su rama.</li>
+          <li><b>Nube:</b> varias sesiones en claude.ai/code, cada una en su rama; o desde la terminal, <code>claude --cloud "tu tarea"</code>.</li>
+        </ul>
+        
+      <article class="prompt" id="p15">
+        <header><span class="num">P15</span><h3>Dos experimentos en paralelo</h3><span class="chip">Subagentes</span><span class="chip gris">Terminal</span><span class="chip gris">Nube</span></header>
+        <p class="cuando">Cada subagente trabaja en su propio contexto y en su propia carpeta: no se pisan.</p>
+        <div class="caja-prompt"><pre>Lanza dos subagentes en paralelo. Cada uno entrena con scripts/entrenar.py en su propia carpeta de experimentos/:
+uno con [columnas A] y otro con [columnas B]. Que no escriban en docs/.
+Cuando terminen, consolida una tabla comparativa en docs/experimentos.md y recomienda una combinación, con su justificación en una frase.</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> Dos entrenamientos al mismo tiempo, una sola tabla y una recomendación.</p>
+      </article>
+        
+      <article class="prompt" id="p16">
+        <header><span class="num">P16</span><h3>Una meta que Claude persigue solo (/goal)</h3><span class="chip gris">Terminal</span><span class="chip gris">Nube</span></header>
+        <p class="cuando">Claude sigue trabajando, turno tras turno, hasta que la condición se cumple.</p>
+        <div class="caja-prompt"><pre>/goal python -m pytest tests/ -q pasa, la prueba de paridad termina en OK y el README explica cada columna usada y cada columna excluida con su motivo</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> Varios turnos seguidos sin que intervengas, hasta que la condición se cumple. Ojo: si la meta fuera solo «baja el MAE», el agente podría colarse una fuga de datos. Pon la meta en lo verificable y las reglas en CLAUDE.md.</p>
+      </article>
+        
+      <article class="prompt" id="p17">
+        <header><span class="num">P17</span><h3>Claude como herramienta de línea de comandos</h3><span class="chip gris">Terminal</span></header>
+        <p class="cuando">Con -p, Claude responde una vez y termina: así se usa en scripts y en GitHub Actions.</p>
+        <div class="caja-prompt"><pre>claude -p &quot;Resume en 5 viñetas qué cambió en el último commit y si hay algún riesgo para el modelo publicado&quot;</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> Una respuesta en la terminal, sin sesión interactiva. Agrega <code>--output-format json</code> para leerla desde un programa.</p>
+      </article>
+        <h3>Seguridad y ética, sin negociar</h3>
+        <ul class="simple">
+          <li><b>Los secretos no viajan en prompts ni en commits.</b> Van en GitHub Secrets o en variables de entorno. El kit le prohíbe a Claude leer <code>.env</code>.</li>
+          <li><b>El texto de afuera puede traer instrucciones.</b> Un issue, una página web o un CSV pueden decir «ignora tus reglas». Por eso <code>@claude</code> solo responde a quien tiene permiso de escritura, y tú revisas cada diff.</li>
+          <li><b>Tú respondes por tu código.</b> Revisa lo que Claude escribió antes de fusionar; si no lo entiendes, pregúntale hasta entenderlo.</li>
+          <li><b>Declara el uso de IA.</b> La plantilla de PR trae la sección «Uso de IA»: qué hizo Claude y qué revisaste tú.</li>
+          <li><b>Cuida tu cuota.</b> <code>/usage</code> muestra cuánto llevas; <code>/clear</code> entre tareas y prompts concretos gastan menos.</li>
+        </ul>
+        
+      <article class="prompt" id="p18">
+        <header><span class="num">P18</span><h3>¿Qué puede hacer Claude en tu repositorio?</h3><span class="chip gris">Terminal</span><span class="chip gris">Nube</span></header>
+        <p class="cuando">Antes de darle más autonomía, entiende qué tiene permitido.</p>
+        <div class="caja-prompt"><pre>Lee .claude/settings.json y .claude/hooks/ y explícame en una tabla qué puede hacer Claude en este repositorio sin pedirme permiso, qué tiene prohibido y qué pasa con cada hook.
+¿Qué regla agregarías para proteger mejor main y mis datos? No cambies nada.</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> Una tabla de permisos y hooks y dos o tres propuestas. Tú decides si las agregas.</p>
+      </article>
+      </section>
+
+      <section class="tarjeta" id="cierre" aria-labelledby="t-cierre">
+        <div class="paso-cabecera"><span class="numero">7</span><div><h2 id="t-cierre">Cierre: reto final y entrega</h2><p class="meta">10 minutos · 2:45 a 2:55</p></div></div>
+        <p class="objetivo"><b>El reto:</b> lleva tu proyecto de un issue a la página publicada, con PR, pruebas en verde y revisión. Tus manos solo escriben prompts y revisan.</p>
+        
+      <article class="prompt" id="p19">
+        <header><span class="num">P19</span><h3>Revisa tu entrega del 10 %</h3><span class="chip">Skill</span><span class="chip gris">Terminal</span><span class="chip gris">Nube</span></header>
+        <p class="cuando">Antes de subir el PDF a Canvas.</p>
+        <div class="caja-prompt"><pre>/revisar-entrega</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> Una tabla ✅ ⚠️ ❌ con la evidencia de cada punto: paridad, que el modelo sea el tuyo, página publicada, línea base, uso responsable y README. El informe lo escribes tú.</p>
+      </article>
+        <p>La entrega de la línea de profundización (10 % de la nota) está en Canvas: el enlace de tu página, el de tu repositorio y un PDF de máximo 2 páginas.</p>
+      </section>
+
+      <section class="tarjeta" id="kit" aria-labelledby="t-kit">
+        <h2 class="titulo-seccion" id="t-kit">El kit, archivo por archivo</h2>
+        <p class="objetivo">Todo está en el repositorio de la plantilla. Ábrelo, léelo y cámbialo: es tuyo.</p>
+        <ul class="kit">
+          <li><a href="https://github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/blob/main/CLAUDE.md" rel="noopener">CLAUDE.md</a><span>Memoria del proyecto: comandos, reglas y tu sección «Proyecto».</span></li>
+          <li><a href="https://github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/blob/main/.claude/settings.json" rel="noopener">.claude/settings.json</a><span>Permisos (qué corre sin preguntar y qué está prohibido) y los hooks.</span></li>
+          <li><a href="https://github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/tree/main/.claude/hooks" rel="noopener">.claude/hooks/</a><span><code>proteger_archivos.sh</code> bloquea editar <code>modelo.js</code>, datos y <code>.env</code>; <code>revisar_cambio.sh</code> revisa cada archivo editado; <code>inicio_sesion.sh</code> recuerda la rama e instala dependencias en la nube.</span></li>
+          <li><a href="https://github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/blob/main/.claude/rules/pagina-web.md" rel="noopener">.claude/rules/pagina-web.md</a><span>Reglas que solo se cargan cuando Claude trabaja en <code>web/</code>.</span></li>
+          <li><a href="https://github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/tree/main/.claude/skills" rel="noopener">.claude/skills/</a><span><code>/experimento</code>, <code>/publicar-modelo</code>, <code>/revisar-entrega</code> y <code>guia-ml</code> (criterios del curso que Claude consulta solo).</span></li>
+          <li><a href="https://github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/tree/main/.claude/agents" rel="noopener">.claude/agents/</a><span>Subagentes <code>explorador-datos</code> y <code>revisor-ml</code>.</span></li>
+          <li><a href="https://github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/blob/main/.mcp.json" rel="noopener">.mcp.json</a><span>Servidores MCP del proyecto: la documentación de Claude Code.</span></li>
+          <li><a href="https://github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/tree/main/.github" rel="noopener">.github/</a><span>Plantilla de issue «Tarea», plantilla de PR y los flujos <code>pruebas</code>, <code>claude</code>, <code>claude-revision</code> y <code>pages</code>.</span></li>
+          <li><a href="https://github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/blob/main/scripts/entrenar.py" rel="noopener">scripts/entrenar.py</a><span>El cuaderno de Colab desde la terminal: entrena, compara y, con <code>--publicar</code>, publica si le gana a la línea base.</span></li>
+          <li><a href="https://github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/blob/main/scripts/resumen_modelo.js" rel="noopener">scripts/resumen_modelo.js</a><span>Resumen del modelo publicado sin leer sus 200 KB.</span></li>
+          <li><a href="https://github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning/tree/main/tests" rel="noopener">tests/</a><span>Pruebas de <code>entrenar.py</code> con datos inventados (corren en segundos).</span></li>
+        </ul>
+        
+      <article class="prompt" id="p0">
+        <header><span class="num">P0</span><h3>Trae el kit a tu repositorio del taller anterior</h3><span class="chip gris">Terminal</span></header>
+        <p class="cuando">Solo si ya tienes tu repositorio <code>mi-modelo</code> y no quieres crear una copia nueva.</p>
+        <div class="caja-prompt"><pre>Trae a este repositorio el kit de Claude Code de la plantilla original (https://github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning, rama main):
+CLAUDE.md, .claude/, .mcp.json, .github/ISSUE_TEMPLATE/, .github/pull_request_template.md, .github/workflows/pruebas.yml, claude.yml y claude-revision.yml, scripts/entrenar.py, scripts/resumen_modelo.js, tests/, notebooks/plantilla_tu_modelo.ipynb y las líneas nuevas de .gitignore.
+No toques web/modelo.js ni mi README. Hazlo en la rama feature/kit-claude-code, corre las pruebas y abre un PR.</pre><button class="copiar" type="button">Copiar</button></div>
+        <p class="espera"><b>Qué debe pasar:</b> Un PR con el kit. Fusiónalo y abre una sesión nueva para que Claude cargue la configuración.</p>
+      </article>
+      </section>
+
+      <section class="tarjeta" id="chuleta" aria-labelledby="t-chuleta">
+        <h2 class="titulo-seccion" id="t-chuleta">Chuleta</h2>
+        <div class="tabla-envoltura">
+          <table class="tabla">
+            <thead><tr><th>Escribe</th><th>Para</th></tr></thead>
+            <tbody>
+              <tr><td data-label="Escribe"><kbd>Shift</kbd>+<kbd>Tab</kbd></td><td data-label="Para">Cambiar de modo: manual, aceptar ediciones, plan, auto</td></tr>
+              <tr><td data-label="Escribe"><kbd>Esc</kbd> · <kbd>Esc</kbd> <kbd>Esc</kbd></td><td data-label="Para">Detener a Claude · volver a un punto anterior (también <code>/rewind</code>)</td></tr>
+              <tr><td data-label="Escribe"><code>@archivo</code> · <code>@agente</code></td><td data-label="Para">Mostrarle un archivo · llamar a un subagente</td></tr>
+              <tr><td data-label="Escribe"><code>/init</code> · <code>/memory</code></td><td data-label="Para">Crear CLAUDE.md · editar la memoria</td></tr>
+              <tr><td data-label="Escribe"><code>/context</code> · <code>/compact</code> · <code>/clear</code></td><td data-label="Para">Ver qué ocupa la memoria · resumirla · empezar de cero</td></tr>
+              <tr><td data-label="Escribe"><code>/skills</code> · <code>/hooks</code> · <code>/mcp</code> · <code>/permissions</code></td><td data-label="Para">Ver lo que está cargado y activo</td></tr>
+              <tr><td data-label="Escribe"><code>/code-review</code> · <code>/security-review</code></td><td data-label="Para">Revisar el diff en busca de errores o de problemas de seguridad</td></tr>
+              <tr><td data-label="Escribe"><code>/goal</code> · <code>/plan</code></td><td data-label="Para">Una meta que Claude persigue solo · entrar al modo plan con una tarea</td></tr>
+              <tr><td data-label="Escribe"><code>/install-github-app</code></td><td data-label="Para">Conectar @claude y la revisión de PR en GitHub</td></tr>
+              <tr><td data-label="Escribe"><code>/usage</code> · <code>/model</code></td><td data-label="Para">Ver tu consumo · cambiar de modelo</td></tr>
+              <tr><td data-label="Escribe"><code>claude -c</code> · <code>claude --resume</code></td><td data-label="Para">Seguir la última conversación · elegir una anterior</td></tr>
+              <tr><td data-label="Escribe"><code>claude -p "…"</code></td><td data-label="Para">Una respuesta sin sesión (scripts y CI)</td></tr>
+              <tr><td data-label="Escribe"><code>claude --worktree nombre</code> · <code>claude --cloud "…"</code></td><td data-label="Para">Sesión en una copia aislada · tarea en la nube</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="tarjeta" id="problemas" aria-labelledby="t-problemas">
+        <h2 class="titulo-seccion" id="t-problemas">Si algo falla</h2>
+        <details><summary>«Ignoring permissions.allow entries… this workspace has not been trusted»</summary>
+          <div>Abre <code>claude</code> una vez en la carpeta, sin <code>-p</code>, y acepta el diálogo de confianza. Hasta entonces Claude te pide permiso para todo.</div></details>
+        <details><summary>Los hooks no hacen nada o muestran «bash: command not found»</summary>
+          <div>En Windows, instala Git for Windows y abre una terminal nueva. Revisa con <code>/hooks</code> que estén cargados. Los cambios a <code>.claude/settings.json</code> se aplican al abrir una sesión nueva.</div></details>
+        <details><summary>Claude no encuentra <code>/experimento</code> o los subagentes</summary>
+          <div>Abre Claude en la raíz del repositorio (donde está <code>CLAUDE.md</code>) y escribe <code>/skills</code>. Si acabas de traer el kit, empieza una sesión nueva.</div></details>
+        <details><summary>«No module named pandas» o «No module named pytest»</summary>
+          <div>Corre <code>python -m pip install -r requirements.txt pytest</code> en la terminal, o pídeselo a Claude. En la nube lo hace el hook al iniciar la sesión.</div></details>
+        <details><summary>@claude no responde en GitHub</summary>
+          <div>Revisa tres cosas: la app de Claude instalada en el repositorio, el secreto <code>CLAUDE_CODE_OAUTH_TOKEN</code> o <code>ANTHROPIC_API_KEY</code> en Actions, y que el archivo <code>.github/workflows/claude.yml</code> esté en <code>main</code>. El error aparece en la pestaña Actions.</div></details>
+        <details><summary>En la nube, <code>gh issue create</code> o <code>gh pr create</code> devuelven 403</summary>
+          <div>En claude.ai/code esos comandos de <code>gh</code> no funcionan. Claude puede usar la API de GitHub (<code>gh api</code>) o el botón <b>Create PR</b> de la sesión. Si no, crea el issue tú en GitHub.</div></details>
+        <details><summary>Se me acabó la cuota de uso</summary>
+          <div>Mira <code>/usage</code>. Mientras se renueva, trabaja en pareja con alguien y sigue leyendo los diffs y las revisiones. Para ahorrar: <code>/clear</code> entre tareas, prompts concretos y un modelo más pequeño con <code>/model</code> para tareas simples.</div></details>
+      </section>
+
+      <section class="tarjeta" id="chequeo" aria-labelledby="t-chequeo">
+        <h2 class="titulo-seccion" id="t-chequeo">Lista final</h2>
+        <ul class="lista-chequeo" id="lista-chequeo" data-clave="clase-claude-code-chequeo-v1" data-final="¡Terminaste! Tu proyecto trabaja como uno profesional.">
+          <li><label><input type="checkbox" id="c1"><span>Claude Code abre en mi repositorio y <code>/skills</code> muestra <code>/experimento</code></span></label></li>
+          <li><label><input type="checkbox" id="c2"><span><code>docs/ESPECIFICACION.md</code> aprobado y la sección «Proyecto» de CLAUDE.md actualizada</span></label></li>
+          <li><label><input type="checkbox" id="c3"><span>Un issue con criterios de aceptación verificables</span></label></li>
+          <li><label><input type="checkbox" id="c4"><span>Dos o más experimentos en <code>docs/experimentos.md</code></span></label></li>
+          <li><label><input type="checkbox" id="c5"><span>Un PR abierto con <code>/publicar-modelo</code> y el check <b>Pruebas</b> en verde</span></label></li>
+          <li><label><input type="checkbox" id="c6"><span>Revisión de <code>revisor-ml</code> sin 🔴</span></label></li>
+          <li><label><input type="checkbox" id="c7"><span>Una skill o un hook creado por mí</span></label></li>
+          <li><label><input type="checkbox" id="c8"><span>PR fusionado y la página dice «5 de 5 coinciden»</span></label></li>
+          <li><label><input type="checkbox" id="c9"><span><code>/revisar-entrega</code> sin ❌</span></label></li>
+        </ul>
+        <p class="progreso" id="progreso" aria-live="polite"></p>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer class="pie">
+  <div class="contenedor">
+    <p>Clase de Claude Code avanzado del curso Machine Learning 1, Universidad EAN. Guía anterior: <a href="../guia/">Tu modelo en la web</a> ·
+      Plantilla: <a href="https://github.com/Daniel01010101010101/Ejercicio_ejemplo_machine_learning" rel="noopener">repositorio en GitHub</a> · Documentación oficial: <a href="https://code.claude.com/docs" rel="noopener">code.claude.com/docs</a> ·
+      Para docentes: <a href="profe.html">guion de la clase</a>.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  var raiz = document.documentElement;
+  var botonTema = document.getElementById('boton-tema');
+  function temaActual() {
+    var t = raiz.getAttribute('data-theme');
+    if (t) return t;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  function pintarBotonTema() {
+    var oscuro = temaActual() === 'dark';
+    botonTema.classList.toggle('tema-oscuro', oscuro);
+    botonTema.setAttribute('aria-label', oscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
+  }
+  botonTema.addEventListener('click', function () {
+    var nuevo = temaActual() === 'dark' ? 'light' : 'dark';
+    raiz.setAttribute('data-theme', nuevo);
+    try { localStorage.setItem('predictor-saber11-tema', nuevo); } catch (e) { /* sin almacenamiento */ }
+    pintarBotonTema();
+  });
+  pintarBotonTema();
+
+  // Botones «Copiar»: copian el prompt o el comando de su caja; si no hay portapapeles, lo seleccionan.
+  Array.prototype.forEach.call(document.querySelectorAll('.copiar'), function (boton) {
+    boton.addEventListener('click', function () {
+      var caja = boton.parentNode.querySelector('pre, code, a');
+      var texto = boton.getAttribute('data-copiar') || caja.textContent;
+      var original = boton.textContent;
+      function marcar(mensaje) {
+        boton.textContent = mensaje;
+        setTimeout(function () { boton.textContent = original; }, 1600);
+      }
+      function seleccionar() {
+        var rango = document.createRange();
+        rango.selectNodeContents(caja);
+        var seleccion = window.getSelection();
+        seleccion.removeAllRanges();
+        seleccion.addRange(rango);
+        marcar('Ctrl + C');
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texto).then(function () { marcar('Copiado'); }, seleccionar);
+      } else {
+        seleccionar();
+      }
+    });
+  });
+
+  // Al imprimir, abre los desplegables.
+  var cerrados = [];
+  window.addEventListener('beforeprint', function () {
+    cerrados = Array.prototype.filter.call(document.querySelectorAll('details'), function (d) { return !d.open; });
+    cerrados.forEach(function (d) { d.open = true; });
+  });
+  window.addEventListener('afterprint', function () {
+    cerrados.forEach(function (d) { d.open = false; });
+    cerrados = [];
+  });
+
+  // Lista final: se guarda en este navegador (si el almacenamiento está disponible).
+  var lista = document.getElementById('lista-chequeo');
+  if (!lista) return;
+  var CLAVE = lista.getAttribute('data-clave');
+  var casillas = Array.prototype.slice.call(lista.querySelectorAll('input'));
+  var marcadas = {};
+  try { marcadas = JSON.parse(localStorage.getItem(CLAVE) || '{}') || {}; } catch (e) { marcadas = {}; }
+  function pintarProgreso() {
+    var hechas = casillas.filter(function (c) { return c.checked; }).length;
+    document.getElementById('progreso').textContent = hechas === casillas.length
+      ? lista.getAttribute('data-final')
+      : hechas + ' de ' + casillas.length + ' listos.';
+  }
+  casillas.forEach(function (casilla) {
+    casilla.checked = !!marcadas[casilla.id];
+    casilla.addEventListener('change', function () {
+      marcadas[casilla.id] = casilla.checked;
+      try { localStorage.setItem(CLAVE, JSON.stringify(marcadas)); } catch (e) { /* sin almacenamiento */ }
+      pintarProgreso();
+    });
+  });
+  pintarProgreso();
+})();
+</script>
+
+</body>
+</html>
